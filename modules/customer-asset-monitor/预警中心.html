@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="6yPUSeRFEtI2O86OxZv5o9"><head data-page-node-id="k97O8cUC4RrPDHALVoPAog">
+<meta charset="UTF-8" data-page-node-id="RAqHoTIqedwrk0YlqaH7rK">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" data-page-node-id="OhcHPpByghnEpCEhHH0NBL">
+<title data-page-node-id="UHWiCO9eJfLk9v4YkM8jXG">预警中心 ｜ 全面风险管理系统</title>
+<style data-page-node-id="oGW1G2Y174Ih4BWFh6PjCc">
+/* ===== 基础与页面框架（行情监测设计体系） ===== */
+:root{--bg:#f2f5fa; --card:#ffffff; --line:#e3e9f2; --line2:#eef2f8;
+  --blue:#1d6fd1; --blue-deep:#155cb0; --navy:#16283f; --txt2:#5b6b82; --txt3:#8ba0bb;
+  --red:#dc2626; --green:#16a34a; --amber:#d97706; --orange:#ea580c;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--navy);font-family:"Microsoft YaHei","PingFang SC","Segoe UI",sans-serif;font-size:13px;line-height:1.55}
+.page{max-width:1560px;margin:0 auto;padding:22px 28px 40px}
+.topbar{background:linear-gradient(90deg,#CBE5FF 0%,#E4F2FF 55%,#F6FBFF 100%);border:1px solid #C2DCFF;border-radius:12px;color:#0B4F94;padding:18px 26px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 10px rgba(43,90,138,.10)}
+.topbar .sys{font-size:12px;letter-spacing:2px;opacity:.85;margin-bottom:4px}
+.topbar h1{font-size:22px;font-weight:800;letter-spacing:1px;color:#0B4F94;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.topbar h1 small{font-size:11.5px;font-weight:600;opacity:.85;letter-spacing:2.5px;color:#547AA4}
+.date-pick{display:flex;align-items:center;gap:8px;background:#D2E8FF;border-radius:9px;padding:8px 14px;font-size:13px;font-weight:700;color:#2B5A8A;cursor:pointer;box-shadow:inset 0 0 0 1px #BFD8F3;transition:box-shadow .15s;flex-shrink:0}
+.date-pick:hover{box-shadow:inset 0 0 0 1.5px #45AFFF}
+.date-pick .dp-label{letter-spacing:1px}
+.date-pick input[type=date]{border:none;background:transparent;color:#2B5A8A;font:700 13px/1 inherit;outline:none;cursor:pointer;color-scheme:light;width:132px;padding:0}
+.top-meta{text-align:right;font-size:12px;opacity:.92;line-height:1.9}
+.top-meta b{font-size:14px}
+#pane-mkt .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:16px}
+#pane-mkt .kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 18px;position:relative;overflow:hidden}
+#pane-mkt .kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--blue)}
+#pane-mkt .kpi.warn::before{background:var(--red)}
+#pane-mkt .kpi.amber::before{background:var(--amber)}
+#pane-mkt .kpi .k-label{font-size:12px;color:var(--txt2);margin-bottom:6px}
+#pane-mkt .kpi .k-val{font-size:24px;font-weight:700}
+#pane-mkt .kpi .k-val small{font-size:13px;font-weight:500;color:var(--txt2);margin-left:6px}
+#pane-mkt .kpi .k-sub{font-size:11.5px;color:var(--txt3);margin-top:4px}
+#pane-mkt .kpi .up{color:var(--red)}
+#pane-mkt .kpi .down{color:var(--green)}
+#pane-mkt .signalbar{margin-top:14px;background:#fff8ec;border:1px solid #f2ddba;border-radius:10px;padding:11px 18px;font-size:12.5px;color:#7c5410;display:flex;flex-wrap:wrap;gap:6px 22px;align-items:center}
+#pane-mkt .signalbar .tag{background:var(--amber);color:#fff;border-radius:4px;padding:1px 8px;font-size:11px;font-weight:600}
+#pane-mkt .signalbar b{color:#a3540a}
+#pane-mkt .sec-title{display:flex;align-items:center;gap:10px;margin:26px 0 14px}
+#pane-mkt .sec-title .no{background:var(--blue);color:#fff;font-size:13px;font-weight:700;border-radius:6px;padding:3px 10px}
+#pane-mkt .sec-title h2{font-size:17px;font-weight:700}
+#pane-mkt .sec-title .en{color:var(--txt3);font-size:12px;letter-spacing:1px}
+#pane-mkt .sub-title{display:flex;align-items:baseline;gap:10px;margin:20px 0 10px}
+#pane-mkt .sub-title .bar{width:4px;height:15px;background:var(--blue);border-radius:2px}
+#pane-mkt .sub-title h3{font-size:14.5px;font-weight:700}
+#pane-mkt .sub-title .note{font-size:11.5px;color:var(--txt3)}
+#pane-mkt .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+#pane-mkt .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;box-shadow:0 1px 3px rgba(22,40,63,.04)}
+#pane-mkt .card h4{font-size:13px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+#pane-mkt .card h4 .dot{width:8px;height:8px;border-radius:50%}
+#pane-mkt .dot.red{background:var(--red)}
+#pane-mkt .dot.green{background:var(--green)}
+#pane-mkt .dot.blue{background:var(--blue)}
+#pane-mkt .card h4 .sub{font-weight:400;font-size:11px;color:var(--txt3)}
+#pane-mkt table{width:100%;border-collapse:collapse;font-size:12.5px}
+#pane-mkt th{background:#f6f9fd;color:var(--txt2);font-weight:600;padding:7px 8px;text-align:right;border-bottom:1px solid var(--line);white-space:normal;line-height:1.35}
+#pane-mkt th:first-child, #pane-mkt td:first-child{text-align:center}
+#pane-mkt th:nth-child(2), #pane-mkt td:nth-child(2){text-align:left}
+#pane-mkt td{padding:7px 8px;border-bottom:1px solid var(--line2);text-align:right;font-variant-numeric:tabular-nums}
+#pane-mkt tbody tr:hover{background:#f4f8fd}
+#pane-mkt td.name{font-weight:600;text-align:left}
+#pane-mkt td.name .code{display:block;font-size:10.5px;color:var(--txt3);font-weight:400}
+#pane-mkt .pos{color:var(--red);font-weight:600}
+#pane-mkt .neg{color:var(--green);font-weight:600}
+#pane-mkt .flat{color:var(--txt3)}
+#pane-mkt .spec-hi{color:var(--orange);font-weight:700}
+#pane-mkt .fund-out{color:var(--green)}
+#pane-mkt .fund-in{color:var(--red)}
+#pane-mkt .na{color:#b6c3d4}
+#pane-mkt .opt-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 26px}
+#pane-mkt .opt-col{min-width:0}
+#pane-mkt .opt-row{display:grid;grid-template-columns:34px 190px 118px 1fr;gap:10px;align-items:center;padding:9px 4px;border-bottom:1px solid var(--line2)}
+#pane-mkt .opt-row:hover{background:#f4f8fd;border-radius:6px}
+#pane-mkt .opt-head{display:grid;grid-template-columns:34px 190px 118px 1fr;gap:10px;align-items:center;padding:8px 4px;background:#f2f7fd;border-bottom:2px solid #c9dcf3;border-radius:8px;font-size:11.5px;font-weight:700;color:#3d4f6b}
+#pane-mkt .opt-head .hr{text-align:center}
+#pane-mkt .opt-head .hchips{display:flex;gap:5px;min-width:0}
+#pane-mkt .opt-head .hl{flex:1;text-align:center;white-space:nowrap}
+#pane-mkt .opt-rank{font-size:13px;font-weight:700;color:var(--txt3);text-align:center}
+#pane-mkt .opt-rank.top3{color:#fff;background:var(--red);border-radius:5px;padding:1px 0;font-size:11.5px}
+#pane-mkt .opt-name{font-weight:700;font-size:12.5px}
+#pane-mkt .opt-name .code{display:block;font-size:10.5px;color:var(--txt3);font-weight:400}
+#pane-mkt .iv-wrap{display:flex;align-items:center;gap:6px}
+#pane-mkt .iv-bar{height:12px;background:linear-gradient(90deg,#e8594a,#c23424);border-radius:3px;min-width:2px}
+#pane-mkt .iv-val{font-weight:700;color:#c23424;font-size:12.5px}
+#pane-mkt .chips{display:flex;gap:5px}
+#pane-mkt .lamp{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px}
+#pane-mkt .alert-card{border:1.5px solid #f0b429 !important;background:linear-gradient(180deg,#fffaf0 0%,#ffffff 55%);box-shadow:0 3px 12px rgba(234,88,12,.10)}
+#pane-mkt .alert-card h4{font-size:14.5px;color:#9a4a00}
+#pane-mkt .alert-card h4 .sub{color:#a97b3f}
+#pane-mkt .alert-icon{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#ea580c;color:#fff;font-size:12px;font-weight:700}
+#pane-mkt .opt-row.tier-red{background:#fdf1ef;box-shadow:inset 3px 0 0 #dc2626;border-radius:6px}
+#pane-mkt .opt-row.tier-orange{background:#fdf7ec;box-shadow:inset 3px 0 0 #ea580c;border-radius:6px}
+#pane-mkt .chip-dev{font-size:12px;font-weight:700;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.55)}
+#pane-mkt .chip{flex:1;text-align:center;border-radius:5px;padding:5px 2px;font-size:11.5px;font-weight:700;color:#fff;white-space:nowrap}
+#pane-mkt .foot{margin-top:26px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 18px;font-size:11.5px;color:var(--txt2);line-height:1.9}
+#pane-mkt .foot b{color:var(--navy)}
+@media(max-width:1100px){
+  #pane-mkt .grid2, #pane-mkt .kpis{grid-template-columns:1fr}
+}
+#pane-mkt .fcard{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 1px 3px rgba(15,23,42,.05);margin-bottom:16px;overflow:hidden}
+#pane-mkt .fcard-head{padding:13px 18px 11px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:linear-gradient(180deg,#F8FAFC,#fff)}
+#pane-mkt .fcard-head h4{font-size:14.5px;font-weight:700}
+#pane-mkt .fcard-head h4 i{font-style:normal;color:var(--txt3);font-weight:500;font-size:12px;margin-left:6px}
+#pane-mkt .fhint{font-size:11.5px;color:var(--txt2);background:#F1F5F9;border-radius:6px;padding:2px 9px}
+#pane-mkt .fhint.warn{background:#FFFBEB;color:#B45309;border:1px solid #FDE68A}
+#pane-mkt .fdual{display:grid;grid-template-columns:1fr 1fr}
+#pane-mkt .fdual .fpanel + .fpanel{border-left:1px solid var(--line)}
+#pane-mkt .fpanel-title{padding:10px 16px 8px;font-size:13px;font-weight:700;display:flex;align-items:baseline;gap:8px}
+#pane-mkt .fpanel-title .cnt{font-size:11px;color:var(--txt3);font-weight:500}
+#pane-mkt .fpanel-title.up{color:#B91C1C}
+#pane-mkt .fpanel-title.dn{color:#15803D}
+#pane-mkt .frow2{display:grid;grid-template-columns:1.15fr 1fr;gap:16px;margin-bottom:16px}
+#pane-mkt table.ftable{width:100%;border-collapse:collapse}
+#pane-mkt .ftable thead th{background:#F1F5F9;color:#475569;font-weight:600;font-size:12px;padding:8px 10px 7px;text-align:center;border-bottom:1.5px solid var(--line);white-space:nowrap;line-height:1.4}
+#pane-mkt .ftable thead th:first-child{text-align:left;padding-left:16px}
+#pane-mkt .ftable thead th .cal{display:block;font-size:10px;font-weight:500;color:#94A3B8;margin-top:2px}
+#pane-mkt .ftable tbody td{padding:7px 10px;text-align:center;border-bottom:1px solid #F1F5F9;white-space:nowrap;font-weight:700}
+#pane-mkt .ftable tbody td:first-child{text-align:left;padding-left:16px}
+#pane-mkt .ftable tbody tr:hover td{background:rgba(30,58,138,.045) !important}
+#pane-mkt .ftable tbody tr:last-child td{border-bottom:none}
+#pane-mkt .ftable td.empty{background:#F1F5F9 !important;color:#94A3B8;font-weight:500}
+#pane-mkt .fname{font-size:13px;font-weight:700;color:#1E293B}
+#pane-mkt sup.otc{font-size:9.5px;font-weight:800;color:#2E97F5;vertical-align:super;line-height:0;margin-left:1px;letter-spacing:0}
+#pane-mkt sup.mm{font-size:9.5px;font-weight:800;color:#EA580C;vertical-align:super;line-height:0;margin-left:1px;letter-spacing:0}
+#pane-mkt .tdbar{display:flex;align-items:center;gap:6px;justify-content:flex-start}
+#pane-mkt .tdbar .bar{height:12px;border-radius:2.5px;min-width:3px}
+#pane-mkt .tdbar .bar.up{background:linear-gradient(90deg,#ef7b74,#c23424)}
+#pane-mkt .tdbar .bar.dn{background:linear-gradient(90deg,#5cb585,#15803d)}
+#pane-mkt .tdbar .bar.flat{background:#cbd5e1}
+#pane-mkt .tdbar .v{font-weight:700;font-size:12px;min-width:40px;text-align:right}
+#pane-mkt .tdbar .v.up{color:#B91C1C}
+#pane-mkt .tdbar .v.dn{color:#15803D}
+#pane-mkt .tdbar .v.flat{color:#475569}
+@media(max-width:1100px){
+  #pane-mkt .fdual, #pane-mkt .frow2{grid-template-columns:1fr}
+  #pane-mkt .fdual .fpanel + .fpanel{border-left:none;border-top:1px solid var(--line)}
+}
+
+/* ===== Tab 导航 ===== */
+.tabs{display:flex;gap:12px;margin-top:16px}
+.tab-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:9px;border:1px solid #C2DCFF;background:#EBF5FF;border-radius:10px;padding:12px 18px;font-size:14.5px;font-weight:700;color:#2B5A8A;cursor:pointer;font-family:inherit;letter-spacing:1px;transition:all .15s}
+.tab-btn:not(.active):hover{border-color:#45AFFF;color:#0B4F94;background:#E0F0FF}
+.tab-btn .tno{font-size:12px;font-weight:700;background:#C2DCFF;color:#0B4F94;border-radius:6px;padding:1px 9px}
+.tab-btn .tab-badge{font-size:11px;font-weight:700;background:var(--red);color:#fff;border-radius:9px;padding:1px 8px;letter-spacing:0}
+.tab-btn.active{background:linear-gradient(135deg,#47B3FF 0%,#2E97F5 100%);color:#fff;border-color:transparent;box-shadow:0 3px 10px rgba(69,175,255,.35)}
+.tab-btn.active .tno{background:rgba(255,255,255,.22);color:#fff}
+.tabpane{display:none}
+.tabpane.active{display:block}
+.int-meta{margin:16px 0 4px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 18px;font-size:12px;color:var(--txt2);display:flex;flex-wrap:wrap;gap:4px 20px;align-items:center}
+.int-meta b{color:var(--navy)}
+.tab-btn:active{transform:translateY(1px)}
+
+/* ===== Tab2 · 内部指标监测与预警（样式作用域 #pane-int；弹窗/Toast 为全局） ===== */
+/* 内部指标页变量（作用于 Tab2 与弹窗/Toast） */
+#pane-int,#notifyMask,#toast{--ink:#0F172A;--ink2:#475569;--ink3:#94A3B8;--line:#E2E8F0;--red-badge:#DC2626;--amber-badge:#D97706}
+#pane-int .sec{margin-bottom:26px;}
+#pane-int .sec-head{display:flex;align-items:baseline;gap:12px;margin-bottom:12px;padding:0 2px;}
+#pane-int .sec-no{font-size:20px;font-weight:800;color:#fff;background:linear-gradient(135deg,#15306E,#1E3A8A);
+    padding:1px 10px;border-radius:7px;letter-spacing:1px;}
+#pane-int .sec-head h2{font-size:17px;font-weight:700;color:var(--ink);letter-spacing:.5px;}
+#pane-int .sec-sub{font-size:12px;color:var(--ink3);}
+#pane-int .card{background:#fff;border:1px solid var(--line);border-radius:12px;
+    box-shadow:0 1px 3px rgba(15,23,42,.05);margin-bottom:16px;overflow:hidden;}
+#pane-int .card-head{padding:13px 18px 11px;border-bottom:1px solid var(--line);
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    background:linear-gradient(180deg,#F8FAFC,#fff);}
+#pane-int .card-head h3{font-size:14.5px;font-weight:700;}
+#pane-int .card-head h3 i{font-style:normal;color:var(--ink3);font-weight:500;font-size:12px;margin-left:6px;}
+#pane-int .card-head .hint{font-size:11.5px;color:var(--ink2);background:#F1F5F9;border-radius:6px;padding:2px 9px;}
+#pane-int .card-head .hint.warn{background:#FFFBEB;color:#B45309;border:1px solid #FDE68A;}
+#pane-int table{width:100%;border-collapse:collapse;}
+#pane-int thead th{background:#F1F5F9;color:#475569;font-weight:600;font-size:12px;
+    padding:8px 10px 7px;text-align:center;border-bottom:1.5px solid var(--line);
+    white-space:nowrap;position:sticky;top:0;}
+#pane-int thead th:first-child{text-align:left;padding-left:16px;}
+#pane-int thead th .cal{display:block;font-size:10px;font-weight:500;color:var(--ink3);margin-top:2px;letter-spacing:0;}
+#pane-int tbody td{padding:7px 10px;text-align:center;border-bottom:1px solid #F1F5F9;white-space:nowrap;
+    font-weight:700;}
+#pane-int tbody td:first-child{text-align:left;padding-left:16px;}
+#pane-int tbody tr:hover td{background:rgba(30,58,138,.045) !important;}
+#pane-int tbody tr:last-child td{border-bottom:none;}
+#pane-int .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+#pane-int .kpi-card{background:#fff;border:1px solid var(--line);border-radius:12px;
+    box-shadow:0 1px 3px rgba(15,23,42,.05);padding:15px 18px 13px;
+    position:relative;overflow:hidden;}
+#pane-int .kpi-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--kc,#DC2626);}
+#pane-int .kpi-tag{font-size:11px;font-weight:700;color:var(--ink3);letter-spacing:1.5px;margin-bottom:7px;}
+#pane-int .kpi-num{font-size:27px;font-weight:800;line-height:1.1;color:var(--kc,#DC2626);}
+#pane-int .kpi-num small{font-size:13px;font-weight:600;color:var(--ink3);margin-left:3px;}
+#pane-int .kpi-sub{font-size:11.5px;color:var(--ink2);margin-top:6px;line-height:1.55;}
+#pane-int .kpi-sub .d{display:inline-block;width:7px;height:7px;border-radius:50%;margin:0 4px 1px 0;vertical-align:1px;}
+#pane-int .st{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:2px 9px;border-radius:12px;white-space:nowrap;}
+#pane-int .st .st-dot{width:7px;height:7px;border-radius:50%;flex:none;}
+#pane-int .st.over{background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;}
+#pane-int .st.over .st-dot{background:#DC2626;}
+#pane-int .st.warn{background:#FFF7ED;color:#C2410C;border:1px solid #FED7AA;}
+#pane-int .st.warn .st-dot{background:#EA580C;}
+#pane-int .st.watch{background:#FFFBEB;color:#B45309;border:1px solid #FDE68A;}
+#pane-int .st.watch .st-dot{background:#D97706;}
+#pane-int .st.ok{background:#F0FDF4;color:#15803D;border:1px solid #BBF7D0;}
+#pane-int .st.ok .st-dot{background:#16A34A;}
+#pane-int .prog{position:relative;height:18px;background:#F1F5F9;border-radius:9px;overflow:hidden;min-width:130px;}
+#pane-int .prog-bar{position:absolute;left:0;top:0;bottom:0;border-radius:9px;}
+#pane-int .prog span{position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:10.5px;font-weight:800;color:#334155;}
+#pane-int .spark{display:flex;align-items:flex-end;gap:3px;height:26px;justify-content:center;}
+#pane-int .spark i{width:11px;border-radius:2px 2px 0 0;display:block;}
+#pane-int .cat-tag{display:inline-block;font-size:10px;font-weight:600;color:#475569;background:#F1F5F9;border-radius:4px;padding:1px 7px;white-space:nowrap;}
+#pane-int #tblLimit tbody td, #pane-int #tblTrend tbody td, #pane-int #tblCombo tbody td, #pane-int #tblSector tbody td{font-weight:600;font-size:12px;}
+#pane-int .hit-name{color:#B91C1C;font-weight:700;}
+#pane-int .bdg2{font-size:10px;font-weight:800;background:#DC2626;color:#fff;border-radius:4px;padding:1px 6px;}
+#pane-int .notify-btn{font-size:11px;font-weight:700;color:#1D4ED8;background:#EFF6FF;border:1px solid #BFDBFE;
+    border-radius:6px;padding:2px 11px;cursor:pointer;white-space:nowrap;font-family:inherit;}
+#pane-int .notify-btn:hover{background:#DBEAFE;border-color:#93C5FD;}
+#pane-int .notify-btn.done{color:#15803D;background:#F0FDF4;border-color:#BBF7D0;}
+#pane-int .notify-btn.done:hover{background:#DCFCE7;}
+.modal-mask{position:fixed;inset:0;background:rgba(15,23,42,.45);
+    display:none;align-items:center;justify-content:center;z-index:100;}
+.modal{background:#fff;border-radius:14px;width:540px;max-width:92vw;
+    box-shadow:0 20px 60px rgba(15,23,42,.35);overflow:hidden;}
+.modal-head{padding:14px 20px;font-size:15px;font-weight:700;color:#0F172A;
+    border-bottom:1px solid var(--line);background:linear-gradient(180deg,#F8FAFC,#fff);
+    display:flex;align-items:center;gap:9px;}
+.lv-tag{font-size:11px;font-weight:700;border-radius:6px;padding:1px 9px;flex:none;}
+.lv-tag.red{background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA;}
+.lv-tag.orange{background:#FFF7ED;color:#C2410C;border:1px solid #FED7AA;}
+.lv-tag.yellow{background:#FFFBEB;color:#B45309;border:1px solid #FDE68A;}
+.modal-body{padding:12px 20px 4px;max-height:62vh;overflow-y:auto;}
+.modal-sec{font-size:12px;font-weight:700;color:#475569;margin:10px 0 6px;}
+.modal-sec .lt{font-weight:400;color:var(--ink3);}
+.modal textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:9px 11px;
+    font-size:12px;line-height:1.65;color:#334155;font-family:inherit;resize:vertical;}
+.modal textarea:focus{outline:2px solid #BFDBFE;}
+.rcpt-list{border:1px solid var(--line);border-radius:8px;padding:7px 10px;display:grid;grid-template-columns:1fr;gap:1px;}
+.rcpt{display:flex;align-items:center;gap:8px;font-size:12px;color:#334155;padding:3.5px 2px;cursor:pointer;white-space:nowrap;}
+.rcpt input{accent-color:#1D4ED8;flex:none;}
+.rcpt .rg{font-size:10px;font-weight:700;color:#475569;background:#F1F5F9;border-radius:4px;padding:1px 7px;flex:none;}
+.rcpt .rg.rg-hq{background:#EFF6FF;color:#1D4ED8;}
+.chan-row{border:1px solid var(--line);border-radius:8px;padding:8px 10px;display:flex;gap:20px;flex-wrap:wrap;}
+.chan-row label{display:flex;align-items:center;gap:6px;font-size:12px;color:#334155;cursor:pointer;white-space:nowrap;}
+.chan-row input{accent-color:#1D4ED8;}
+.modal-foot{padding:12px 20px 15px;display:flex;align-items:center;gap:10px;justify-content:flex-end;
+    border-top:1px solid var(--line);background:#F8FAFC;}
+.demo-note{font-size:10.5px;color:var(--ink3);margin-right:auto;line-height:1.5;max-width:270px;text-align:left;}
+.btn-cancel{font-size:12.5px;font-weight:600;color:#475569;background:#fff;border:1px solid #CBD5E1;
+    border-radius:7px;padding:6px 16px;cursor:pointer;font-family:inherit;}
+.btn-send{font-size:12.5px;font-weight:700;color:#fff;background:linear-gradient(135deg,#1D4ED8,#1E3A8A);
+    border:none;border-radius:7px;padding:6px 18px;cursor:pointer;font-family:inherit;}
+.btn-send:hover{filter:brightness(1.12);}
+.toast{position:fixed;left:50%;bottom:36px;transform:translateX(-50%) translateY(20px);
+    background:#0F172A;color:#fff;font-size:12.5px;font-weight:600;
+    padding:10px 22px;border-radius:10px;box-shadow:0 8px 30px rgba(15,23,42,.4);
+    opacity:0;pointer-events:none;transition:all .3s;z-index:200;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+#pane-int .rules-col-title{padding:12px 18px 8px;font-size:13px;font-weight:700;color:var(--ink);
+    display:flex;align-items:center;gap:7px;}
+#pane-int .rules-col-title .dot{width:8px;height:8px;border-radius:50%;background:#1E3A8A;flex:none;}
+#pane-int .cal-list{padding:4px 18px 14px;}
+#pane-int .cal-list li{list-style:none;padding:6.5px 0 6.5px 14px;position:relative;font-size:12px;color:#334155;line-height:1.6;
+    border-bottom:1px dashed #F1F5F9;}
+#pane-int .cal-list li:last-child{border-bottom:none;}
+#pane-int .cal-list li::before{content:"";position:absolute;left:0;top:13px;width:5px;height:5px;border-radius:50%;background:#94A3B8;}
+#pane-int .cal-list b{color:var(--ink);font-weight:700;}
+#pane-int footer{padding:6px 2px 26px;font-size:11px;color:var(--ink3);line-height:1.8}
+#pane-int footer b{color:var(--ink2);font-weight:600}
+@media (max-width:1080px){
+  #pane-int .kpi{grid-template-columns:1fr 1fr;}
+}
+@media (max-width:560px){
+  #pane-int .kpi{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body data-page-node-id="UFAV1GhSoBsbYGH2b3ZSs2" style="">
+<div class="page" data-page-node-id="r3csAtIf6nGOBTHDCmTvzz">
+
+
+
+<header class="topbar" data-page-node-id="APKhpgxSkQpfGLwhJzUGBI">
+  <div data-page-node-id="UfVm552VubAhGqsQxDJuKz">
+    
+    <h1 data-page-node-id="FCIM9QTWdhBpIrkSy8WRBX">预警中心<small>RISK EARLY-WARNING CENTER</small></h1>
+  </div>
+  <label class="date-pick" id="datePick" title="选择交易日">
+    <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><path fill="#547AA4" d="M14 2h-2V1a1 1 0 0 0-2 0v1H6V1a1 1 0 0 0-2 0v1H2a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1zm-1 12H3V6h10v8zM5 8h2v2H5zm4 0h2v2H9z"/></svg>
+    <span class="dp-label">交易日</span>
+    <input type="date" id="tradeDate" value="2026-10-15">
+  </label>
+</header><nav class="tabs" data-page-node-id="zIDSIWQaDiB9E1o284ZqMh">
+  <button type="button" class="tab-btn active" data-tab="mkt" data-page-node-id="oe9iTPOa6vcoLQyJNhvTmV"><span class="tno" data-page-node-id="OU4wCiiC7GyMAcz0Go1p69">1</span>行情监测与预警</button>
+  <button type="button" class="tab-btn" data-tab="int" data-page-node-id="XsEp04zGhEtQ5Ao1fgH1nA"><span class="tno" data-page-node-id="ORmeyDOjrCXNqlZTudlUKJ">2</span>内部指标监测与预警<span class="tab-badge" id="tabIntBadge" data-page-node-id="M9CTGQBAbgJX3QQwFUso5B">13 项预警</span></button>
+</nav>
+
+<div class="tabpane active" id="pane-mkt" data-page-node-id="V3N1S3tFlA2OEL9Ak5pmvW">
+<section class="kpis" data-page-node-id="uWFfVe3VXuG9smbbR7Msk2">
+  <div class="kpi warn" data-page-node-id="zrMA6WcpLNyFXhVEUIPki7">
+    <div class="k-label" data-page-node-id="nz1fM9whChnv7gLXlDeVdw">商品期货涨跌分布（有成交品种）</div>
+    <div class="k-val" data-page-node-id="6WWvWGHO4hJlBSANCr4LPT"><span class="up" data-page-node-id="U1toPh08UkpqeWqQO35Pju">11 涨</span> / <span class="down" data-page-node-id="JznXYYEzTPvu1mKmP6RxEC">63 跌</span><small data-page-node-id="tl7GORYC0V5YzxsuD3XERT">平均 -1.66%</small></div>
+    <div class="k-sub" data-page-node-id="B23Td4AB1M7Yw9mrmGBx3M">普跌格局，沪银 -5.34% 领跌，集运指数(欧线) +2.37% 领涨</div>
+  </div>
+  <div class="kpi warn" data-page-node-id="qUIK1izI1ruYGJfn3grQHu">
+    <div class="k-label" data-page-node-id="04W4gj4GjaPliZxuOJ9r4B">股指期货主力（4 个品种）</div>
+    <div class="k-val down" data-page-node-id="dkxbEuThuGVNn7GGraGy8R">全线下跌</div>
+    <div class="k-sub" data-page-node-id="DGjMzDs5KAVfK2GIRkctEk">中证1000期货 -3.46% ｜ 中证500期货 -3.19% ｜ 沪深300期货 -1.49% ｜ 上证50期货 -0.40%</div>
+  </div>
+  <div class="kpi" data-page-node-id="Fz4BSoiCdBaY7zmKGAHx8p">
+    <div class="k-label" data-page-node-id="4HZ5cgN8A4QXJe3kgL5V0I">国债期货主力（4 个品种）</div>
+    <div class="k-val" data-page-node-id="7jNylCjexJlyy8Je10WrWJ">窄幅震荡</div>
+    <div class="k-sub" data-page-node-id="AMZM1KdHM559vhSw85uSg7">2年期 +0.01% ｜ 5年期 0.00% ｜ 10年期 -0.01% ｜ 30年期 -0.08%，30年期历史波动率 5.12%</div>
+  </div>
+  <div class="kpi amber" data-page-node-id="mUQisxB3XamdPl6l1QoPy9">
+    <div class="k-label" data-page-node-id="xqlBllDOutUDZr55UrHVkR">商品期权隐含波动率（IV）</div>
+    <div class="k-val" data-page-node-id="ZJKJ3sAomls09DNN0pF4bH">80.52<small data-page-node-id="OhrAGGnm0safKCGltRAqcE">燃油 IV 现值全场最高</small></div>
+    <div class="k-sub" data-page-node-id="iJCVCgFXMfA8FvhvboO6rj">IV 分位数 ≥80% 共 8 个 ｜ ≤20% 共 21 个（样本 64 个商品期权品种）</div>
+  </div>
+</section>
+
+<div class="signalbar" data-page-node-id="uzODH772ZYEDDA9BIfnq9W">
+  <span class="tag" data-page-node-id="9yhBCJXfdbGu32V5VWTvwN">预警信号</span>
+  <span data-page-node-id="8jh5l0uqXRyPQ54fWwwVJo"><b data-page-node-id="48VZn0udMPoAHGBrk8fXfj">方向性风险</b>：商品 11 涨 63 跌、股指全线下跌，单边空头行情，关注多头敞口与追保压力</span>
+  <span data-page-node-id="GJ1sOKQWH5RgeB7M1g1729"><b data-page-node-id="I8Zz9MquThWjx6H1fRYfp2">资金流出</b>：原油 -12.45%、20号胶 -12.01%、橡胶 -9.63%</span>
+  <span data-page-node-id="MRCQWuCCe7gAesqh5eHe5F"><b data-page-node-id="w3VNZJhZSXmHzADao8ibeB">放量异动</b>：沪镍成交量 +110.94%、国际铜 +102.40%、菜油 +99.57%</span>
+  <span data-page-node-id="HSBbLSes78vE6eVlyYVCZ3"><b data-page-node-id="yqrg4FrfM0wYBAFsG0v0dJ">高投机度</b>：沪锡 2.99、橡胶 2.97、原油 2.82（&gt;2 重点关注）</span>
+  <span data-page-node-id="bWoEd762gcJWZXSzzAOptS"><b data-page-node-id="dEodeKYZMQzW2xlg4hsz7W">IV-HV 偏离</b>：<span style="color:#dc2626;font-weight:700" data-page-node-id="TNHksaBzaKvjGysZreUL9u">红 2</span>（纸浆、锰硅 IV 显著高于 HV）｜<span style="color:#ea580c;font-weight:700" data-page-node-id="BVJad2An1R5BZvyTVYgfQ8">橙 6</span>（沥青 -29.7pp、甲醇 -23.6pp、PTA -19.6pp 等 IV 显著低于 HV）</span>
+</div>
+
+<div class="sec-title" data-page-node-id="NUFVenNjAs3PbsmIqopZ38"><span class="no" data-page-node-id="LrKVSLlNTt2kO9Evx7CGy9">一</span><h2 data-page-node-id="E9IhyDBPr0QFyHrd0ISAgv">行情监测</h2><span class="en" data-page-node-id="pdnOdwCXpNDtZARIn03EWj">MARKET MONITORING</span></div>
+
+<div class="sub-title" data-page-node-id="hXCHLBbA9OMguNQt8GkLmW"><span class="bar" data-page-node-id="43u2r17V9xqCPDVvOB9OXh"></span><h3 data-page-node-id="IfwgEMyoYFxssQrThKrg4O">1. 期货主力合约行情</h3><span class="note" data-page-node-id="RadLQvkFpu0jbcLdo2H0aW">数据来源：Wind CSR《品种表现（内盘）-全品种》 ｜ 红涨绿跌；涨跌幅列为条形图（各榜单内相对最长满格），其余指标单元格色阶按数值强度渲染 ｜ 商品涨跌榜仅含商品品种，金融期货单列于股指、国债两表 ｜ 品种名右上角 <sup class="otc">1</sup> = 涉及场外业务的品种（对照场外业务品种清单：商品两榜 20 品种中 18 个涉及，股指期货 4 品种全涉及）、<sup class="mm">2</sup> = 涉及做市业务的品种（进行中做市项目：商品两榜 11 个、股指期货 2 个、国债期货 4 个）</span></div>
+
+<div class="fcard" data-page-node-id="Gc8Yco1eUodMtKA0XI7Y6B">
+  <div class="fcard-head" data-page-node-id="N0rH4utCUD767GRDCCBb7o">
+    <h4 data-page-node-id="GRJM1XAp7UqCNC6b0Wc6CF">商品期货 · 涨跌前十品种<i data-page-node-id="mn1vkh6ss4L7puiK2L3TPR">内盘三大商品交易所 + 广期所 + 能源中心</i></h4>
+    <span class="fhint warn" id="commodityHint" data-page-node-id="r6l6DQvThh0Xvgw5aXIefR">今日商品市场普跌：有成交品种 74 个中仅 11 个上涨，跌幅 ≥3% 品种 13 个</span>
+  </div>
+  <div class="fdual" data-page-node-id="zNnEAVTjdZGEV8lFTWWbPv">
+    <div class="fpanel" data-page-node-id="mXW1QnpmFjpIKgqTUqhi0P">
+      <div class="fpanel-title up" data-page-node-id="mDHaedv5XDUSkfIOSXTdzT">▲ 涨幅榜 <span class="cnt" id="cntTop" data-page-node-id="SFNOOaAyuPGEE7U2C7AMsa">共 10 个（已剔除下跌品种）</span></div>
+      <table class="ftable" id="ftTop" data-page-node-id="CcaJfP2bAwJsgc2VN2BUj1"><thead data-page-node-id="PvHcy9clVxMBWBhLd4MYfm"><tr data-page-node-id="81jlLBfk0pBo1wzsQPI7HM"><th data-page-node-id="V1uT6BcVXiNL5GiPBIpCc7">品种</th><th data-page-node-id="aJq0gLBr8Gs0EAkdlQll9Y">涨跌幅(%)<span class="cal" data-page-node-id="oG1LdckzOAsK1q0Q9CcemU">当日收盘较前结算</span></th><th data-page-node-id="DWKNUbGkXLAAKbZYjx1xA8">投机度<span class="cal" data-page-node-id="zjIrkFixFb6SmQxiCPeLye">成交量÷持仓量</span></th><th data-page-node-id="6bOZIfSFqERioerHX5LyH5">成交量变化(%)<span class="cal" data-page-node-id="1neGYmoI6TAiOyaUdXR7Xp">较前一交易日</span></th><th data-page-node-id="SO61jwIYX7b4FsJo3ygTge">每日资金变化(%)<span class="cal" data-page-node-id="N9zMQRhHlCFyZ9KDqjb4gA">保证金占用较前一日</span></th><th data-page-node-id="2DFTdMKHf6GafsVZDWyCwu">历史波动率(%)<span class="cal" data-page-node-id="VqGsL9iSz328kxWpfG1XlB">年化</span></th></tr></thead><tbody data-page-node-id="XdHfleRndHtheuJe3VGE2Y"><tr><td><div class="fname" title="该品种涉及场外、做市业务">集运指数(欧线)<sup class="otc">1</sup><sup class="mm">2</sup></div></td><td><div class="tdbar"><div class="bar up" style="width:56px"></div><span class="v up">+2.37</span></div></td><td style="background:#d5def8;color:#1E3A8A">0.55</td><td style="background:#a9d9d5;color:#0F5250">+31.9</td><td style="background:#f6e1e1;color:#7F1D1D">+4.07</td><td style="background:#9d6cf2;color:#FFFFFF">59.78</td></tr><tr><td><div class="fname" title="该品种涉及场外、做市业务">花生<sup class="otc">1</sup><sup class="mm">2</sup></div></td><td><div class="tdbar"><div class="bar up" style="width:25px"></div><span class="v up">+1.07</span></div></td><td style="background:#c0cdf4;color:#1E3A8A">0.84</td><td style="background:#ecf7f6;color:#0F5250">+7.1</td><td style="background:#c3decd;color:#14532D">-3.19</td><td style="background:#e6d9fc;color:#5B21B6">15.28</td></tr><tr><td><div class="fname" title="该品种涉及场外、做市业务">燃油<sup class="otc">1</sup><sup class="mm">2</sup></div></td><td><div class="tdbar"><div class="bar up" style="width:19px"></div><span class="v up">+0.79</span></div></td><td style="background:#6e8de6;color:#FFFFFF">1.92</td><td style="background:#d7dbe1;color:#475569">-7.3</td><td style="background:#fcf4f4;color:#7F1D1D">+1.46</td><td style="background:#884cef;color:#FFFFFF">72.50</td></tr><tr><td><div class="fname" title="该品种涉及场外、做市业务">硅铁<sup class="otc">1</sup><sup class="mm">2</sup></div></td><td><div class="tdbar"><div class="bar up" style="width:12px"></div><span class="v up">+0.50</span></div></td><td style="background:#beccf4;color:#1E3A8A">0.86</td><td style="background:#f2f9f8;color:#0F5250">+4.9</td><td style="background:#eff6f2;color:#14532D">-0.84</td><td style="background:#ede4fd;color:#5B21B6">11.06</td></tr><tr><td><div class="fname" title="该品种涉及场外业务">线材<sup class="otc">1</sup></div></td><td><div class="tdbar"><div class="bar up" style="width:8px"></div><span class="v up">+0.35</span></div></td><td style="background:#e1e7fa;color:#1E3A8A">0.40</td><td style="background:#eef0f2;color:#475569">-3.0</td><td style="background:#b91c1c;color:#FFFFFF">+31.00</td><td style="background:#f0e9fd;color:#5B21B6">8.92</td></tr><tr><td><div class="fname" title="该品种涉及场外、做市业务">锰硅<sup class="otc">1</sup><sup class="mm">2</sup></div></td><td><div class="tdbar"><div class="bar up" style="width:8px"></div><span class="v up">+0.34</span></div></td><td style="background:#bac9f3;color:#1E3A8A">0.91</td><td style="background:#7cc5bf;color:#0F5250">+48.2</td><td style="background:#f6e1e1;color:#7F1D1D">+4.15</td><td style="background:#f3edfd;color:#5B21B6">7.21</td></tr><tr><td><div class="fname">纤维板</div></td><td><div class="tdbar"><div class="bar up" style="width:6px"></div><span class="v up">+0.24</span></div></td><td style="background:#eef2fc;color:#1E3A8A">0.22</td><td style="background:#0d9488;color:#FFFFFF">+89.4</td><td style="background:#c5e0cf;color:#14532D">-3.08</td><td style="background:#ebe0fc;color:#5B21B6">12.44</td></tr><tr><td><div class="fname" title="该品种涉及场外业务">原木<sup class="otc">1</sup></div></td><td><div class="tdbar"><div class="bar up" style="width:3px"></div><span class="v up">+0.12</span></div></td><td style="background:#eef1fc;color:#1E3A8A">0.23</td><td style="background:#8ecdc8;color:#0F5250">+41.6</td><td style="background:#c2decd;color:#14532D">-3.22</td><td style="background:#f9f6fe;color:#5B21B6">3.47</td></tr><tr><td><div class="fname" title="该品种涉及场外业务">玉米淀粉<sup class="otc">1</sup></div></td><td><div class="tdbar"><div class="bar up" style="width:3px"></div><span class="v up">+0.08</span></div></td><td style="background:#e2e9fa;color:#1E3A8A">0.38</td><td style="background:#c6ccd4;color:#475569">-10.3</td><td style="background:#dfeee5;color:#14532D">-1.70</td><td style="background:#eee5fd;color:#5B21B6">10.56</td></tr><tr><td><div class="fname" title="该品种涉及做市业务">粳米<sup class="mm">2</sup></div></td><td><div class="tdbar"><div class="bar up" style="width:3px"></div><span class="v up">+0.08</span></div></td><td style="background:#f9fafe;color:#1E3A8A">0.08</td><td style="background:#b1ddd9;color:#0F5250">+28.8</td><td style="background:#f7e6e6;color:#7F1D1D">+3.37</td><td style="background:#f9f6fe;color:#5B21B6">3.84</td></tr></tbody></table>
+    </div>
+    <div class="fpanel" data-page-node-id="UO9QCY8mrk1qliDxFzc1Bc">
+      <div class="fpanel-title dn" data-page-node-id="IHrVIW0N5HzVAhOQq8DQQh">▼ 跌幅榜 TOP10 <span class="cnt" id="cntBot" data-page-node-id="tRji36YyB9XgKno6f8pQWg">共 10 个</span></div>
+      <table class="ftable" id="ftBot" data-page-node-id="9KNMRA7AVTL8QxzsDZE2zD"><thead data-page-node-id="wTi890ZjMNcCN041SpZps2"><tr data-page-node-id="my5hvcvpimkOalWVBssZgD"><th data-page-node-id="g2moDxD3PDGxOwXQniGCja">品种</th><th data-page-node-id="np8eDd0QAcvy3CGNfhEUHm">涨跌幅(%)<span class="cal" data-page-node-id="9RatVy1xPMYAMmLbQHMAfS">当日收盘较前结算</span></th><th data-page-node-id="FD5JWdS8AQUqPrYYRNPEVf">投机度<span class="cal" data-page-node-id="qMftHDq3dFcLhs60WKyMHx">成交量÷持仓量</span></th><th data-page-node-id="ZJK9kTzmeNbfQLvqaqaGNG">成交量变化(%)<span class="cal" data-page-node-id="TAAguEeix68IrsSpvNAYNi">较前一交易日</span></th><th data-page-node-id="C3T6BD6Yreruhr9LKJDsub">每日资金变化(%)<span class="cal" data-page-node-id="uAOrZE1lGnIRA5qqsgxj46">保证金占用较前一日</span></th><th data-page-node-id="5uPjAVhtx0VhQmla5L4p1z">历史波动率(%)<span class="cal" data-page-node-id="B4zHIem3xbe4zaDM5xXhzO">年化</span></th></tr></thead><tbody data-page-node-id="a9Ktda2ctqrGOCCLszm1Zc"><tr><td><div class="fname" title="该品种涉及场外业务">沪银<sup class="otc">1</sup></div></td><td><div class="tdbar"><div class="bar dn" style="width:56px"></div><span class="v dn">-5.34</span></div></td><td style="background:#8fa7ec;color:#1E3A8A">1.48</td><td style="background:#79c4bd;color:#0F5250">+49.7</td><td style="background:#cbe3d4;color:#14532D">-2.78</td><td style="background:#c0a0f6;color:#5B21B6">38.46</td></tr><tr><td><div class="fname" title="该品种涉及场外业务">苹果<sup class="otc">1</sup></div></td><td><div class="tdbar"><div class="bar dn" style="width:50px"></div><span class="v dn">-4.75</span></div></td><td style="background:#a6b9f0;color:#1E3A8A">1.18</td><td style="background:#64748b;color:#FFFFFF">-28.0</td><td style="background:#7db993;color:#14532D">-6.90</td><td style="background:#dbcafa;color:#5B21B6">21.70</td></tr><tr><td><div class="fname" title="该品种涉及场外、做市业务">多晶硅<sup class="otc">1</sup><sup class="mm">2</sup></div></td><td><div class="tdbar"><div class="bar dn" style="width:48px"></div><span class="v dn">-4.58</span></div></td><td style="background:#d8e1f8;color:#1E3A8A">0.51</td><td style="background:#c0c7d0;color:#475569">-11.3</td><td style="background:#b6d8c3;color:#14532D">-3.87</td><td style="background:#decefb;color:#5B21B6">20.00</td></tr><tr><td><div class="fname" title="该品种涉及场外、做市业务">甲醇<sup class="otc">1</sup><sup class="mm">2</sup></div></td><td><div class="tdbar"><div class="bar dn" style="width:44px"></div><span class="v dn">-4.23</span></div></td><td style="background:#6384e4;color:#FFFFFF">2.07</td><td style="background:#d9dde2;color:#475569">-6.9</td><td style="background:#96c6a8;color:#14532D">-5.59</td><td style="background:#9f6ef2;color:#FFFFFF">58.81</td></tr><tr><td><div class="fname" title="该品种涉及场外、做市业务">鸡蛋<sup class="otc">1</sup><sup class="mm">2</sup></div></td><td><div class="tdbar"><div class="bar dn" style="width:42px"></div><span class="v dn">-3.97</span></div></td><td style="background:#94aced;color:#1E3A8A">1.41</td><td style="background:#d8eeec;color:#0F5250">+14.5</td><td style="background:#97c6a9;color:#14532D">-5.55</td><td style="background:#d7c4fa;color:#5B21B6">24.13</td></tr><tr><td><div class="fname" title="该品种涉及场外、做市业务">碳酸锂<sup class="otc">1</sup><sup class="mm">2</sup></div></td><td><div class="tdbar"><div class="bar dn" style="width:41px"></div><span class="v dn">-3.87</span></div></td><td style="background:#d3ddf7;color:#1E3A8A">0.58</td><td style="background:#b5bdc8;color:#475569">-13.3</td><td style="background:#abd1b9;color:#14532D">-4.48</td><td style="background:#9d6bf1;color:#FFFFFF">60.03</td></tr><tr><td><div class="fname" title="该品种涉及场外业务">纯苯<sup class="otc">1</sup></div></td><td><div class="tdbar"><div class="bar dn" style="width:40px"></div><span class="v dn">-3.84</span></div></td><td style="background:#4a71e0;color:#FFFFFF">2.40</td><td style="background:#bec5ce;color:#475569">-11.7</td><td style="background:#bddbc9;color:#14532D">-3.49</td><td style="background:#9f6ef2;color:#FFFFFF">58.85</td></tr><tr><td><div class="fname" title="该品种涉及场外、做市业务">原油<sup class="otc">1</sup><sup class="mm">2</sup></div></td><td><div class="tdbar"><div class="bar dn" style="width:39px"></div><span class="v dn">-3.68</span></div></td><td style="background:#2a58da;color:#FFFFFF">2.82</td><td style="background:#eff1f3;color:#475569">-2.9</td><td style="background:#15803d;color:#FFFFFF">-12.45</td><td style="background:#9c6bf1;color:#FFFFFF">60.18</td></tr><tr><td><div class="fname" title="该品种涉及场外业务">沥青<sup class="otc">1</sup></div></td><td><div class="tdbar"><div class="bar dn" style="width:36px"></div><span class="v dn">-3.41</span></div></td><td style="background:#829de9;color:#1E3A8A">1.65</td><td style="background:#e7e9ed;color:#475569">-4.4</td><td style="background:#b2d5bf;color:#14532D">-4.10</td><td style="background:#8547ee;color:#FFFFFF">74.54</td></tr><tr><td><div class="fname" title="该品种涉及场外业务">沪锡<sup class="otc">1</sup></div></td><td><div class="tdbar"><div class="bar dn" style="width:34px"></div><span class="v dn">-3.28</span></div></td><td style="background:#1d4ed8;color:#FFFFFF">2.99</td><td style="background:#f1f9f8;color:#0F5250">+5.3</td><td style="background:#fefafa;color:#7F1D1D">+0.64</td><td style="background:#d1b9f9;color:#5B21B6">28.25</td></tr></tbody></table>
+    </div>
+  </div>
+</div>
+
+<div class="frow2" data-page-node-id="zApiMiSppK6ApLXAujFo5N">
+  <div class="fcard" data-page-node-id="kalggMuk0l5UbWYCehe0o9">
+    <div class="fcard-head" data-page-node-id="ZoXSLFsNmm42XFBGy3U7BR"><h4 data-page-node-id="dUugqjHwt3ObHENzUyZX9c">股指期货 · 全品种<i data-page-node-id="Ad8vsMO9sz0tVp0KlwYYyd">中金所 IF / IH / IC / IM</i></h4></div>
+    <table class="ftable" id="ftIdx" data-page-node-id="ijgJi5SVHdVkyUOGIXBqhE"><thead data-page-node-id="En2dVhEx2WfyAaK3vqp727"><tr data-page-node-id="DfaWjUbDSHDqDFp868OApC"><th data-page-node-id="jG2BNNsdNXIJtbETFlxdIe">品种</th><th data-page-node-id="qFBNQzYDZ2Aw8yh2slqvC6">涨跌幅(%)<span class="cal" data-page-node-id="ePlQDQwB9TM72sBduPwLpn">当日收盘较前结算</span></th><th data-page-node-id="0UIGgBNgg0RJT5bHdyoaqA">投机度<span class="cal" data-page-node-id="E9IYiryRFUkdx3BwGoRV1n">成交量÷持仓量</span></th><th data-page-node-id="tB14Zy1KTFEZm36Mvrt68M">成交量变化(%)<span class="cal" data-page-node-id="k6xir7a7xJS6ltvJKLHI0Q">较前一交易日</span></th><th data-page-node-id="GoGouVi5eAIkix8N2KQDnm">每日资金变化(%)<span class="cal" data-page-node-id="eEZJvENwTgEFMiYL0aVh8h">保证金占用较前一日</span></th><th data-page-node-id="AoertE8cUnIydPlxGUtVWM">历史波动率(%)<span class="cal" data-page-node-id="StZA6NDvqaDFFAROf9dFpg">年化</span></th></tr></thead><tbody data-page-node-id="pPgkmuV0YSzeNAHUGPafUs"><tr><td><div class="fname" title="该品种涉及场外业务">上证50期货<sup class="otc">1</sup></div></td><td><div class="tdbar"><div class="bar dn" style="width:6px"></div><span class="v dn">-0.40</span></div></td><td style="background:#ced9f7;color:#1E3A8A">0.65</td><td style="background:#8cccc7;color:#0F5250">+42.4</td><td style="background:#e2a0a0;color:#7F1D1D">+12.94</td><td style="background:#ece2fc;color:#5B21B6">11.89</td></tr><tr><td><div class="fname" title="该品种涉及场外、做市业务">沪深300期货<sup class="otc">1</sup><sup class="mm">2</sup></div></td><td><div class="tdbar"><div class="bar dn" style="width:24px"></div><span class="v dn">-1.49</span></div></td><td style="background:#d8e0f8;color:#1E3A8A">0.52</td><td style="background:#87cac4;color:#0F5250">+44.4</td><td style="background:#efcccc;color:#7F1D1D">+6.95</td><td style="background:#e7dbfc;color:#5B21B6">14.54</td></tr><tr><td><div class="fname" title="该品种涉及场外业务">中证500期货<sup class="otc">1</sup></div></td><td><div class="tdbar"><div class="bar dn" style="width:52px"></div><span class="v dn">-3.19</span></div></td><td style="background:#c7d3f5;color:#1E3A8A">0.74</td><td style="background:#91cec9;color:#0F5250">+40.8</td><td style="background:#f4dcdc;color:#7F1D1D">+4.79</td><td style="background:#dbc9fa;color:#5B21B6">21.78</td></tr><tr><td><div class="fname" title="该品种涉及场外、做市业务">中证1000期货<sup class="otc">1</sup><sup class="mm">2</sup></div></td><td><div class="tdbar"><div class="bar dn" style="width:56px"></div><span class="v dn">-3.46</span></div></td><td style="background:#c9d5f6;color:#1E3A8A">0.71</td><td style="background:#a6d8d3;color:#0F5250">+32.9</td><td style="background:#f4dada;color:#7F1D1D">+5.00</td><td style="background:#dac7fa;color:#5B21B6">22.65</td></tr></tbody></table>
+  </div>
+  <div class="fcard" data-page-node-id="OZ8g0ntMccAEekfgHuwG0o">
+    <div class="fcard-head" data-page-node-id="VdsZYBE2gJl3KGS5lZCMQN"><h4 data-page-node-id="aJAbz8PFpJuDB8MApePUYD">国债期货 · 全品种<i data-page-node-id="HtXrvKfkZKr2t2W8G5YZOZ">中金所 TS / TF / T / TL</i></h4></div>
+    <table class="ftable" id="ftBond" data-page-node-id="M3v3t06p7vPH6Z9p29kIhh"><thead data-page-node-id="m9J1BtvYKEtGIzeELWVA5I"><tr data-page-node-id="Q1eM7FcqH9i0pBiuTe3dnL"><th data-page-node-id="KIb0HmrYEGO0jtByT4BgDp">品种</th><th data-page-node-id="eEuyvj7S8k2gm3MH2kD9MD">涨跌幅(%)<span class="cal" data-page-node-id="5i8CBGQwkCfWBcMD7KPizA">当日收盘较前结算</span></th><th data-page-node-id="AhT90K7gmqaIPoFQtmvnkN">投机度<span class="cal" data-page-node-id="SeBxAbHR4TNGYyfyhqGQjl">成交量÷持仓量</span></th><th data-page-node-id="w7ciJTITDCRfbDbOmwVTQW">成交量变化(%)<span class="cal" data-page-node-id="Zt0ZGnmGcT6KI07iSIvtyz">较前一交易日</span></th><th data-page-node-id="JomSBY1QgUMjQ6hieSyeK1">每日资金变化(%)<span class="cal" data-page-node-id="a34YF2uuFN3sc0HFh2CkZQ">保证金占用较前一日</span></th><th data-page-node-id="ZzErjALz2lVBU4oOvlyLTb">历史波动率(%)<span class="cal" data-page-node-id="HtyGQaqB9BanXqgxweGeIF">年化</span></th></tr></thead><tbody data-page-node-id="dcUVxQMn8dAGHcaM8XKXkD"><tr><td><div class="fname" title="该品种涉及做市业务">2年期国债期货<sup class="mm">2</sup></div></td><td><div class="tdbar"><div class="bar up" style="width:7px"></div><span class="v up">+0.01</span></div></td><td style="background:#d3ddf7;color:#1E3A8A">0.58</td><td style="background:#f9fdfc;color:#0F5250">+2.1</td><td style="background:#f8e9e9;color:#7F1D1D">+3.04</td><td style="background:#fefeff;color:#5B21B6">0.41</td></tr><tr><td><div class="fname" title="该品种涉及做市业务">5年期国债期货<sup class="mm">2</sup></div></td><td><div class="tdbar"><div class="bar flat" style="width:3px"></div><span class="v flat">0.00</span></div></td><td style="background:#e6ebfb;color:#1E3A8A">0.33</td><td style="background:#a7b0bd;color:#475569">-15.9</td><td style="background:#fefbfb;color:#7F1D1D">+0.61</td><td style="background:#fdfdff;color:#5B21B6">1.01</td></tr><tr><td><div class="fname" title="该品种涉及做市业务">10年期国债期货<sup class="mm">2</sup></div></td><td><div class="tdbar"><div class="bar dn" style="width:7px"></div><span class="v dn">-0.01</span></div></td><td style="background:#ebf0fc;color:#1E3A8A">0.26</td><td style="background:#e5f4f2;color:#0F5250">+9.4</td><td style="background:#fefbfb;color:#7F1D1D">+0.54</td><td style="background:#fdfbff;color:#5B21B6">1.48</td></tr><tr><td><div class="fname" title="该品种涉及做市业务">30年期国债期货<sup class="mm">2</sup></div></td><td><div class="tdbar"><div class="bar dn" style="width:56px"></div><span class="v dn">-0.08</span></div></td><td style="background:#d2dcf7;color:#1E3A8A">0.59</td><td style="background:#79c4bd;color:#0F5250">+49.4</td><td style="background:#deede4;color:#14532D">-1.75</td><td style="background:#f7f2fe;color:#5B21B6">5.12</td></tr></tbody></table>
+  </div>
+</div>
+
+<div class="sub-title" data-page-node-id="3EDJjSB8WgaUjFlzT8524D"><span class="bar" data-page-node-id="yhnbPQkJNwk92JyjKrOZSQ"></span><h3 data-page-node-id="uGY3t23ZxRZuguWCCfyV1v">2. 期权波动率 · 股指期权与商品期权 IV 现值</h3><span style="background:#ea580c;color:#fff;border-radius:5px;padding:2px 10px;font-size:11.5px;font-weight:700" data-page-node-id="4phABLw8L9nlZnPDVKjQSz">IV-HV 偏离预警：红 2 · 橙 6 · 黄 11</span><span class="note" data-page-node-id="CuTAYeAXzR4lLqhBRD0Rzh">股指期权为全品种（ETF 期权与指数期权，共 12 个）｜ 商品期权为 IV 现值前二十 ｜ IV 越高 → 期权越贵 ｜ 数据来源：期权市场速览（品种合并）｜ 品种名右上角 <sup class="mm">2</sup> = 涉及做市业务的品种（进行中：股指期权 9 个、商品期权 TOP20 中 10 个）</span></div>
+
+<div class="card">
+  <h4><span class="dot blue"></span>股指期权 IV 现值 · 全部 12 个<span class="sub">ETF 期权与指数期权全品种 · 无对应 HV（IV−HV 显示 —）</span></h4>
+  <div class="opt-grid" id="optGridIdx"><div class="opt-col"><div class="opt-head"><div class="hr">排名</div><div>品种</div><div>IV 现值</div><div class="hchips"><span class="hl">IV 分位数</span><span class="hl">标的涨跌幅</span><span class="hl">PCR 分位数</span><span class="hl">IV−HV(pp)</span></div></div><div class="opt-row ">
+    <div class="opt-rank top3">01</div>
+    <div class="opt-name">科创50ETF易方达<span class="code">588080.SH</span></div>
+    <div class="iv-wrap"><div class="iv-bar" style="width:56px"></div><div class="iv-val">44.22</div></div>
+    <div class="chips">
+      <div class="chip" style="background:#1d6fd1">78.66</div>
+      <div class="chip" style="background:#5cb585">-1.41%</div>
+      <div class="chip" style="background:#f8d0b0">13.69</div>
+      <div class="chip chip-dev" style="background:#c2cddc">—</div>
+    </div></div><div class="opt-row ">
+    <div class="opt-rank top3">02</div>
+    <div class="opt-name">科创50ETF华夏<span class="code">588000.SH</span></div>
+    <div class="iv-wrap"><div class="iv-bar" style="width:55px"></div><div class="iv-val">43.60</div></div>
+    <div class="chips">
+      <div class="chip" style="background:#1d6fd1">76.57</div>
+      <div class="chip" style="background:#5cb585">-1.37%</div>
+      <div class="chip" style="background:#f8d0b0">2.07</div>
+      <div class="chip chip-dev" style="background:#c2cddc">—</div>
+    </div></div><div class="opt-row ">
+    <div class="opt-rank top3">03</div>
+    <div class="opt-name" title="该品种涉及做市业务">创业板ETF易方达<sup class="mm">2</sup><span class="code">159915.SZ</span></div>
+    <div class="iv-wrap"><div class="iv-bar" style="width:47px"></div><div class="iv-val">37.06</div></div>
+    <div class="chips">
+      <div class="chip" style="background:#124e94">84.94</div>
+      <div class="chip" style="background:#16a34a">-2.94%</div>
+      <div class="chip" style="background:#f8d0b0">14.94</div>
+      <div class="chip chip-dev" style="background:#c2cddc">—</div>
+    </div></div><div class="opt-row ">
+    <div class="opt-rank ">04</div>
+    <div class="opt-name" title="该品种涉及做市业务">中证1000<sup class="mm">2</sup><span class="code">000852.SH</span></div>
+    <div class="iv-wrap"><div class="iv-bar" style="width:41px"></div><div class="iv-val">32.24</div></div>
+    <div class="chips">
+      <div class="chip" style="background:#124e94">94.98</div>
+      <div class="chip" style="background:#15803d">-3.28%</div>
+      <div class="chip" style="background:#c2410c">90.87</div>
+      <div class="chip chip-dev" style="background:#c2cddc">—</div>
+    </div></div><div class="opt-row ">
+    <div class="opt-rank ">05</div>
+    <div class="opt-name" title="该品种涉及做市业务">中证500ETF南方<sup class="mm">2</sup><span class="code">510500.SH</span></div>
+    <div class="iv-wrap"><div class="iv-bar" style="width:35px"></div><div class="iv-val">27.54</div></div>
+    <div class="chips">
+      <div class="chip" style="background:#124e94">87.87</div>
+      <div class="chip" style="background:#15803d">-3.17%</div>
+      <div class="chip" style="background:#f8d0b0">5.39</div>
+      <div class="chip chip-dev" style="background:#c2cddc">—</div>
+    </div></div><div class="opt-row ">
+    <div class="opt-rank ">06</div>
+    <div class="opt-name" title="该品种涉及做市业务">中证500ETF嘉实<sup class="mm">2</sup><span class="code">159922.SZ</span></div>
+    <div class="iv-wrap"><div class="iv-bar" style="width:35px"></div><div class="iv-val">27.48</div></div>
+    <div class="chips">
+      <div class="chip" style="background:#124e94">83.68</div>
+      <div class="chip" style="background:#15803d">-3.19%</div>
+      <div class="chip" style="background:#f8d0b0">19.09</div>
+      <div class="chip chip-dev" style="background:#c2cddc">—</div>
+    </div></div></div><div class="opt-col"><div class="opt-head"><div class="hr">排名</div><div>品种</div><div>IV 现值</div><div class="hchips"><span class="hl">IV 分位数</span><span class="hl">标的涨跌幅</span><span class="hl">PCR 分位数</span><span class="hl">IV−HV(pp)</span></div></div><div class="opt-row ">
+    <div class="opt-rank ">07</div>
+    <div class="opt-name" title="该品种涉及做市业务">深证100ETF易方达<sup class="mm">2</sup><span class="code">159901.SZ</span></div>
+    <div class="iv-wrap"><div class="iv-bar" style="width:33px"></div><div class="iv-val">25.73</div></div>
+    <div class="chips">
+      <div class="chip" style="background:#1d6fd1">76.99</div>
+      <div class="chip" style="background:#16a34a">-1.64%</div>
+      <div class="chip" style="background:#f8d0b0">3.73</div>
+      <div class="chip chip-dev" style="background:#c2cddc">—</div>
+    </div></div><div class="opt-row ">
+    <div class="opt-rank ">08</div>
+    <div class="opt-name" title="该品种涉及做市业务">沪深300<sup class="mm">2</sup><span class="code">000300.SH</span></div>
+    <div class="iv-wrap"><div class="iv-bar" style="width:24px"></div><div class="iv-val">19.16</div></div>
+    <div class="chips">
+      <div class="chip" style="background:#124e94">82.85</div>
+      <div class="chip" style="background:#16a34a">-2.07%</div>
+      <div class="chip" style="background:#ea7a35">70.54</div>
+      <div class="chip chip-dev" style="background:#c2cddc">—</div>
+    </div></div><div class="opt-row ">
+    <div class="opt-rank ">09</div>
+    <div class="opt-name" title="该品种涉及做市业务">沪深300ETF嘉实<sup class="mm">2</sup><span class="code">159919.SZ</span></div>
+    <div class="iv-wrap"><div class="iv-bar" style="width:22px"></div><div class="iv-val">17.59</div></div>
+    <div class="chips">
+      <div class="chip" style="background:#1d6fd1">66.95</div>
+      <div class="chip" style="background:#5cb585">-1.29%</div>
+      <div class="chip" style="background:#f8d0b0">21.58</div>
+      <div class="chip chip-dev" style="background:#c2cddc">—</div>
+    </div></div><div class="opt-row ">
+    <div class="opt-rank ">10</div>
+    <div class="opt-name" title="该品种涉及做市业务">沪深300ETF华泰柏瑞<sup class="mm">2</sup><span class="code">510300.SH</span></div>
+    <div class="iv-wrap"><div class="iv-bar" style="width:22px"></div><div class="iv-val">17.45</div></div>
+    <div class="chips">
+      <div class="chip" style="background:#1d6fd1">71.13</div>
+      <div class="chip" style="background:#5cb585">-1.21%</div>
+      <div class="chip" style="background:#f4a261">49.79</div>
+      <div class="chip chip-dev" style="background:#c2cddc">—</div>
+    </div></div><div class="opt-row ">
+    <div class="opt-rank ">11</div>
+    <div class="opt-name">上证50<span class="code">000016.SH</span></div>
+    <div class="iv-wrap"><div class="iv-bar" style="width:21px"></div><div class="iv-val">16.40</div></div>
+    <div class="chips">
+      <div class="chip" style="background:#1d6fd1">74.48</div>
+      <div class="chip" style="background:#5cb585">-0.42%</div>
+      <div class="chip" style="background:#c2410c">91.70</div>
+      <div class="chip chip-dev" style="background:#c2cddc">—</div>
+    </div></div><div class="opt-row ">
+    <div class="opt-rank ">12</div>
+    <div class="opt-name" title="该品种涉及做市业务">上证50ETF华夏<sup class="mm">2</sup><span class="code">510050.SH</span></div>
+    <div class="iv-wrap"><div class="iv-bar" style="width:19px"></div><div class="iv-val">14.77</div></div>
+    <div class="chips">
+      <div class="chip" style="background:#5b92dd">54.39</div>
+      <div class="chip" style="background:#5cb585">-0.59%</div>
+      <div class="chip" style="background:#f4a261">47.30</div>
+      <div class="chip chip-dev" style="background:#c2cddc">—</div>
+    </div></div></div></div>
+</div>
+
+<div class="card" data-page-node-id="lvIKB5SnlOdQqGLFNMERur">
+  <h4 data-page-node-id="nbBVGg8hD5r3P1qd2DYMTY"><span class="dot red" data-page-node-id="Vvk4vk7TYwiGEf7KiQxLsE"></span>商品期权 IV 现值 TOP20<span class="sub" data-page-node-id="4rwHmLcLxaHt3b2YPc5ZuA">波动率溢价最高，期权定价最贵</span></h4>
+  <div class="opt-grid" id="optGrid" data-page-node-id="V7AkKb6pTQKQGsl48GAzyO"><div class="opt-col"><div class="opt-head"><div class="hr">排名</div><div>品种</div><div>IV 现值</div><div class="hchips"><span class="hl">IV 分位数</span><span class="hl">标的涨跌幅</span><span class="hl">PCR 分位数</span><span class="hl">IV−HV(pp)</span></div></div><div class="opt-row ">
+    <div class="opt-rank top3">01</div>
+    <div class="opt-name" title="该品种涉及做市业务">SHFE燃油<sup class="mm">2</sup><span class="code">FU.SHF</span></div>
+    <div class="iv-wrap"><div class="iv-bar" style="width:56px"></div><div class="iv-val">80.52</div></div>
+    <div class="chips">
+      <div class="chip" style="background:#124e94">87.14</div>
+      <div class="chip" style="background:#ef7b74">+0.79%</div>
+      <div class="chip" style="background:#ea7a35">64.73</div>
+      <div class="chip chip-dev" style="background:#16a34a">+8.02</div>
+    </div></div><div class="opt-row ">
+    <div class="opt-rank top3">02</div>
+    <div class="opt-name" title="该品种涉及做市业务">GFEX碳酸锂<sup class="mm">2</sup><span class="code">LC.GFE</span></div>
+    <div class="iv-wrap"><div class="iv-bar" style="width:37px"></div><div class="iv-val">52.92</div></div>
+    <div class="chips">
+      <div class="chip" style="background:#1d6fd1">76.25</div>
+      <div class="chip" style="background:#15803d">-3.87%</div>
+      <div class="chip" style="background:#c2410c">97.10</div>
+      <div class="chip chip-dev" style="background:#c2cddc">—</div>
+    </div></div><div class="opt-row ">
+    <div class="opt-rank top3">03</div>
+    <div class="opt-name" title="该品种涉及做市业务">INE原油<sup class="mm">2</sup><span class="code">SC.INE</span></div>
+    <div class="iv-wrap"><div class="iv-bar" style="width:36px"></div><div class="iv-val">52.06</div></div>
+    <div class="chips">
+      <div class="chip" style="background:#1d6fd1">60.58</div>
+      <div class="chip" style="background:#15803d">-3.68%</div>
+      <div class="chip" style="background:#f4a261">57.26</div>
+      <div class="chip chip-dev" style="background:#16a34a">-8.12</div>
+    </div></div><div class="opt-row tier-orange">
+    <div class="opt-rank ">04</div>
+    <div class="opt-name">SHFE沥青<span class="code">BU.SHF</span></div>
+    <div class="iv-wrap"><div class="iv-bar" style="width:31px"></div><div class="iv-val">44.89</div></div>
+    <div class="chips">
+      <div class="chip" style="background:#124e94">84.98</div>
+      <div class="chip" style="background:#15803d">-3.41%</div>
+      <div class="chip" style="background:#ea7a35">70.12</div>
+      <div class="chip chip-dev" style="background:#ea580c">-29.65</div>
+    </div></div><div class="opt-row ">
+    <div class="opt-rank ">05</div>
+    <div class="opt-name">DCE 纯苯<span class="code">BZ.DCE</span></div>
+    <div class="iv-wrap"><div class="iv-bar" style="width:29px"></div><div class="iv-val">41.22</div></div>
+    <div class="chips">
+      <div class="chip" style="background:#124e94">82.05</div>
+      <div class="chip" style="background:#15803d">-3.84%</div>
+      <div class="chip" style="background:#f8d0b0">36.10</div>
+      <div class="chip chip-dev" style="background:#c2cddc">—</div>
+    </div></div><div class="opt-row ">
+    <div class="opt-rank ">06</div>
+    <div class="opt-name">DCE LPG<span class="code">PG.DCE</span></div>
+    <div class="iv-wrap"><div class="iv-bar" style="width:28px"></div><div class="iv-val">40.74</div></div>
+    <div class="chips">
+      <div class="chip" style="background:#1d6fd1">76.55</div>
+      <div class="chip" style="background:#5cb585">-0.72%</div>
+      <div class="chip" style="background:#ea7a35">63.49</div>
+      <div class="chip chip-dev" style="background:#16a34a">+1.92</div>
+    </div></div><div class="opt-row ">
+    <div class="opt-rank ">07</div>
+    <div class="opt-name" title="该品种涉及做市业务">DCE乙二醇<sup class="mm">2</sup><span class="code">EG.DCE</span></div>
+    <div class="iv-wrap"><div class="iv-bar" style="width:27px"></div><div class="iv-val">38.62</div></div>
+    <div class="chips">
+      <div class="chip" style="background:#1d6fd1">75.54</div>
+      <div class="chip" style="background:#5cb585">-1.26%</div>
+      <div class="chip" style="background:#f4a261">42.74</div>
+      <div class="chip chip-dev" style="background:#16a34a">-3.55</div>
+    </div></div><div class="opt-row ">
+    <div class="opt-rank ">08</div>
+    <div class="opt-name">DCE苯乙烯<span class="code">EB.DCE</span></div>
+    <div class="iv-wrap"><div class="iv-bar" style="width:26px"></div><div class="iv-val">37.84</div></div>
+    <div class="chips">
+      <div class="chip" style="background:#1d6fd1">79.17</div>
+      <div class="chip" style="background:#15803d">-3.26%</div>
+      <div class="chip" style="background:#f4a261">46.89</div>
+      <div class="chip chip-dev" style="background:#d97706">-13.81</div>
+    </div></div><div class="opt-row tier-orange">
+    <div class="opt-rank ">09</div>
+    <div class="opt-name" title="该品种涉及做市业务">CZCE甲醇<sup class="mm">2</sup><span class="code">MA.CZC</span></div>
+    <div class="iv-wrap"><div class="iv-bar" style="width:25px"></div><div class="iv-val">35.23</div></div>
+    <div class="chips">
+      <div class="chip" style="background:#1d6fd1">69.29</div>
+      <div class="chip" style="background:#15803d">-4.23%</div>
+      <div class="chip" style="background:#f8d0b0">25.31</div>
+      <div class="chip chip-dev" style="background:#ea580c">-23.58</div>
+    </div></div><div class="opt-row ">
+    <div class="opt-rank ">10</div>
+    <div class="opt-name" title="该品种涉及做市业务">GFEX钯<sup class="mm">2</sup><span class="code">PD.GFE</span></div>
+    <div class="iv-wrap"><div class="iv-bar" style="width:24px"></div><div class="iv-val">34.11</div></div>
+    <div class="chips">
+      <div class="chip" style="background:#a9c2e6">3.97</div>
+      <div class="chip" style="background:#16a34a">-1.75%</div>
+      <div class="chip" style="background:#ea7a35">74.16</div>
+      <div class="chip chip-dev" style="background:#c2cddc">—</div>
+    </div></div></div><div class="opt-col"><div class="opt-head"><div class="hr">排名</div><div>品种</div><div>IV 现值</div><div class="hchips"><span class="hl">IV 分位数</span><span class="hl">标的涨跌幅</span><span class="hl">PCR 分位数</span><span class="hl">IV−HV(pp)</span></div></div><div class="opt-row ">
+    <div class="opt-rank ">11</div>
+    <div class="opt-name">SHFE白银<span class="code">AG.SHF</span></div>
+    <div class="iv-wrap"><div class="iv-bar" style="width:24px"></div><div class="iv-val">34.01</div></div>
+    <div class="chips">
+      <div class="chip" style="background:#a9c2e6">11.72</div>
+      <div class="chip" style="background:#15803d">-5.34%</div>
+      <div class="chip" style="background:#c2410c">91.29</div>
+      <div class="chip chip-dev" style="background:#16a34a">-4.45</div>
+    </div></div><div class="opt-row ">
+    <div class="opt-rank ">12</div>
+    <div class="opt-name" title="该品种涉及做市业务">CZCE对二甲苯<sup class="mm">2</sup><span class="code">PX.CZC</span></div>
+    <div class="iv-wrap"><div class="iv-bar" style="width:23px"></div><div class="iv-val">33.53</div></div>
+    <div class="chips">
+      <div class="chip" style="background:#1d6fd1">72.77</div>
+      <div class="chip" style="background:#16a34a">-1.68%</div>
+      <div class="chip" style="background:#f4a261">50.62</div>
+      <div class="chip chip-dev" style="background:#c2cddc">—</div>
+    </div></div><div class="opt-row ">
+    <div class="opt-rank ">13</div>
+    <div class="opt-name">SHFE丁二烯橡胶<span class="code">BR.SHF</span></div>
+    <div class="iv-wrap"><div class="iv-bar" style="width:23px"></div><div class="iv-val">33.09</div></div>
+    <div class="chips">
+      <div class="chip" style="background:#5b92dd">58.92</div>
+      <div class="chip" style="background:#16a34a">-1.89%</div>
+      <div class="chip" style="background:#ea7a35">60.58</div>
+      <div class="chip chip-dev" style="background:#c2cddc">—</div>
+    </div></div><div class="opt-row ">
+    <div class="opt-rank ">14</div>
+    <div class="opt-name">SHFE锡<span class="code">SN.SHF</span></div>
+    <div class="iv-wrap"><div class="iv-bar" style="width:22px"></div><div class="iv-val">32.27</div></div>
+    <div class="chips">
+      <div class="chip" style="background:#5b92dd">48.13</div>
+      <div class="chip" style="background:#15803d">-3.28%</div>
+      <div class="chip" style="background:#c2410c">100.00</div>
+      <div class="chip chip-dev" style="background:#16a34a">+4.02</div>
+    </div></div><div class="opt-row ">
+    <div class="opt-rank ">15</div>
+    <div class="opt-name">CZCE丙烯<span class="code">PL.CZC</span></div>
+    <div class="iv-wrap"><div class="iv-bar" style="width:22px"></div><div class="iv-val">32.22</div></div>
+    <div class="chips">
+      <div class="chip" style="background:#1d6fd1">71.85</div>
+      <div class="chip" style="background:#5cb585">-1.29%</div>
+      <div class="chip" style="background:#c2410c">89.21</div>
+      <div class="chip chip-dev" style="background:#c2cddc">—</div>
+    </div></div><div class="opt-row ">
+    <div class="opt-rank ">16</div>
+    <div class="opt-name">DCE焦煤<span class="code">JM.DCE</span></div>
+    <div class="iv-wrap"><div class="iv-bar" style="width:21px"></div><div class="iv-val">29.74</div></div>
+    <div class="chips">
+      <div class="chip" style="background:#a9c2e6">33.52</div>
+      <div class="chip" style="background:#15803d">-3.19%</div>
+      <div class="chip" style="background:#ea7a35">67.05</div>
+      <div class="chip chip-dev" style="background:#16a34a">-6.55</div>
+    </div></div><div class="opt-row ">
+    <div class="opt-rank ">17</div>
+    <div class="opt-name" title="该品种涉及做市业务">INE20号胶<sup class="mm">2</sup><span class="code">NR.INE</span></div>
+    <div class="iv-wrap"><div class="iv-bar" style="width:20px"></div><div class="iv-val">28.90</div></div>
+    <div class="chips">
+      <div class="chip" style="background:#124e94">91.30</div>
+      <div class="chip" style="background:#16a34a">-2.84%</div>
+      <div class="chip" style="background:#f8d0b0">33.91</div>
+      <div class="chip chip-dev" style="background:#d97706">-12.05</div>
+    </div></div><div class="opt-row ">
+    <div class="opt-rank ">18</div>
+    <div class="opt-name" title="该品种涉及做市业务">CZCE PTA<sup class="mm">2</sup><span class="code">TA.CZC</span></div>
+    <div class="iv-wrap"><div class="iv-bar" style="width:20px"></div><div class="iv-val">28.68</div></div>
+    <div class="chips">
+      <div class="chip" style="background:#1d6fd1">61.00</div>
+      <div class="chip" style="background:#16a34a">-2.30%</div>
+      <div class="chip" style="background:#f8d0b0">26.56</div>
+      <div class="chip chip-dev" style="background:#d97706">-19.63</div>
+    </div></div><div class="opt-row ">
+    <div class="opt-rank ">19</div>
+    <div class="opt-name">GFEX铂<span class="code">PT.GFE</span></div>
+    <div class="iv-wrap"><div class="iv-bar" style="width:20px"></div><div class="iv-val">28.44</div></div>
+    <div class="chips">
+      <div class="chip" style="background:#a9c2e6">0.53</div>
+      <div class="chip" style="background:#15803d">-3.49%</div>
+      <div class="chip" style="background:#c2410c">87.56</div>
+      <div class="chip chip-dev" style="background:#c2cddc">—</div>
+    </div></div><div class="opt-row ">
+    <div class="opt-rank ">20</div>
+    <div class="opt-name" title="该品种涉及做市业务">CZCE红枣<sup class="mm">2</sup><span class="code">CJ.CZC</span></div>
+    <div class="iv-wrap"><div class="iv-bar" style="width:19px"></div><div class="iv-val">27.97</div></div>
+    <div class="chips">
+      <div class="chip" style="background:#124e94">94.61</div>
+      <div class="chip" style="background:#5cb585">-0.23%</div>
+      <div class="chip" style="background:#c2410c">99.59</div>
+      <div class="chip chip-dev" style="background:#16a34a">-5.12</div>
+    </div></div></div></div>
+</div>
+
+
+<div class="card alert-card" style="margin-top:16px" data-page-node-id="YY1Uk3F7j5HUCQUzHDBkhn">
+  <h4 data-page-node-id="D6ogblHYHhEWM2MsEuF7Ge"><span class="alert-icon" data-page-node-id="L3o3tN2hHtdeBhpHCQHIVF">!</span>IV-HV 偏离预警标准<span class="sub" data-page-node-id="n9bMeE4o4barPs0SPnH2Ba">判定指标：IV/HV 比值（隐含波动率 ÷ 历史波动率）；辅助参考：IV−HV 偏离（百分点） ｜ 当前分布（45 个有 HV 数据品种）：红 2 · 橙 6 · 黄 11 · 绿 26，另 19 个新品种 HV 缺失暂不评级</span></h4>
+  <table data-page-node-id="ud2ocmXAHHHxH7580BRi4P">
+    <thead data-page-node-id="s1d3poDFmzhXEvpAEHSwpC"><tr data-page-node-id="W6JK1KXgEozlZ5ioQVHiDF"><th style="width:110px;text-align:center" data-page-node-id="yqHOQGz2S15DDiat84EJay">预警等级</th><th style="text-align:left" data-page-node-id="nGzgEvlGiM6ZpkS0cjoBuJ">判定标准（IV/HV）</th><th style="text-align:left" data-page-node-id="Hjbq6ONZPmRHNKsgSDFafO">风险含义</th></tr></thead>
+    <tbody data-page-node-id="IEPhiW0M0FfMOUXWkDasCo">
+      <tr data-page-node-id="hRt5eSktHXqIfybHgB5ajB"><td style="text-align:center" data-page-node-id="uUqvLUQCFlp5wCIHld7bEc"><span class="lamp" style="background:#dc2626" data-page-node-id="sDrlNtFi2gyCy9RYl36DCz"></span><b style="color:#dc2626" data-page-node-id="6Lc7WM270wEIZFFNCoxanP">红色 · 严重偏离</b></td>
+          <td style="text-align:left" data-page-node-id="jNpERpMAVxRmYRwdBrtRQY">IV/HV &gt; 1.6，或 IV/HV &lt; 0.5</td>
+          <td style="text-align:left" data-page-node-id="5sD2LlIoBA4rIzIdekIEb8">期权定价与已实现波动严重背离：偏高提示恐慌性溢价、买方成本畸高；偏低提示波动被严重低估，卖方尾部风险积聚</td>
+          </tr>
+      <tr data-page-node-id="wHHKVOESrvyOIDotMwzBSv"><td style="text-align:center" data-page-node-id="lnelt7Oava8bmu6XE1fCtL"><span class="lamp" style="background:#ea580c" data-page-node-id="EvbEEDiMV1o0TBQgKrKfBG"></span><b style="color:#ea580c" data-page-node-id="1Rf33vwG6SaDEAd57vEBfr">橙色 · 预警</b></td>
+          <td style="text-align:left" data-page-node-id="zdBgh11IrfwNVV2ruQiucZ">1.4 &lt; IV/HV ≤ 1.6，或 0.5 ≤ IV/HV &lt; 0.65</td>
+          <td style="text-align:left" data-page-node-id="LLFA3Q7gEGHOoxcAAMQN9T">波动率溢价明显异常，对冲成本与定价风险上升</td>
+          </tr>
+      <tr data-page-node-id="Uwaepc5IxzhLmgHz3D7imG"><td style="text-align:center" data-page-node-id="G2oD705HPQyuBMKvADF6Nl"><span class="lamp" style="background:#d97706" data-page-node-id="pnbGHzVcTZuEENdecWZPsH"></span><b style="color:#d97706" data-page-node-id="M8KoJ27qfdd110Ih12lqge">黄色 · 关注</b></td>
+          <td style="text-align:left" data-page-node-id="s92E7dLtcrRlTBF4aYcxxy">1.2 &lt; IV/HV ≤ 1.4，或 0.65 ≤ IV/HV &lt; 0.8</td>
+          <td style="text-align:left" data-page-node-id="3zwwLOPwDnZQeTQTVsZo9n">溢价偏离常态区间，需观察是否趋势性扩大</td>
+          </tr>
+      <tr data-page-node-id="xe2XVn5YNAy3EY8ZKLem9K"><td style="text-align:center" data-page-node-id="9xycBSXg7tg1lgttnpykGJ"><span class="lamp" style="background:#16a34a" data-page-node-id="Y6LvUNWQHgYv2EcHhDXyJp"></span><b style="color:#16a34a" data-page-node-id="otRPkLdASdgOeiqiBAjKnY">绿色 · 正常</b></td>
+          <td style="text-align:left" data-page-node-id="zmAIDFUOlVizY3SpbZ5dRu">0.8 ≤ IV/HV ≤ 1.2</td>
+          <td style="text-align:left" data-page-node-id="3mLbvmSzp7iFpOfPAcnBM2">隐含波动与已实现波动基本匹配，定价合理</td>
+          </tr>
+    </tbody>
+  </table>
+  <div style="font-size:11px;color:var(--txt3);margin-top:8px" data-page-node-id="Lv1vL6KF9AT6H37opKtwD8">注：IV 显著高于 HV 时，卖出期权（做市 / 备兑）具超额收益空间但需防尾部风险；IV 显著低于 HV 时，期权定价偏便宜，卖方承担波动低估风险、买方保护成本较低。新品种（CSR 未覆盖）以「—」列示，待数据补全后自动纳入评级。</div>
+</div>
+
+<div class="foot" data-page-node-id="S62ug5cEkxPLa4B31lYpwa">
+  <b data-page-node-id="7wwoEYHhh11WLOLyAX5EFz">指标口径说明：</b>
+  涨跌幅 = 标的当日涨跌幅（%，红涨绿跌）；投机度 = 品种成交量 / 品种持仓量；成交量变化 = 当日成交量较上一交易日变动（%）；每日资金变化 = 当日持仓资金较上一交易日变动（%）；历史波动率 = 标的期货历史波动率（%）。
+  IV 现值 = 隐含波动率（%）；IV / PCR 分位数 = 该指标在历史区间中的百分位（0–100，越接近 100 当前水平越高）；IV/HV = IV 现值 ÷ 历史波动率，IV−HV 偏离单位为百分点（pp）。<br data-page-node-id="xj8K0zXEdH73d75JP5DVNr">
+  期货行情数据来源：Wind CSR《品种表现（内盘）-全品种》，数据日期 2026-10-15，共 87 个品种（商品 79 个、金融期货 8 个）；商品涨跌榜列示涨跌幅前 10 名，动力煤、强麦、粳稻、普麦、早籼稻当日无成交，未纳入排序；投机度=成交量÷持仓量，历史波动率为年化口径。期权数据来源：《期权市场速览_品种合并_2026-10-15》（Wind 期权市场速览合并 CSR），共 64 个有效商品期权品种参与 IV 排序（取前二十）；股指期权（ETF 期权与指数期权）12 个品种全列单示，无对应历史波动率，IV−HV 以 — 标示。
+</div>
+</div>
+
+<div class="tabpane" id="pane-int" data-page-node-id="XR1KclAJx0f0YzhFZQlmFL">
+  
+  <!-- 01 预警总览 -->
+  <section class="sec" data-page-node-id="nP13phgjMVQmDIur1ReCrI">
+    <div class="sec-head" data-page-node-id="rGZkgTr0MlskmwhOx7ecCm">
+      <span class="sec-no" data-page-node-id="Es793ijj7KLkEOA1ccU43o">01</span>
+      <h2 data-page-node-id="Y6I8bkFJBNIVeVNnGIV1uM">预警总览</h2>
+      
+    </div>
+    <div class="kpi" id="kpiRow" data-page-node-id="hyIbIPp8Yrh1KyYuNGMPlt"><div class="kpi-card" style="--kc:#DC2626" data-page-node-id="qX3rW4XjKDDJpqUZ4Kvz6l"><div class="kpi-tag" data-page-node-id="9Dgu5IuRsEUhVOrZhbgTtF">单指标超限</div><div class="kpi-num" data-page-node-id="Vilo0QzFpsFXLoiIoKkfXm">6<small data-page-node-id="N1ZidV3zZM785SBmxtvykz">/ 12 项触发</small></div><div class="kpi-sub" data-page-node-id="KxYShjSOhYBIfQcadxPKAp"><span class="d" style="background:#DC2626" data-page-node-id="1iJK4nwxQY39ckj2JxyNCP"></span>超限 1 · <span class="d" style="background:#EA580C" data-page-node-id="K1BeUg6yr5dM0akTmAPCu1"></span>预警 2 · <span class="d" style="background:#D97706" data-page-node-id="2wpr5Yj65Sv58mKwElObSJ"></span>关注 3</div></div><div class="kpi-card" style="--kc:#EA580C" data-page-node-id="asMdIdZa5zLPM0UYgAZDjX"><div class="kpi-tag" data-page-node-id="s9hCc4avl9pOVGPOHlwcOO">趋势恶化</div><div class="kpi-num" data-page-node-id="Vk5GSwOGCP1DEZZ42JVkx0">4<small data-page-node-id="ZrNSpxQAEzZfm6AfeD8YAf">/ 7 项触发</small></div><div class="kpi-sub" data-page-node-id="DeVnIGd6G1dyD9JefnGH51">连续 3 个交易日同向恶化即触发</div></div><div class="kpi-card" style="--kc:#DC2626" data-page-node-id="IcN6gAELBgtNn10ULqEJRB"><div class="kpi-tag" data-page-node-id="nX6Gg7zE6BiAmqJRYzSsI9">组合恶化</div><div class="kpi-num" data-page-node-id="OC1CGp0YbgJGOr4crVQAbU">3<small data-page-node-id="DF81BVFSzfOA05DpdL8dWY">/ 3 条规则命中</small></div><div class="kpi-sub" data-page-node-id="1AWAYX2JtxwLRiVGjFF4Ms">当日多项指标同时恶化</div></div><div class="kpi-card" style="--kc:#DC2626" data-page-node-id="NVtBNGwa0F80oSP9TNFK8W"><div class="kpi-tag" data-page-node-id="nA4ZOYY12GyQ9byox4YMCj">当前最紧指标</div><div class="kpi-num" data-page-node-id="4lYqBcQoItcBm3ScIU4bkm">107.1<small data-page-node-id="RnETsQGgdymARSLnHEKRqX">%</small></div><div class="kpi-sub" data-page-node-id="qjanzSt72IwscOs7tfptyE">权益类敞口（超限）</div></div></div>
+  </section>
+
+  <!-- 02 单指标超限 -->
+  <section class="sec" data-page-node-id="SZl6QN30tvFlyASNXx6yml">
+    <div class="sec-head" data-page-node-id="yXTwRvV0enouhs1PbbpcvA">
+      <span class="sec-no" data-page-node-id="xdOqufxCUwiHFlLinbRub4">02</span>
+      <h2 data-page-node-id="PS1sVzLsr6aDmO960NKUtH">单指标超限</h2>
+      <span class="sec-sub" data-page-node-id="padaSfAVZNcEYDq9FVvcNi">当日指标超过授权限额或预警线 ｜ 仅展示超限、预警、关注项，正常项（占用率 &lt;70%）不在表中列示</span>
+    </div>
+    <div class="card" data-page-node-id="LdehEasmZvVwD26jHTVdUP">
+      <div class="card-head" data-page-node-id="aOBJwYMBIHAZ15fEAdEWA0">
+        <h3 data-page-node-id="ZlkWWWLjTaMR97uRXsDnre">限额执行监控<i data-page-node-id="k4sIF9rWC4hErFS689M0uq">监控 12 项 · 触发 6 项 · 快照 2026-08-04</i></h3>
+        <span class="hint" data-page-node-id="OsqFnHVqIdawcoiPvCHMzf">≥100% 超限 · ≥80% 预警 · ≥70% 关注</span>
+        <span class="hint warn" data-page-node-id="COjRf0r1qhWjLaFIF6AC7f">通知列可发送至相关人员</span>
+      </div>
+      <table id="tblLimit" data-page-node-id="06m0kOzgHB2wL7j3lJXuLC">
+        <thead data-page-node-id="VxIOwfSgGeFXT1cXnCN8Rc"><tr data-page-node-id="HjGbdDoa8VSeusTDg8D1fB">
+          <th data-page-node-id="fkTNapgIA2jlU5uBrDnj2o">风险分类</th>
+          <th style="text-align:left;padding-left:16px" data-page-node-id="20xDiWHw9yIWzTolEuGeMy">监控指标</th>
+          <th data-page-node-id="0RHzWnlx4zC6sJYzpPcwzH">当前值<span class="cal" data-page-node-id="xRNvuuffmzKRTGXKAcHS8l">快照 2026-08-04</span></th>
+          <th data-page-node-id="Eib1i2ie2FYHaYzdz603Ph">授权限额<span class="cal" data-page-node-id="wUDZoeRftPBvBV0D5CDaU7">同一单位</span></th>
+          <th data-page-node-id="hEORkM1yg35PbS1sW1rdKe">限额执行<span class="cal" data-page-node-id="Rr8IBEHU5I38XY7LHR5mPq">满条=授权限额</span></th>
+          <th data-page-node-id="9m4ngnrYAjRgUSRRmqOti5">状态</th>
+          <th data-page-node-id="GM5fr3eWFiQFBdtCygsges">通知<span class="cal" data-page-node-id="wss6TXsHEZkPOmTbcZCCiC">点击发送相关人员</span></th>
+        </tr></thead>
+        <tbody data-page-node-id="XJ2rb60V56Vh9SsjN2ikKP"><tr data-page-node-id="mrWPWyNcAqoO9IQBdnB5ct"><td data-page-node-id="r44HcvCIZFwtSPR2yHC1KV"><span class="cat-tag" data-page-node-id="LVMKKTAdAwcQfxfcZkX9me">市场风险</span></td><td style="text-align:left;padding-left:16px;font-weight:700;color:#1E293B" data-page-node-id="sSYUogl0a1MMreD3xwyWsP">权益类敞口</td><td data-page-node-id="L6jZIVqXHa9HtlMn6HaJ3c">1.50 亿</td><td data-page-node-id="jj9nGQAmBW8weXAhylhtZ7">1.40 亿</td><td data-page-node-id="UFXEaWnSqudWKtMfpfteZP"><div class="prog" data-page-node-id="MDHrCypajDHYQDVhUWkrjC"><div class="prog-bar" style="width:100%;background:#DC2626" data-page-node-id="XdnQgLykEn3T2vGOaOoC4i"></div><span data-page-node-id="5fhLuS8maMr3AKwVRw2Jbk">107.1%</span></div></td><td data-page-node-id="IkdEV3MUyqFC5DLQXWCXAP"><span class="st over" data-page-node-id="BI5DsZcQi4M7ybmATpdQyA"><span class="st-dot" data-page-node-id="zwBH2Ay6DqYzGEAepRmlJE"></span>超限</span></td><td data-page-node-id="UgqI9yco54qoNYNy3mYVbS"><button class="notify-btn" onclick="openNotify('L0')" data-page-node-id="o1qpyQaMmCAyBCRW7rfopF">🔔 通知</button></td></tr><tr data-page-node-id="Uvxv0Ndcx4678NsDfypwhq"><td data-page-node-id="slCKCBqRrTpLnvaCIyx23r"><span class="cat-tag" data-page-node-id="VXVw1Z6JEqzBtOpOS1VugZ">市场风险</span></td><td style="text-align:left;padding-left:16px;font-weight:700;color:#1E293B" data-page-node-id="HCM1YSa1YRNYEgYPTGRedj">单日 VAR 值</td><td data-page-node-id="QN92AIgjT2MRXulAYS7paB">3,300 万</td><td data-page-node-id="BDP5NPh1OdwSNbAoDUW5Z7">4,000 万</td><td data-page-node-id="qnsHChJ3UlejblUdDFgBKp"><div class="prog" data-page-node-id="3ofNBe1C3uYGdRgwEJpzEi"><div class="prog-bar" style="width:82.5%;background:#EA580C" data-page-node-id="aBclrbiYHOikdvImRe3Xt2"></div><span data-page-node-id="5WEnTyEJkmxkj0R4G2a0Pv">82.5%</span></div></td><td data-page-node-id="z343InV0Hjj702ziyCMGJW"><span class="st warn" data-page-node-id="IYwqN3jskChGv6eZSeAlIx"><span class="st-dot" data-page-node-id="JAOAaOId4XPDdeuLu2cu8D"></span>预警</span></td><td data-page-node-id="6T3ysC8yEBZ9QKJWTSg8ir"><button class="notify-btn" onclick="openNotify('L2')" data-page-node-id="t4M5UNGR9yBzzKD0cTPNCZ">🔔 通知</button></td></tr><tr data-page-node-id="FRA1B3X4caCz9NhVdzmNKP"><td data-page-node-id="vU9SzNyNeCJsSFipSJw0P2"><span class="cat-tag" data-page-node-id="BP2RIRpbn5Pcc7opKHe4EF">信用风险</span></td><td style="text-align:left;padding-left:16px;font-weight:700;color:#1E293B" data-page-node-id="Gm5ioEzGZBzvjjO1xtTuD6">场外授信占用</td><td data-page-node-id="OkNZ0SAduY1cAc9mHw5yD6">8,400 万</td><td data-page-node-id="nUIFyZCsXttQE4ntOgQYCv">9,000 万</td><td data-page-node-id="rSOI9Xsv8MSl3RnmVVvE6z"><div class="prog" data-page-node-id="oc06Xe2mSiBHchSN8E2AT3"><div class="prog-bar" style="width:93.33333333333333%;background:#EA580C" data-page-node-id="Z33iK9p7YVN5MXzMYaA9be"></div><span data-page-node-id="KycQSdH6hZjFdhbTxSjidq">93.3%</span></div></td><td data-page-node-id="Y7U4mafIR0SCePgxdVBEeK"><span class="st warn" data-page-node-id="CLVW1BMuQoBzKx6EvEFbCP"><span class="st-dot" data-page-node-id="84hV904CDmWWV4DbkdBfq3"></span>预警</span></td><td data-page-node-id="BNnN16H0Ev10suV7NMeb73"><button class="notify-btn" onclick="openNotify('L5')" data-page-node-id="mAvMaIdDmwFzawRKaxWpxN">🔔 通知</button></td></tr><tr data-page-node-id="pq2V99WD9qzOE0B6KcMZa9"><td data-page-node-id="Ysm4jYEDbkdVm2TBex53CU"><span class="cat-tag" data-page-node-id="EwDirFsfZ2aFUOu0z6Yers">集中度</span></td><td style="text-align:left;padding-left:16px;font-weight:700;color:#1E293B" data-page-node-id="aaOMJaU1ldz3iigC3tDgCD">场外客户集中度（中国石油）</td><td data-page-node-id="AmBJCqSJjbZ3X4abHgATIY">4.50 亿</td><td data-page-node-id="Nvnj5srJbQYGIvEVyWWX37">6.00 亿</td><td data-page-node-id="Cc7XVCdWxQTPb2uj1U15kN"><div class="prog" data-page-node-id="RgR3yXRsbxZHDrW1eveLKd"><div class="prog-bar" style="width:75%;background:#D97706" data-page-node-id="LnWoRoCXq8HVazHb75iyoh"></div><span data-page-node-id="JUckA8WcP84HDezWF3Heln">75.0%</span></div></td><td data-page-node-id="WSabkrtZvqPiUhRj4E5KBX"><span class="st watch" data-page-node-id="AkNVbSWRkgyYDJecwhheew"><span class="st-dot" data-page-node-id="00FQlfC2f1VNODqgBrH1sw"></span>关注</span></td><td data-page-node-id="jMN8ah3fMhqHlf0xN2oyAR"><button class="notify-btn" onclick="openNotify('L8')" data-page-node-id="BY2yR6HcHeCcwDx2JRitTd">🔔 通知</button></td></tr><tr data-page-node-id="HOmWfywD8Z36YAR7y2mLUn"><td data-page-node-id="2phf2Z7U8HKAXwTt8l1oxG"><span class="cat-tag" data-page-node-id="94BF9I9UFg4zJGLHHNEBrk">集中度</span></td><td style="text-align:left;padding-left:16px;font-weight:700;color:#1E293B" data-page-node-id="ONd1iRN0KoDkCghIQCcysP">场外标的集中度（螺纹钢）</td><td data-page-node-id="vqLtgrsPN1kuHvssLDtijL">4.80 亿</td><td data-page-node-id="uVDiybKT5HfgBtrFR4l4No">6.50 亿</td><td data-page-node-id="dgBDCOATBqCHqntP6u3o6o"><div class="prog" data-page-node-id="EuJDSI3JK8wmgTnrMgfFxq"><div class="prog-bar" style="width:73.84615384615385%;background:#D97706" data-page-node-id="ZhF42DH7qs5KrC23Az7yEw"></div><span data-page-node-id="lfRVhX2ZkNrt0lnZwYS1to">73.8%</span></div></td><td data-page-node-id="T1O9mm7dNBMEhtnE0Ig8s5"><span class="st watch" data-page-node-id="hVW0JqelCWGXKvrVzURpao"><span class="st-dot" data-page-node-id="9mY8HX4To5eS6CTAAUVDaK"></span>关注</span></td><td data-page-node-id="GH3zNtqhjo0fUZGGDApcNE"><button class="notify-btn" onclick="openNotify('L9')" data-page-node-id="ZZIpoUJLwynSsjIXpgR66I">🔔 通知</button></td></tr><tr data-page-node-id="bXqPFaX7sF3z9Dn2H3ZxGw"><td data-page-node-id="MkmtGHZ9is2CzSigietCLO"><span class="cat-tag" data-page-node-id="bAJO00zPGugZb8WprcwNfb">集中度</span></td><td style="text-align:left;padding-left:16px;font-weight:700;color:#1E293B" data-page-node-id="FyJmZFS9Am0d9qaI3bIL3d">非标仓库集中度（中储无锡）</td><td data-page-node-id="L6cVHB70LmQmhwlP1cVKjB">3,000 万</td><td data-page-node-id="4bq0Z2jVABpUJqxyptZyOB">4,000 万</td><td data-page-node-id="W1w9slZkJ6aAXUbS0GDGCK"><div class="prog" data-page-node-id="duTts4wgui4nlMsF6TWgMM"><div class="prog-bar" style="width:75%;background:#D97706" data-page-node-id="Q4KUEgl4YDbtPkoewXSIOE"></div><span data-page-node-id="XBreHFWI2GG2CrSbtdH7NX">75.0%</span></div></td><td data-page-node-id="Wzi652qDfoqPe32kvyze8q"><span class="st watch" data-page-node-id="aVSb0QTLrh2cJbYcFI6jjJ"><span class="st-dot" data-page-node-id="BSb3FfAhx1ajcEcDo6QBYC"></span>关注</span></td><td data-page-node-id="j4NSbVRMn6xsX9GDvLGTRV"><button class="notify-btn" onclick="openNotify('L11')" data-page-node-id="HFEwMi1XrNrmhI4MGQr9GM">🔔 通知</button></td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 03 3 日趋势监测 -->
+  <section class="sec" data-page-node-id="aedTlIMdq4pDWDGEX2HXse">
+    <div class="sec-head" data-page-node-id="059olzhfxCRjiqGnZOAi2X">
+      <span class="sec-no" data-page-node-id="e6Ein6Xy88aFBCGfOQHDVQ">03</span>
+      <h2 data-page-node-id="lv8RQATSD8NePJxaH6sOVT">3 日趋势监测</h2>
+      <span class="sec-sub" style="" data-page-node-id="xP7vjNmGuRhlUamImz2Q1E">指标连续 3 个交易日同向恶化即触发预警</span>
+    </div>
+    <div class="card" data-page-node-id="PxAkEmO5ebsyzIrqWwLttV">
+      <div class="card-head" data-page-node-id="Dbf3GZvrYsDZkGdcv4DA5e">
+        <h3 data-page-node-id="OQeEWJGd5nYNm0gtwDZBuB">趋势恶化监测<i data-page-node-id="pVjrvU5WzEDI5SC25EJHvB">7 项监测对象 · D-2 至 D0</i></h3>
+        
+      </div>
+      <table id="tblTrend" data-page-node-id="gS3nUDCYrUkKOLfJqyQQHh">
+        <thead data-page-node-id="sT2hbInYFmC1i55A8tTRGc"><tr data-page-node-id="QsEgzkYGDUNrqnNZB557UW">
+          <th data-page-node-id="auGOoqorgrXh9eYzUXXC9A">监测对象</th>
+          <th data-page-node-id="IUrxA4uKGDGqSW1Z0zqjhu">D-2<span class="cal" data-page-node-id="z4ICHlG6LUvGDLIx5t0sd9">前3交易日</span></th>
+          <th data-page-node-id="odnQzucFfLddNrlxowqCHZ">D-1<span class="cal" data-page-node-id="npZdC1RK28KifCtcdcRLtf">前2交易日</span></th>
+          <th data-page-node-id="l6EdfZImfieJ1Wxil7Dumh">D0<span class="cal" data-page-node-id="PeYN2LMQBSPND76hw7fRFp">当日</span></th>
+          <th data-page-node-id="WOr8d0iRU4pP2RxsFgx0nC">3日走势<span class="cal" data-page-node-id="TGtLnxTp9XaFMVWcGMoind">柱高按数值</span></th>
+          <th data-page-node-id="580AsTW4W9uE18FaNeeHoJ">触发规则</th>
+          <th data-page-node-id="xneHvGxK92TFaB86HESrlJ">状态</th>
+          <th data-page-node-id="XuLspO8BMWWwm4IIntDqjX">通知<span class="cal" style="" data-page-node-id="N8aKcvzoNxxxDq1gVO8rU2">点击发送相关人员</span></th>
+        </tr></thead>
+        <tbody data-page-node-id="GrPg5FfZ2AkvUjTtO1IQx5"><tr data-page-node-id="1AWTH44ucOuS2SJ1FHx7Wr"><td style="font-weight:700;color:#1E293B" data-page-node-id="pWSuOPbOml7GEFBwsacYlv">场外商品业务<div style="font-size:10px;color:var(--ink3);font-weight:400" data-page-node-id="z7fUVLWEPfQUgXrVezDlI0">当日盈亏（万）</div></td><td style="color:#B91C1C" data-page-node-id="vt3aXJiesWXGrFDFxOSlCd">-38.60</td><td style="color:#B91C1C" data-page-node-id="KnMdZ8OBrylmpUDPviViyJ">-52.10</td><td style="color:#B91C1C" data-page-node-id="yx4B9DWBFl5FAntuuTtMki">-44.43</td><td data-page-node-id="3htAm6SpCzjOfmErTe4HtP"><div class="spark" data-page-node-id="XjnbDBVlyG7dtsLONaT5jd"><i style="height:19.3px;background:#DC2626" data-page-node-id="jib2YSrpGBLPcmOOpG6LAr"></i><i style="height:24.0px;background:#DC2626" data-page-node-id="9Xs3X0ouPQ5zzlp8fbACZr"></i><i style="height:21.4px;background:#DC2626" data-page-node-id="BTXBU0wEXBqARFQQMGSBcA"></i></div></td><td style="font-weight:600;color:#475569" data-page-node-id="M4KXqykr3bRCoQLEshA7Yi">连续 3 日亏损</td><td data-page-node-id="EWEElAH2a1TFDolnpN7ODP"><span class="st over" data-page-node-id="N5S1qDGV3A2ZYWlGoWmyBR"><span class="st-dot" data-page-node-id="NshHChU0nUFkf2o3P4FK9U"></span>触发</span></td><td data-page-node-id="iIZJG1ovlSel11cFBO9vcl"><button class="notify-btn" onclick="openNotify('T0')" data-page-node-id="kmDi9PfbHSCh7IbQDi92IF">🔔 通知</button></td></tr><tr data-page-node-id="uVNC4wPuGWReysNTzTg8uX"><td style="font-weight:700;color:#1E293B" data-page-node-id="PaEzKaT6iyrKArfGJe8f5e">权益类敞口<div style="font-size:10px;color:var(--ink3);font-weight:400" data-page-node-id="68Maq9amY8jOHX64rusq5N">敞口（万）</div></td><td style="color:#15803D" data-page-node-id="QRhealszFcQRxyy9RSHbuq">13,200.00</td><td style="color:#15803D" data-page-node-id="gI6U2AEWh9C4CF5GT1Gln7">14,100.00</td><td style="color:#15803D" data-page-node-id="mLSIDa1CI0SBAGO0Pkw2dy">15,000.00</td><td data-page-node-id="jLu9RGiRbbsyUKn7IMl9cj"><div class="spark" data-page-node-id="hrcLIPbI3cEbP45OHwUi68"><i style="height:21.8px;background:#F59E0B" data-page-node-id="tPDgPjOTFiZddupanJ5ESy"></i><i style="height:22.9px;background:#F59E0B" data-page-node-id="wToTqHkXyjDJuUdqJrSFPK"></i><i style="height:24.0px;background:#EA580C" data-page-node-id="8XqoPe152R10kb8NKCXEUV"></i></div></td><td style="font-weight:600;color:#475569" data-page-node-id="Hmv9k8cAFCGcvlnoXNoAlM">连续 3 日扩大</td><td data-page-node-id="ZPwNzdaFfcRCjGAPNGsHMV"><span class="st over" data-page-node-id="oHqZniihFOXCdWk3SZVeuc"><span class="st-dot" data-page-node-id="PefIGWbcZq4FFcre5Salxf"></span>触发</span></td><td data-page-node-id="gKhYiCgNcBkyyq8n3Lxvng"><button class="notify-btn" onclick="openNotify('T1')" data-page-node-id="lQRhsk3jziZv4rHTSPnCHL">🔔 通知</button></td></tr><tr data-page-node-id="dFboVUFpNQrHjmf4zAXjVN"><td style="font-weight:700;color:#1E293B" data-page-node-id="8cZM6t7lVKDXG0BxJFHYKd">单日 VAR 值<div style="font-size:10px;color:var(--ink3);font-weight:400" data-page-node-id="4Bo4gH5pbhGloXFiY6UX3E">VAR（万）</div></td><td style="color:#15803D" data-page-node-id="4OflU4j64W4QFbU8Fb97nw">3,150.00</td><td style="color:#15803D" data-page-node-id="TqZwYKPCS0ld3Fcp0oHcL7">3,220.00</td><td style="color:#15803D" data-page-node-id="9H8mA7tqGLOt8yCkEbXghS">3,300.00</td><td data-page-node-id="Jqac0HFx10FnM9ZVW7E5vY"><div class="spark" data-page-node-id="VNKvljjOdMWH22pcN722yN"><i style="height:23.2px;background:#F59E0B" data-page-node-id="GAsnqfxdY8KrFA9d6rdksI"></i><i style="height:23.6px;background:#F59E0B" data-page-node-id="mLmH5hjOCzLxETFwHxFpfO"></i><i style="height:24.0px;background:#EA580C" data-page-node-id="js5jlmuuXd3i5npVlFU5TC"></i></div></td><td style="font-weight:600;color:#475569" data-page-node-id="mmztaymoXZ1m33B2r04G61">连续 3 日上升</td><td data-page-node-id="fpPjJXQhD0gWBWv34FDqOo"><span class="st over" data-page-node-id="XT3Y71GcyWhCAutPjgihvm"><span class="st-dot" data-page-node-id="RW7UJS93cwg3VKOhMxAssl"></span>触发</span></td><td data-page-node-id="JJJ6H1JA0AwESqypU9jueY"><button class="notify-btn" onclick="openNotify('T2')" data-page-node-id="6Y3xbiQ2QILfhRZk41D8z9">🔔 通知</button></td></tr><tr data-page-node-id="s8hSgVHJBtC6zSwmuQYqum"><td style="font-weight:700;color:#1E293B" data-page-node-id="rt4PidNLaEfUzbD69KKUk2">期现业务<div style="font-size:10px;color:var(--ink3);font-weight:400" data-page-node-id="KSDhpDjq15HusyBNe0bfVE">当日盈亏（万）</div></td><td style="color:#B91C1C" data-page-node-id="LrPZya2odGY9WDIsm4OKzy">-12.30</td><td style="color:#B91C1C" data-page-node-id="EUVQI2edFGsrbtAeVXGPuA">-8.75</td><td style="color:#B91C1C" data-page-node-id="P1htEIjVCp55mMk1AUlUmc">-15.20</td><td data-page-node-id="ULPO6kyRn4r4nAtpGDxRW0"><div class="spark" data-page-node-id="VUxSofTB1SsZ2Tdb1NGqwo"><i style="height:20.6px;background:#DC2626" data-page-node-id="jJiAM7fQoaNVHJ3nnTFALQ"></i><i style="height:16.4px;background:#DC2626" data-page-node-id="26BDhRFLDDC43WVgX69oCY"></i><i style="height:24.0px;background:#DC2626" data-page-node-id="qBgtMf1l8grra8KPP8DiKm"></i></div></td><td style="font-weight:600;color:#475569" data-page-node-id="Z4AGixioSAh6qNi7YZnL1a">连续 3 日亏损</td><td data-page-node-id="V4ipC7Z4x1cxPD0j4VO7oV"><span class="st over" data-page-node-id="Qe2u1zORkIiILudxZdEtJ3"><span class="st-dot" data-page-node-id="aAM3vvoMWjI5gTnXQju8Zo"></span>触发</span></td><td data-page-node-id="qJWf3BqCPVeL5yLKsZc8rY"><button class="notify-btn" onclick="openNotify('T3')" data-page-node-id="u6h3l6vG2YHqtsq9DVEvcG">🔔 通知</button></td></tr><tr data-page-node-id="vnhF419rSFzkFLTZWTIYdK"><td style="font-weight:700;color:#1E293B" data-page-node-id="l7cwiDGCho3tdZ8jzb4xIP">做市业务<div style="font-size:10px;color:var(--ink3);font-weight:400" data-page-node-id="uY69VuuP2KVMJ7w9uVu5jC">当日盈亏（万）</div></td><td style="color:#15803D" data-page-node-id="BBmB2g9YpUY0UJMuWGeHk8">+5.10</td><td style="color:#C2410C" data-page-node-id="X4VMo5s6fYc5KkFVjY2hPZ">-8.20</td><td style="color:#15803D" data-page-node-id="513xChqVHrxTZnOEoxY4Av">+12.53</td><td data-page-node-id="prQvXvxvQxCLESpOqEErFA"><div class="spark" data-page-node-id="kaGk5RAhKhaAKzmy54UsUV"><i style="height:13.3px;background:#16A34A" data-page-node-id="6vpynR5zMwHyorj7K0sKYJ"></i><i style="height:17.8px;background:#94A3B8" data-page-node-id="BZ1DBMiXjEkFHnK4X0XrT2"></i><i style="height:24.0px;background:#16A34A" data-page-node-id="fG2gTuE8MhjqCpjR0q4sCi"></i></div></td><td style="font-weight:600;color:#475569" data-page-node-id="5kVpBRQIAEwtbkyto3FeZB">连续 3 日亏损</td><td data-page-node-id="zUcVv1zrJV0Vb0fwAPkzUa"><span class="st ok" data-page-node-id="XrtYdFVCPw5Qg2WFlCk9P9"><span class="st-dot" data-page-node-id="ku59mHp0LoMGs7wZTW5fe1"></span>未触发</span></td><td data-page-node-id="08Kfgj4I6IuVk2osQYUojW"><span style="color:#94A3B8" data-page-node-id="kZwJzqzjK2lBL0D2jqC9hG">—</span></td></tr><tr data-page-node-id="reVynHzGMBTiqB25P6HbL2"><td style="font-weight:700;color:#1E293B" data-page-node-id="dbpGts5uZHBoNqEnYphavR">非权益类敞口<div style="font-size:10px;color:var(--ink3);font-weight:400" data-page-node-id="DflA43a7mNtFqpbM6aj0SG">敞口（万）</div></td><td style="color:#15803D" data-page-node-id="nQ8PEduvWllc7ZUBl8HLHE">4,900.00</td><td style="color:#15803D" data-page-node-id="1EQOFcYlbYZCMDp1eXj62u">4,820.00</td><td style="color:#15803D" data-page-node-id="9YodwMSHHzAVpcomiiAZ8v">4,751.68</td><td data-page-node-id="qscMRHWcMKbQdrGMBuYvMC"><div class="spark" data-page-node-id="JKq2TksImY526MDDfJUHik"><i style="height:24.0px;background:#16A34A" data-page-node-id="CDz1hztewaOeJFIULBqItE"></i><i style="height:23.7px;background:#16A34A" data-page-node-id="Jn3ys8CDZ7yjDpoSRLvN9v"></i><i style="height:23.5px;background:#16A34A" data-page-node-id="Np8V6yKAjoqZUVxOQIuG6O"></i></div></td><td style="font-weight:600;color:#475569" data-page-node-id="DqOElYnsHGgT5DnIwjp24u">连续 3 日扩大</td><td data-page-node-id="5U2GFdxDekQt4Nhoq6QoWd"><span class="st ok" data-page-node-id="DP05K4HJHzVu2CZb0d4qFk"><span class="st-dot" data-page-node-id="fHTrYJSTefovRHPEhqU6vH"></span>未触发</span></td><td data-page-node-id="BFGohvfxdftZC1jqGw7LR7"><span style="color:#94A3B8" data-page-node-id="AtFlS1K6P7PCZQZGuCbbHw">—</span></td></tr><tr data-page-node-id="sUkKQkcTnd9GICq8w3mpEh"><td style="font-weight:700;color:#1E293B" data-page-node-id="Huc7Ba3Wf9FgBT0GIkJjNf">场外股指业务<div style="font-size:10px;color:var(--ink3);font-weight:400" data-page-node-id="DqsCMcJXhP633T0WuTdTp9">当日盈亏（万）</div></td><td style="color:#15803D" data-page-node-id="k43FqU2PQUvLIjQ1vthDeq">+150.20</td><td style="color:#15803D" data-page-node-id="PpalVOTrZK7HlaDSn6nrhK">+165.80</td><td style="color:#15803D" data-page-node-id="vF8NgNu7LJ6yJXav0gmsSf">+181.33</td><td data-page-node-id="q5kOTi2Gc8KDPeGMaQ3Ql0"><div class="spark" data-page-node-id="No7FdnffOWOzN2PSEBKObt"><i style="height:20.9px;background:#16A34A" data-page-node-id="3xZB2OBx26YsRo4uajafkd"></i><i style="height:22.5px;background:#16A34A" data-page-node-id="qqSsawBTyx6b6krpooKStO"></i><i style="height:24.0px;background:#16A34A" data-page-node-id="ym6ZTcTcxqKCv3bXccsNM0"></i></div></td><td style="font-weight:600;color:#475569" data-page-node-id="lUyOpVwTBll6J8BlP4JoT7">连续 3 日亏损</td><td data-page-node-id="0cEU14kshefUZdeRlAXT4Y"><span class="st ok" data-page-node-id="3CFKrV8fx3ZH6wfkHHVhF4"><span class="st-dot" data-page-node-id="8454pYjiQIsVE1r4FGLJvk"></span>未触发</span></td><td data-page-node-id="Vl7lRl332BEo6gUxvfBn3J"><span style="color:#94A3B8" data-page-node-id="saLObmDvYoeR6vWI0NHxfd">—</span></td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 04 多指标组合恶化 -->
+  <section class="sec" data-page-node-id="86F22k4NfkXcYwXG4DU9cB">
+    <div class="sec-head" data-page-node-id="60S7ZqC6QeUBiYcvh5lxcy">
+      <span class="sec-no" data-page-node-id="iCFLDtefNjR5y0SwFl6cJR">04</span>
+      <h2 data-page-node-id="IctmGsCQTohGpngEe4Egoc">多指标组合恶化</h2>
+      <span class="sec-sub" style="" data-page-node-id="FhD4Z6K1tqGcmYWY8es112">当日多项指标同时恶化（组合规则 C1–C3）｜ 敞口为带符号水平值，同方向绝对值扩大即计敞口扩大（如 −100→−200） </span>
+    </div>
+    <div class="card" data-page-node-id="BI3alelz4R7kIDOV9mR9wf">
+      <div class="card-head" data-page-node-id="9xHsH5wjjB7ndvynjLXZLx">
+        <h3 data-page-node-id="X1HdqN8Acg9JrU3HMNcAFS">组合规则命中<i data-page-node-id="E7UlBMpB2K3VfMJfYmpkTO">3 条组合规则</i></h3>
+        <span class="hint" data-page-node-id="pL9eVbEoYNHEUKdxkBlif0">敞口 = Delta／Vega／Gamma，同方向绝对值扩大即计</span>
+        
+      </div>
+      <table id="tblCombo" data-page-node-id="QbE4yBgOmgs64sWNBjlkq6">
+        <thead data-page-node-id="DrlMTS6wzRaWy1uWG15DyM"><tr data-page-node-id="fQeEyRfDeHZY8RSAwYQ79i">
+          <th data-page-node-id="7fMvPU5Rqm2Leyz4EesoVX">规则</th>
+          <th data-page-node-id="vznkkJrguSHim0LB3bDqPq">组合条件<span class="cal" data-page-node-id="31kx4imiGnar5cT8o6MrzU">同日同时满足</span></th>
+          <th data-page-node-id="fXw5PcuKwqbGUXiXM96cIU">当前命中<span class="cal" data-page-node-id="IhyDSvSbgotmSVVRAnlBed">触发对象</span></th>
+          <th data-page-node-id="IuMKr3FpLzbkMkQpTWYgPw">状态</th>
+          <th data-page-node-id="4XKz1traeYUGsFhV62YjBP">通知<span class="cal" data-page-node-id="CvudUKSnS2jLv1co5zUHm7">点击发送相关人员</span></th>
+        </tr></thead>
+        <tbody data-page-node-id="c2rNDZAaNQWdJwwe9PCVSk"><tr><td><b style="color:#B91C1C">C1</b> 亏损＋敞口扩大</td><td style="white-space:normal;min-width:150px;font-weight:500;color:#475569">当日盈亏 < 0 且 Delta/Vega/Gamma 任一同方向绝对值扩大（如 −100→−200）</td><td style="white-space:normal"><span class="hit-name">场外商品业务、期现业务</span><div style="font-size:10.5px;color:var(--ink2);font-weight:400">场外商品：亏损 −44.43 万 · Delta +320（前日 +180，多头扩大）；期现：亏损 −15.20 万 · Delta −200（前日 −120，空头绝对值扩大）</div></td><td><span class="st over"><span class="st-dot"></span>触发</span></td><td><button class="notify-btn" onclick="openNotify('C1')">🔔 通知</button></td></tr><tr><td><b style="color:#B91C1C">C2</b> 亏损＋VAR 上升</td><td style="white-space:normal;min-width:150px;font-weight:500;color:#475569">当日盈亏 < 0 且 单日 VAR 环比上升</td><td style="white-space:normal"><span class="hit-name">全公司（场外商品拖累）</span><div style="font-size:10.5px;color:var(--ink2);font-weight:400">当日亏损 −44.43 万 · VAR 3,300（+80）</div></td><td><span class="st over"><span class="st-dot"></span>触发</span></td><td><button class="notify-btn" onclick="openNotify('C2')">🔔 通知</button></td></tr><tr><td><b style="color:#B91C1C">C3</b> 三重恶化</td><td style="white-space:normal;min-width:150px;font-weight:500;color:#475569">当日亏损＋Delta/Vega/Gamma 任一同方向绝对值扩大＋授信占用上升</td><td style="white-space:normal"><span class="hit-name">场外业务</span><div style="font-size:10.5px;color:var(--ink2);font-weight:400">亏损 −44.43 万 · Delta +320（前日 +180，多头扩大）· 场外授信占用 93.3%（+2.1pct）</div></td><td><span class="st over"><span class="st-dot"></span>触发</span></td><td><button class="notify-btn" onclick="openNotify('C3')">🔔 通知</button></td></tr></tbody>
+      </table>
+      <div style="padding:0 4px 4px" data-page-node-id="azUyjoSGqYIh0sYOOWzXfg">
+        <table id="tblSector" style="border-top:1px dashed var(--line)" data-page-node-id="5UaI95RsjhrEYpH16aQSyb">
+          <thead data-page-node-id="wbXGqKZXLsWbxhrc0gzGQ8"><tr data-page-node-id="bRemw3meAko1trqTKUSHiH">
+            <th colspan="7" style="text-align:left;padding-left:14px;background:#F8FAFC;font-size:11px" data-page-node-id="b3H0lVzJPZsALELfSVtfIH">业务板块当日组合状态<span style="font-weight:400;color:var(--ink3)" data-page-node-id="wgTSUdVF1dg9RlTlcduiMH">（金额单位：万元）</span></th>
+          </tr><tr data-page-node-id="IBPJV8knnSQ75wIpq4WcZB">
+            <th style="text-align:left;padding-left:16px" data-page-node-id="PzQXvsAKV3n6wuoLt6DwDw">板块</th>
+            <th data-page-node-id="Opzh76fT8AvIcB0zAYKJgM">当日盈亏<span class="cal" data-page-node-id="FKT6GVbuJdmBX1F5F5Uiuy">&lt;0 记恶化</span></th>
+            <th data-page-node-id="y8hhHr8kI9tYB85IhqoiuD">Delta敞口<span class="cal" data-page-node-id="M6anACGtzr4bN45A2AvEnA">&gt;0 记恶化</span></th>
+            <th data-page-node-id="Tbf1uKiw8YLQDSjTqgS9s6">Vega敞口<span class="cal" data-page-node-id="JBfcXtYNyt7qrKyc2DOis2">&gt;0 记恶化</span></th>
+            <th data-page-node-id="A3lSFanH3zHrh7WPHxU49L">Gamma敞口<span class="cal" data-page-node-id="LbUKse5QaVK9YzA6wF0To4">&gt;0 记恶化</span></th>
+            <th data-page-node-id="WVeQAFFX6qWxDxLLN5gZX1">授信占用<span class="cal" data-page-node-id="YPUQ7YQdbgnEAYzUO6PBLC">上升记恶化</span></th>
+            <th data-page-node-id="A6H5OEPQ7lXu9bMrnBI9Tx">命中规则<span class="cal" data-page-node-id="lrv4LiPo8pxEX1JDHW07pT">C1–C3</span></th>
+          </tr></thead>
+          <tbody data-page-node-id="mOkDHSzTrylpQH3Fuh7hgC"><tr><td style="text-align:left;padding-left:16px;font-weight:700;color:#1E293B">场外商品</td><td style="color:#B91C1C">-44.43</td><td style="color:#B91C1C" title="前日 +180 · 同方向绝对值扩大">+320 ▲</td><td style="color:#B91C1C" title="前日 +12 · 同方向绝对值扩大">+15.6 ▲</td><td style="color:#B91C1C" title="前日 -5 · 同方向绝对值扩大">-8.2 ▲</td><td>+2.1pct</td><td><span class="badges" style="display:inline-flex;gap:3px"><span class="bdg2">C1</span><span class="bdg2">C2</span><span class="bdg2">C3</span></span></td></tr><tr><td style="text-align:left;padding-left:16px;font-weight:700;color:#1E293B">做市商品</td><td style="color:#15803D">+12.53</td><td style="color:#B91C1C" title="前日 -120 · 同方向绝对值扩大">-150 ▲</td><td style="color:#15803D" title="前日 -28 · 绝对值缩小">-22.4 ▼</td><td style="color:#15803D" title="前日 +5 · 绝对值缩小">+3.1 ▼</td><td>—</td><td><span style="color:#16A34A;font-size:11px">—</span></td></tr><tr><td style="text-align:left;padding-left:16px;font-weight:700;color:#1E293B">场外股指</td><td style="color:#15803D">+181.33</td><td style="color:#B91C1C" title="前日 +650 · 同方向绝对值扩大">+900 ▲</td><td style="color:#15803D" title="前日 +42 · 绝对值缩小">+38.5 ▼</td><td style="color:#B91C1C" title="前日 -9.5 · 同方向绝对值扩大">-12.0 ▲</td><td>—</td><td><span style="color:#16A34A;font-size:11px">—</span></td></tr><tr><td style="text-align:left;padding-left:16px;font-weight:700;color:#1E293B">做市股指</td><td style="color:#15803D">+200.00</td><td style="color:#15803D" title="前日 +80 · 绝对值缩小">+50 ▼</td><td style="color:#B91C1C" title="前日 +6 · 同方向绝对值扩大">+8.2 ▲</td><td style="color:#15803D" title="前日 +3.6 · 绝对值缩小">+2.4 ▼</td><td>—</td><td><span style="color:#16A34A;font-size:11px">—</span></td></tr><tr><td style="text-align:left;padding-left:16px;font-weight:700;color:#1E293B">场外个股</td><td style="color:#15803D">+30.79</td><td style="color:#15803D" title="前日 -45 · 绝对值缩小">-30 ▼</td><td style="color:#B91C1C" title="前日 -4.2 · 同方向绝对值扩大">-5.8 ▲</td><td style="color:#15803D" title="前日 -2.4 · 绝对值缩小">-1.5 ▼</td><td>—</td><td><span style="color:#16A34A;font-size:11px">—</span></td></tr><tr><td style="text-align:left;padding-left:16px;font-weight:700;color:#1E293B">期现</td><td style="color:#B91C1C">-15.20</td><td style="color:#B91C1C" title="前日 -120 · 同方向绝对值扩大">-200 ▲</td><td style="color:#15803D" title="前日 +12.5 · 绝对值缩小">+9.8 ▼</td><td style="color:#B91C1C" title="前日 -0.8 · 同方向绝对值扩大">-1.2 ▲</td><td>—</td><td><span class="badges" style="display:inline-flex;gap:3px"><span class="bdg2">C1</span></span></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- 05 指标口径 -->
+  <section class="sec" data-page-node-id="XjmgkYF9RDTtPaBVeXQB0f">
+    <div class="sec-head" data-page-node-id="423x2DhUKRa0KJqRJAzpqK">
+      <span class="sec-no" data-page-node-id="AlEupB8An8VAGaAZD7Vj6T">05</span>
+      <h2 data-page-node-id="f42midLHUR3QTnaGHxyxif">指标口径说明</h2>
+      <span class="sec-sub" data-page-node-id="mseJD9XXiEm3dtiKX7PhQg">口径同《风险管理子公司驾驶舱》指标体系（快照 2026-08-04）</span>
+    </div>
+    <div class="card" data-page-node-id="v3NRLRZN0FAU3u0nLzbL9H">
+      <div class="col" data-page-node-id="QyIMA5rpdQeCp8rqO2BSIu">
+        <div class="rules-col-title" data-page-node-id="WlGf1MsWP6qHJBnAFJMsJ0"><span class="dot" style="background:#1E3A8A" data-page-node-id="ODIrRyzqgQe822BEgfKOjd"></span>预警口径</div>
+        <ul class="cal-list" data-page-node-id="A174CNRjj3DCE8H0s63es5">
+            <li data-page-node-id="lP4HmhXnRZIxkt3emENJgL"><b data-page-node-id="5XBhDECIFY2tCorOCAy5eR">单指标超限</b>：占用率 = 当前值 ÷ 授权限额；≥100% 超限（红）、≥80% 预警（橙）、≥70% 关注（黄）、其余正常（绿）。表格仅展示超限、预警、关注项，正常项不在表中列示。指标口径同《风险管理子公司驾驶舱》。</li>
+            <li data-page-node-id="n6jsf7f7Y6FhxuNhBvUfxl"><b data-page-node-id="OdH5oBJOxNxbfC9WNbjlqr">趋势恶化</b>：指标连续 3 个交易日同向恶化（业务当日盈亏——含场外、做市、期现业务——连续 3 日为负、敞口连续 3 日扩大、VAR 连续 3 日上升）即触发，触发即升级处置。</li>
+            <li style="" data-page-node-id="iUEl2XiqDNNfSfUXEY8DXZ"><b data-page-node-id="OklViGGwgijycxMdPysAj6">组合恶化</b>：同一交易日内多项指标同时恶化（如当日亏损＋敞口扩大），按组合规则 C1–C3 判定。敞口涵盖 Delta、Vega、Gamma 三个维度（金额口径：万元，正负号为方向），同方向绝对值较前一日扩大即视为「敞口扩大」（如 −100 → −200）。</li>
+            <li style="" data-page-node-id="xM0cJ3PtwppiJlWWCYxmqQ"><b data-page-node-id="mmKzvQZeXS3pvrG0m8oXLe">通知机制</b>：点击「通知」将该条预警发送至期货公司与风险管理子公司相关人员</li>
+            <li data-page-node-id="zYisoHZByhDKXX7tAg1Heo"><b data-page-node-id="e58RrH3rltU8EZ2hI22Zy9">单位口径</b>：金额类指标默认以「万元」计量，≥1 亿自动换算显示；业务规模以「亿元」计量；敞口与 VAR 为水平值（不带符号），盈亏带正负号。</li>
+            
+          </ul>
+        </div>
+      </div>
+    
+  </section>
+<footer data-page-node-id="PEuw4Vxw1kuOrb3TMjzItb">
+  <b data-page-node-id="EXe2X1iFpYxE7kJjNPTceB">数据来源</b>：指标体系与限额取自《风险管理子公司驾驶舱》（快照 2026-08-04）；3 日趋势序列（含期现业务盈亏）与组合明细为演示数据，接入生产后由驾驶舱台账自动取数。<br data-page-node-id="uSB7VciAIG7PeTFyXPbwmp">
+  <b data-page-node-id="CSGsCo7ZNWjHquCKJH7URB">预警口径</b>：占用率 ≥100% 超限（红）、≥80% 预警（橙）、≥70% 关注（黄）、其余正常（绿）；趋势恶化以连续 3 个交易日同向恶化为准；组合恶化按规则 C1–C3 判定（敞口含 Delta／Vega／Gamma，同方向绝对值扩大即计敞口扩大）。<br data-page-node-id="1CbKdW9JmgpFU12VUo0jtG">
+  <b data-page-node-id="1EddLBGM1MkM67zzKCJiSB">通知机制</b>：点击通知列将预警发送至期货公司与风险管理子公司相关人员，收件人按预警级别自动匹配（超限／触发项自动加报期货公司首席风险官），支持系统消息、邮件、企业微信通道；本页为演示环境，发送为前端模拟。<br data-page-node-id="yLcvDM38w9lwE8P38SDZYO">
+  <b data-page-node-id="EifeaeM53Qmn98gFHEkADa">说明</b>：本页由全面风险管理系统 · 内部指标预警模块自动生成，仅供内部风控参考；与「行情监测与预警」页签共同构成穿透式风控预警中心。
+</footer>
+</div>
+
+</div>
+<!-- 通知弹窗 -->
+<div class="modal-mask" id="notifyMask" onclick="if(event.target===this)closeNotify()" style="display: none;" data-page-node-id="ghEuaULSVzdvxf1FyJRuP5">
+  <div class="modal" data-page-node-id="3HVGDPy7HT2wEUR2xAdRko">
+    <div class="modal-head" data-page-node-id="h2GUN0LZL9gKnQVCtDwKUn">
+      <span style="font-size:17px" data-page-node-id="CycvdxFzjEpAiQJir9xhe7">📨</span>
+      <span id="notifyTitle" data-page-node-id="tDeQUHii4oOrirR1bA4wYZ">发送预警通知 · 场外商品业务</span>
+      <span class="lv-tag red" id="notifyLv" data-page-node-id="3pCnOMvNamYMHJOguQA2zE">触发</span>
+    </div>
+    <div class="modal-body" data-page-node-id="ZQ48aj7e6Qh08RSsJ8fhLG">
+      <div class="modal-sec" data-page-node-id="zbtCD7wrvCCjYqjAhIAmdG">预警内容 <span class="lt" data-page-node-id="WRLwz2riMpDZUSk6zNcEdH">（自动生成，可编辑）</span></div>
+      <textarea id="notifyMsg" rows="5" data-page-node-id="kuSKG9BHClc6TUTwCgU6es"></textarea>
+      <div class="modal-sec" data-page-node-id="GFZCjhBJuKKuZpaZgKsdiO">收件人 <span class="lt" data-page-node-id="ASS1wytKyEtP3MBGndXNwv">（按预警级别自动匹配，可勾选调整）</span></div>
+      <div class="rcpt-list" id="notifyRcpts" data-page-node-id="61Ha0WzOA0tjJTk2ReebUg"><label class="rcpt" data-page-node-id="3kRbRftoSoF9ynCAlncdYC"><input type="checkbox" checked="" data-page-node-id="ZHnaVgtdDWYmB8KpKRAcNs"><span class="rg rg-hq" data-page-node-id="Vcp5VIGLtQwPnNLuBSd4K1">期货公司</span><span data-page-node-id="4qaTLH3RHyURqBxagzzKJn">首席风险官</span></label><label class="rcpt" data-page-node-id="hYiBuFtylgsnBk99vMbhhG"><input type="checkbox" checked="" data-page-node-id="dlYhL0WG20bgUlQjwrwuIk"><span class="rg rg-hq" data-page-node-id="mHnGkyC6Dz9fuzmlCmaPzy">期货公司</span><span data-page-node-id="WSRuzp0UyDHHs0pjSshtg3">合规与风险管理部 · 负责人</span></label><label class="rcpt" data-page-node-id="AMWrm1atM8MXTQTTHV2Xl8"><input type="checkbox" checked="" data-page-node-id="ofBeFrT2f2oSAMrkXrBpMz"><span class="rg rg-hq" data-page-node-id="CXYVtrXspSmMTAV7T5WBsP">期货公司</span><span data-page-node-id="VNeBnbly1cKSGer62m3HmC">合规与风险管理部 · 监控岗</span></label><label class="rcpt" data-page-node-id="hJZ0L1qYcDUR6AR6gluVUY"><input type="checkbox" checked="" data-page-node-id="FR1DLoVQcAZG2eTMNRpWO3"><span class="rg" data-page-node-id="u8ATZ8jlPzEpEAyexZuUox">风险管理子公司</span><span data-page-node-id="qAlKkTq4eJK3f2F58SQFMD">分管风险副总经理</span></label><label class="rcpt" data-page-node-id="q3AuD2jMkOnfugAzdSvmtl"><input type="checkbox" checked="" data-page-node-id="7YdlinuIy5bSVJfn5IUWfq"><span class="rg" data-page-node-id="6L3sN4C2sv2lnUhSSur5m3">风险管理子公司</span><span data-page-node-id="UcpgYNTjhBH8qrEWChHjM4">风控合规部 · 负责人</span></label><label class="rcpt" data-page-node-id="EJHnP4CGshwVPdNIroc2Xg"><input type="checkbox" checked="" data-page-node-id="fcCw3w8E7pBYaF8WPbBGbL"><span class="rg" data-page-node-id="P6AZPTJR1NrzPNAtj9mJo5">风险管理子公司</span><span data-page-node-id="yY6dARCMWrCan7OYDPZUVk">风控合规部 · 风控专员</span></label><label class="rcpt" data-page-node-id="jvIaSSIcZeCDBduQFMw4jq"><input type="checkbox" checked="" data-page-node-id="bCiP6B93ktDfd0NGJnw0MV"><span class="rg" data-page-node-id="W8KDuHotLwC1aFlL1zPbnX">风险管理子公司</span><span data-page-node-id="HM6KyQBoFB9AXaYg03OK6d">相关业务部门 · 负责人</span></label></div>
+      <div class="modal-sec" data-page-node-id="wDVpS3OepDhYOb9Pd5GdkG">发送通道</div>
+      <div class="chan-row" data-page-node-id="x9HCVQ4mhMDR2Ne7EL0psk">
+        <label data-page-node-id="FyhAjArRlVWSqnadH2XtHy"><input type="checkbox" checked="" data-page-node-id="czsGf5UzSiAFDwhOBtPrKy">系统消息</label>
+        <label data-page-node-id="7831MYYlaScHcKOMH2JIDv"><input type="checkbox" checked="" data-page-node-id="zdraX3bx4hvtuAc0kcYTsx">邮件</label>
+        <label data-page-node-id="RVAntk9PwKLzZjaYhfMoEM"><input type="checkbox" data-page-node-id="G0Oy0DpJ4G9bACuTQWkoGP">企业微信</label>
+      </div>
+    </div>
+    <div class="modal-foot" data-page-node-id="rHB0ADvfbUzRrCKDTBgdEE">
+      <span class="demo-note" data-page-node-id="I0cqCr7ohz0UZdERj4PdzQ">演示环境：发送为前端模拟；生产环境接入系统消息／邮件／企微通道</span>
+      <button class="btn-cancel" onclick="closeNotify()" data-page-node-id="y3OZGglF9mJgNsiEzVKf3Y">取消</button>
+      <button class="btn-send" onclick="sendNotify()" data-page-node-id="8Ha9if9N1q3parn7gHe4JH">发送通知</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast" data-page-node-id="aDa9Q2ioT4BFCriiOX1shP"></div>
+<script data-page-node-id="Gfai88Ee2goNOx3T8ZgsZP">
+/* ============================================================
+   Tab 1 · 行情监测与预警（Wind 2026-10-15）
+   ============================================================ */
+/* MODEL_START —— 以下为 2026-10-15 静态数据，正式环境请替换为实时行情接口返回的同结构 JSON */
+const DATA = {"date": "2026-10-15", "comTop": [{"name": "集运指数(欧线)", "chg": 2.37, "spec": 0.55, "volchg": 31.86, "fundchg": 4.07, "hv": 59.78}, {"name": "花生", "chg": 1.07, "spec": 0.84, "volchg": 7.1, "fundchg": -3.19, "hv": 15.28}, {"name": "燃油", "chg": 0.79, "spec": 1.92, "volchg": -7.29, "fundchg": 1.46, "hv": 72.5}, {"name": "硅铁", "chg": 0.5, "spec": 0.86, "volchg": 4.94, "fundchg": -0.84, "hv": 11.06}, {"name": "线材", "chg": 0.35, "spec": 0.4, "volchg": -3.03, "fundchg": 31, "hv": 8.92}, {"name": "锰硅", "chg": 0.34, "spec": 0.91, "volchg": 48.23, "fundchg": 4.15, "hv": 7.21}, {"name": "纤维板", "chg": 0.24, "spec": 0.22, "volchg": 89.43, "fundchg": -3.08, "hv": 12.44}, {"name": "原木", "chg": 0.12, "spec": 0.23, "volchg": 41.65, "fundchg": -3.22, "hv": 3.47}, {"name": "玉米淀粉", "chg": 0.08, "spec": 0.38, "volchg": -10.34, "fundchg": -1.7, "hv": 10.56}, {"name": "粳米", "chg": 0.08, "spec": 0.08, "volchg": 28.81, "fundchg": 3.37, "hv": 3.84}], "comBot": [{"name": "沪银", "chg": -5.34, "spec": 1.48, "volchg": 49.7, "fundchg": -2.78, "hv": 38.46}, {"name": "苹果", "chg": -4.75, "spec": 1.18, "volchg": -27.98, "fundchg": -6.9, "hv": 21.7}, {"name": "多晶硅", "chg": -4.58, "spec": 0.51, "volchg": -11.35, "fundchg": -3.87, "hv": 20}, {"name": "甲醇", "chg": -4.23, "spec": 2.07, "volchg": -6.94, "fundchg": -5.59, "hv": 58.81}, {"name": "鸡蛋", "chg": -3.97, "spec": 1.41, "volchg": 14.46, "fundchg": -5.55, "hv": 24.13}, {"name": "碳酸锂", "chg": -3.87, "spec": 0.58, "volchg": -13.31, "fundchg": -4.48, "hv": 60.03}, {"name": "纯苯", "chg": -3.84, "spec": 2.4, "volchg": -11.7, "fundchg": -3.49, "hv": 58.85}, {"name": "原油", "chg": -3.68, "spec": 2.82, "volchg": -2.89, "fundchg": -12.45, "hv": 60.18}, {"name": "沥青", "chg": -3.41, "spec": 1.65, "volchg": -4.42, "fundchg": -4.1, "hv": 74.54}, {"name": "沪锡", "chg": -3.28, "spec": 2.99, "volchg": 5.25, "fundchg": 0.64, "hv": 28.25}], "idx": [{"name": "上证50期货", "chg": -0.4, "spec": 0.65, "volchg": 42.36, "fundchg": 12.94, "hv": 11.89}, {"name": "沪深300期货", "chg": -1.49, "spec": 0.52, "volchg": 44.36, "fundchg": 6.95, "hv": 14.54}, {"name": "中证500期货", "chg": -3.19, "spec": 0.74, "volchg": 40.81, "fundchg": 4.79, "hv": 21.78}, {"name": "中证1000期货", "chg": -3.46, "spec": 0.71, "volchg": 32.91, "fundchg": 5, "hv": 22.65}], "bond": [{"name": "2年期国债期货", "chg": 0.01, "spec": 0.58, "volchg": 2.07, "fundchg": 3.04, "hv": 0.41}, {"name": "5年期国债期货", "chg": 0.0, "spec": 0.33, "volchg": -15.88, "fundchg": 0.61, "hv": 1.01}, {"name": "10年期国债期货", "chg": -0.01, "spec": 0.26, "volchg": 9.44, "fundchg": 0.54, "hv": 1.48}, {"name": "30年期国债期货", "chg": -0.08, "spec": 0.59, "volchg": 49.37, "fundchg": -1.75, "hv": 5.12}], "opt20": [{"rank": 1, "name": "SHFE燃油", "code": "FU.SHF", "iv": 80.52, "ivq": 87.14, "chg": 0.79, "pcrq": 64.73, "dev": 8.02, "tier": "green"}, {"rank": 2, "name": "GFEX碳酸锂", "code": "LC.GFE", "iv": 52.92, "ivq": 76.25, "chg": -3.87, "pcrq": 97.1, "dev": null, "tier": "na"}, {"rank": 3, "name": "INE原油", "code": "SC.INE", "iv": 52.06, "ivq": 60.58, "chg": -3.68, "pcrq": 57.26, "dev": -8.12, "tier": "green"}, {"rank": 4, "name": "SHFE沥青", "code": "BU.SHF", "iv": 44.89, "ivq": 84.98, "chg": -3.41, "pcrq": 70.12, "dev": -29.65, "tier": "orange"}, {"rank": 5, "name": "DCE 纯苯", "code": "BZ.DCE", "iv": 41.22, "ivq": 82.05, "chg": -3.84, "pcrq": 36.1, "dev": null, "tier": "na"}, {"rank": 6, "name": "DCE LPG", "code": "PG.DCE", "iv": 40.74, "ivq": 76.55, "chg": -0.72, "pcrq": 63.49, "dev": 1.92, "tier": "green"}, {"rank": 7, "name": "DCE乙二醇", "code": "EG.DCE", "iv": 38.62, "ivq": 75.54, "chg": -1.26, "pcrq": 42.74, "dev": -3.55, "tier": "green"}, {"rank": 8, "name": "DCE苯乙烯", "code": "EB.DCE", "iv": 37.84, "ivq": 79.17, "chg": -3.26, "pcrq": 46.89, "dev": -13.81, "tier": "yellow"}, {"rank": 9, "name": "CZCE甲醇", "code": "MA.CZC", "iv": 35.23, "ivq": 69.29, "chg": -4.23, "pcrq": 25.31, "dev": -23.58, "tier": "orange"}, {"rank": 10, "name": "GFEX钯", "code": "PD.GFE", "iv": 34.11, "ivq": 3.97, "chg": -1.75, "pcrq": 74.16, "dev": null, "tier": "na"}, {"rank": 11, "name": "SHFE白银", "code": "AG.SHF", "iv": 34.01, "ivq": 11.72, "chg": -5.34, "pcrq": 91.29, "dev": -4.45, "tier": "green"}, {"rank": 12, "name": "CZCE对二甲苯", "code": "PX.CZC", "iv": 33.53, "ivq": 72.77, "chg": -1.68, "pcrq": 50.62, "dev": null, "tier": "na"}, {"rank": 13, "name": "SHFE丁二烯橡胶", "code": "BR.SHF", "iv": 33.09, "ivq": 58.92, "chg": -1.89, "pcrq": 60.58, "dev": null, "tier": "na"}, {"rank": 14, "name": "SHFE锡", "code": "SN.SHF", "iv": 32.27, "ivq": 48.13, "chg": -3.28, "pcrq": 100.0, "dev": 4.02, "tier": "green"}, {"rank": 15, "name": "CZCE丙烯", "code": "PL.CZC", "iv": 32.22, "ivq": 71.85, "chg": -1.29, "pcrq": 89.21, "dev": null, "tier": "na"}, {"rank": 16, "name": "DCE焦煤", "code": "JM.DCE", "iv": 29.74, "ivq": 33.52, "chg": -3.19, "pcrq": 67.05, "dev": -6.55, "tier": "green"}, {"rank": 17, "name": "INE20号胶", "code": "NR.INE", "iv": 28.9, "ivq": 91.3, "chg": -2.84, "pcrq": 33.91, "dev": -12.05, "tier": "yellow"}, {"rank": 18, "name": "CZCE PTA", "code": "TA.CZC", "iv": 28.68, "ivq": 61, "chg": -2.3, "pcrq": 26.56, "dev": -19.63, "tier": "yellow"}, {"rank": 19, "name": "GFEX铂", "code": "PT.GFE", "iv": 28.44, "ivq": 0.53, "chg": -3.49, "pcrq": 87.56, "dev": null, "tier": "na"}, {"rank": 20, "name": "CZCE红枣", "code": "CJ.CZC", "iv": 27.97, "ivq": 94.61, "chg": -0.23, "pcrq": 99.59, "dev": -5.12, "tier": "green"}], "optIdx": [{"rank": 1, "name": "科创50ETF易方达", "code": "588080.SH", "iv": 44.22, "ivq": 78.66, "chg": -1.41, "pcrq": 13.69, "dev": null, "tier": "na"}, {"rank": 2, "name": "科创50ETF华夏", "code": "588000.SH", "iv": 43.6, "ivq": 76.57, "chg": -1.37, "pcrq": 2.07, "dev": null, "tier": "na"}, {"rank": 3, "name": "创业板ETF易方达", "code": "159915.SZ", "iv": 37.06, "ivq": 84.94, "chg": -2.94, "pcrq": 14.94, "dev": null, "tier": "na"}, {"rank": 4, "name": "中证1000", "code": "000852.SH", "iv": 32.24, "ivq": 94.98, "chg": -3.28, "pcrq": 90.87, "dev": null, "tier": "na"}, {"rank": 5, "name": "中证500ETF南方", "code": "510500.SH", "iv": 27.54, "ivq": 87.87, "chg": -3.17, "pcrq": 5.39, "dev": null, "tier": "na"}, {"rank": 6, "name": "中证500ETF嘉实", "code": "159922.SZ", "iv": 27.48, "ivq": 83.68, "chg": -3.19, "pcrq": 19.09, "dev": null, "tier": "na"}, {"rank": 7, "name": "深证100ETF易方达", "code": "159901.SZ", "iv": 25.73, "ivq": 76.99, "chg": -1.64, "pcrq": 3.73, "dev": null, "tier": "na"}, {"rank": 8, "name": "沪深300", "code": "000300.SH", "iv": 19.16, "ivq": 82.85, "chg": -2.07, "pcrq": 70.54, "dev": null, "tier": "na"}, {"rank": 9, "name": "沪深300ETF嘉实", "code": "159919.SZ", "iv": 17.59, "ivq": 66.95, "chg": -1.29, "pcrq": 21.58, "dev": null, "tier": "na"}, {"rank": 10, "name": "沪深300ETF华泰柏瑞", "code": "510300.SH", "iv": 17.45, "ivq": 71.13, "chg": -1.21, "pcrq": 49.79, "dev": null, "tier": "na"}, {"rank": 11, "name": "上证50", "code": "000016.SH", "iv": 16.4, "ivq": 74.48, "chg": -0.42, "pcrq": 91.7, "dev": null, "tier": "na"}, {"rank": 12, "name": "上证50ETF华夏", "code": "510050.SH", "iv": 14.77, "ivq": 54.39, "chg": -0.59, "pcrq": 47.3, "dev": null, "tier": "na"}], "comUp": 11, "comDown": 63, "comN": 74, "comBigDrop": 13};
+/* MODEL_END */
+/* 场外业务涉及品种（《场外品种.xlsx》期货代码映射 + 股指期货全涉及（用户口径）：商品两榜 20 品种中 18 个 + 股指期货 4 个 = 22；纤维板、粳米不在场外清单） */
+const OTC_NAMES = new Set(['集运指数(欧线)', '花生', '燃油', '硅铁', '线材', '锰硅', '原木', '玉米淀粉', '沪银', '苹果', '多晶硅', '甲醇', '鸡蛋', '碳酸锂', '纯苯', '原油', '沥青', '沪锡', '上证50期货', '沪深300期货', '中证500期货', '中证1000期货']);
+/* 做市业务涉及品种（《做市业务风控日志-敞口指标》项目状态=进行中，2026-10-14：商品期权做市 32 码 ∪ 商品期货做市 23 码 ∪ 利率期货做市 T/TF/TS/TL ∪ 权益期权做市 300/500/50/创业板/100ETF 与 IF/IM；完结项目不计。按页面品种名映射——期货表纯名、商品期权 TOP20 带交易所前缀名） */
+const MM_NAMES = new Set(['集运指数(欧线)', '花生', '燃油', '硅铁', '锰硅', '粳米', '多晶硅', '甲醇', '鸡蛋', '碳酸锂', '原油', '沪深300期货', '中证1000期货', '2年期国债期货', '5年期国债期货', '10年期国债期货', '30年期国债期货', 'SHFE燃油', 'GFEX碳酸锂', 'INE原油', 'DCE乙二醇', 'CZCE甲醇', 'GFEX钯', 'CZCE对二甲苯', 'INE20号胶', 'CZCE PTA', 'CZCE红枣', '沪深300ETF嘉实', '沪深300ETF华泰柏瑞', '中证500ETF南方', '中证500ETF嘉实', '上证50ETF华夏', '创业板ETF易方达', '深证100ETF易方达', '沪深300', '中证1000']);
+
+const fmt=(v,d=2)=>v===null||v===undefined?'<span class="na">—</span>':v.toFixed(d);
+const chgCls=v=>v>0?'pos':(v<0?'neg':'flat');
+const chgFmt=v=>v===null||v===undefined?'<span class="na">—</span>':`<span class="${chgCls(v)}">${v>0?'+':''}${v.toFixed(2)}</span>`;
+const specFmt=v=>v===null||v===undefined?'<span class="na">—</span>':(v>=2?`<span class="spec-hi">${v.toFixed(2)}</span>`:v.toFixed(2));
+
+/* ---- 期货主力合约：色阶表渲染（红涨绿跌 / 投机度蓝 / 成交量变化青绿缩量灰蓝 / 历史波动率紫） ---- */
+const C_UP="#B91C1C", C_DN="#15803D";
+function hx(c){c=c.slice(1);return [0,2,4].map(i=>parseInt(c.slice(i,i+2),16)/255);}
+function mix(c1,c2,t){t=Math.max(0,Math.min(1,t));const a=hx(c1),b=hx(c2);
+  return "#"+[0,1,2].map(i=>Math.round(255*(a[i]+(b[i]-a[i])*t)).toString(16).padStart(2,"0")).join("");}
+function lum(c){const r=hx(c);return .299*r[0]+.587*r[1]+.114*r[2];}
+function txtOn(bg){return lum(bg)<.58?"#FFFFFF":"#1E293B";}
+function buildFutParams(rows){
+  const absMax=k=>Math.max(...rows.filter(x=>x[k]!==null&&x[k]!==undefined).map(x=>Math.abs(x[k])),1);
+  const posMax=k=>Math.max(...rows.filter(x=>(x[k]||0)>0).map(x=>x[k]),1);
+  const negMax=k=>Math.max(...rows.filter(x=>(x[k]||0)<0).map(x=>-x[k]),1);
+  const hvMax=Math.max(10,Math.ceil(Math.max(...rows.map(x=>x.hv||0))/10)*10);
+  return {chg:absMax("chg"),vol:[posMax("volchg"),negMax("volchg")],cap:[posMax("fundchg"),negMax("fundchg")],spec:posMax("spec")||2,hv:hvMax};
+}
+function futCell(key,v,p,cm){
+  if(v===null||v===undefined) return '<td class="empty">—</td>';
+  if(key==="chg"){
+    const up=v>0,dn=v<0,cmx=Math.max(0.01,cm||p.chg);
+    const w=Math.max(3,Math.round(Math.abs(v)/cmx*56));
+    return '<td><div class="tdbar"><div class="bar '+(up?'up':dn?'dn':'flat')+'" style="width:'+w+'px"></div><span class="v '+(up?'up':dn?'dn':'flat')+'">'+(up?"+":"")+v.toFixed(2)+'</span></div></td>';
+  }
+  let bg,tc;
+  if(key==="volchg"){
+    bg=v>=0?mix("#FFFFFF","#0D9488",v/p.vol[0]):mix("#FFFFFF","#64748B",-v/p.vol[1]);
+    tc=txtOn(bg)==="#FFFFFF"?"#FFFFFF":(v>=0?"#0F5250":"#475569");
+  }else if(key==="fundchg"){
+    bg=v>0?mix("#FFFFFF",C_UP,Math.min(1,Math.abs(v)/p.cap[0])):mix("#FFFFFF",C_DN,Math.min(1,Math.abs(v)/p.cap[1]));
+    tc=txtOn(bg)==="#FFFFFF"?"#FFFFFF":(v>0?"#7F1D1D":v<0?"#14532D":"#475569");
+  }else if(key==="spec"){
+    bg=mix("#FFFFFF","#1D4ED8",v/p.spec);tc=txtOn(bg)==="#FFFFFF"?"#FFFFFF":"#1E3A8A";
+  }else{
+    bg=mix("#FFFFFF","#7C3AED",v/p.hv);tc=txtOn(bg)==="#FFFFFF"?"#FFFFFF":"#5B21B6";
+  }
+  const nd=(key==="volchg")?1:2;
+  const sign=(key==="chg"||key==="volchg"||key==="fundchg");
+  return '<td style="background:'+bg+';color:'+tc+'">'+(v===null?"—":(sign&&v>0?"+":"")+Number(v).toFixed(nd))+'</td>';
+}
+function renderFutTable(id,rows,params){
+  const cm=Math.max(0.01,...rows.map(x=>Math.abs(x.chg)||0));   /* 涨跌幅条形：表内相对最长满格 */
+  document.getElementById(id).querySelector("tbody").innerHTML=rows.map(x=>{
+    const tg=(OTC_NAMES.has(x.name)?'场外':'')+(MM_NAMES.has(x.name)?((OTC_NAMES.has(x.name)?'、':'')+'做市'):'');
+    return '<tr><td><div class="fname"'+(tg?' title="该品种涉及'+tg+'业务"':'')+'>'
+    +x.name+(OTC_NAMES.has(x.name)?'<sup class="otc">1</sup>':'')+(MM_NAMES.has(x.name)?'<sup class="mm">2</sup>':'')+'</div></td>'
+    +futCell("chg",x.chg,params,cm)+futCell("spec",x.spec,params)
+    +futCell("volchg",x.volchg,params)+futCell("fundchg",x.fundchg,params)+futCell("hv",x.hv,params)
+    +'</tr>';}).join("");
+}
+(function(){
+  const params=buildFutParams(DATA.comTop.concat(DATA.comBot,DATA.idx,DATA.bond));
+  const top=DATA.comTop.filter(r=>(r.chg||0)>=0);   /* 涨幅榜剔除下跌品种 */
+  renderFutTable("ftTop",top,params);
+  renderFutTable("ftBot",DATA.comBot,params);
+  renderFutTable("ftIdx",DATA.idx,params);
+  renderFutTable("ftBond",DATA.bond,params);
+  document.getElementById("cntTop").textContent="共 "+top.length+" 个（已剔除下跌品种）";
+  document.getElementById("cntBot").textContent="共 "+DATA.comBot.length+" 个";
+  document.getElementById("commodityHint").textContent=
+    "今日商品市场普跌：有成交品种 "+DATA.comN+" 个中仅 "+DATA.comUp+" 个上涨，跌幅 ≥3% 品种 "+DATA.comBigDrop+" 个";
+})();
+
+/* 期权 IV TOP20（两列：1-10 / 11-20） —— 展示方式参考 IV TOP/BOTTOM 图：IV 条形 + 分位数/涨跌幅/PCR 色块 */
+const pctColor=(v,stops)=>v>=stops[0][0]?stops[0][1]:v>=stops[1][0]?stops[1][1]:v>=stops[2][0]?stops[2][1]:stops[3][1];
+const ivqC=v=>pctColor(v,[[80,'#124e94'],[60,'#1d6fd1'],[40,'#5b92dd'],[0,'#a9c2e6']]);
+const pcrC=v=>pctColor(v,[[80,'#c2410c'],[60,'#ea7a35'],[40,'#f4a261'],[0,'#f8d0b0']]);
+const chgC=v=>v>0?(v>=1?'#dc2626':'#ef7b74'):v<0?(v<=-3?'#15803d':v<=-1.5?'#16a34a':'#5cb585'):'#c2cddc';
+const tierC={red:'#dc2626',orange:'#ea580c',yellow:'#d97706',green:'#16a34a',na:'#c2cddc'};
+const maxIV=Math.max(...DATA.opt20.map(o=>o.iv));
+const maxIVIdx=Math.max(...DATA.optIdx.map(o=>o.iv));
+const optHead='<div class="opt-head"><div class="hr">排名</div><div>品种</div><div>IV 现值</div><div class="hchips"><span class="hl">IV 分位数</span><span class="hl">标的涨跌幅</span><span class="hl">PCR 分位数</span><span class="hl">IV−HV(pp)</span></div></div>';
+const mkRow=scale=>o=>{
+  const w=Math.max(3,Math.round(o.iv/scale*56));
+  return `<div class="opt-row ${o.tier==='red'?'tier-red':o.tier==='orange'?'tier-orange':''}">
+    <div class="opt-rank ${o.rank<=3?'top3':''}">${String(o.rank).padStart(2,'0')}</div>
+    <div class="opt-name"${MM_NAMES.has(o.name)?' title="该品种涉及做市业务"':''}>${o.name}${MM_NAMES.has(o.name)?'<sup class="mm">2</sup>':''}<span class="code">${o.code}</span></div>
+    <div class="iv-wrap"><div class="iv-bar" style="width:${w}px"></div><div class="iv-val">${o.iv.toFixed(2)}</div></div>
+    <div class="chips">
+      <div class="chip" style="background:${ivqC(o.ivq)}">${o.ivq.toFixed(2)}</div>
+      <div class="chip" style="background:${chgC(o.chg)}">${o.chg>0?'+':''}${o.chg.toFixed(2)}%</div>
+      <div class="chip" style="background:${pcrC(o.pcrq)}">${o.pcrq.toFixed(2)}</div>
+      <div class="chip chip-dev" style="background:${tierC[o.tier]}">${o.dev===null?'—':(o.dev>0?'+':'')+o.dev.toFixed(2)}</div>
+    </div></div>`;
+};
+const optRow=mkRow(maxIV);
+document.getElementById('optGridIdx').innerHTML='<div class="opt-col">'+optHead+DATA.optIdx.slice(0,6).map(mkRow(maxIVIdx)).join('')+'</div><div class="opt-col">'+optHead+DATA.optIdx.slice(6).map(mkRow(maxIVIdx)).join('')+'</div>';
+document.getElementById('optGrid').innerHTML='<div class="opt-col">'+optHead+DATA.opt20.slice(0,10).map(optRow).join('')+'</div><div class="opt-col">'+optHead+DATA.opt20.slice(10).map(optRow).join('')+'</div>';
+
+/* ============================================================
+   Tab 2 · 内部指标监测与预警（风险子驾驶舱 2026-08-04 快照）
+   ============================================================ */
+/* ================= 内部指标预警（数据：风险子驾驶舱 2026-08-04 快照，趋势序列为演示数据） ================= */
+const LIMITS=[
+  {cat:"市场风险",name:"权益类敞口",val:15000.00,lim:14000,unit:"万"},
+  {cat:"市场风险",name:"非权益类敞口",val:4751.68,lim:20000,unit:"万"},
+  {cat:"市场风险",name:"单日 VAR 值",val:3300.00,lim:4000,unit:"万"},
+  {cat:"规模",name:"权益类规模",val:108407.52,lim:380000,unit:"万"},
+  {cat:"规模",name:"业务规模",val:63.95,lim:103,unit:"亿元"},
+  {cat:"信用风险",name:"场外授信占用",val:8400,lim:9000,unit:"万"},
+  {cat:"信用风险",name:"期现授信占用",val:0,lim:20000,unit:"万"},
+  {cat:"信用风险",name:"远期违约风险",val:800,lim:1200,unit:"万"},
+  {cat:"集中度",name:"场外客户集中度（中国石油）",val:45000,lim:60000,unit:"万"},
+  {cat:"集中度",name:"场外标的集中度（螺纹钢）",val:48000,lim:65000,unit:"万"},
+  {cat:"集中度",name:"场外个股集中度（中国银行）",val:12000,lim:20000,unit:"万"},
+  {cat:"集中度",name:"非标仓库集中度（中储无锡）",val:3000,lim:4000,unit:"万"}
+];
+const TRENDS=[
+  {obj:"场外商品业务",metric:"当日盈亏（万）",rule:"连续 3 日亏损",seq:[-38.60,-52.10,-44.43],bad:true},
+  {obj:"权益类敞口",metric:"敞口（万）",rule:"连续 3 日扩大",seq:[13200,14100,15000],bad:true},
+  {obj:"单日 VAR 值",metric:"VAR（万）",rule:"连续 3 日上升",seq:[3150,3220,3300],bad:true},
+  {obj:"期现业务",metric:"当日盈亏（万）",rule:"连续 3 日亏损",seq:[-12.30,-8.75,-15.20],bad:true},
+  {obj:"做市业务",metric:"当日盈亏（万）",rule:"连续 3 日亏损",seq:[5.10,-8.20,12.53],bad:false},
+  {obj:"非权益类敞口",metric:"敞口（万）",rule:"连续 3 日扩大",seq:[4900,4820,4751.68],bad:false},
+  {obj:"场外股指业务",metric:"当日盈亏（万）",rule:"连续 3 日亏损",seq:[150.20,165.80,181.33],bad:false}
+];
+const COMBOS=[
+  {id:"C1",name:"亏损＋敞口扩大",cond:"当日盈亏 < 0 且 Delta/Vega/Gamma 任一同方向绝对值扩大（如 −100→−200）",hit:"场外商品业务、期现业务",detail:"场外商品：亏损 −44.43 万 · Delta +320（前日 +180，多头扩大）；期现：亏损 −15.20 万 · Delta −200（前日 −120，空头绝对值扩大）"},
+  {id:"C2",name:"亏损＋VAR 上升",cond:"当日盈亏 < 0 且 单日 VAR 环比上升",hit:"全公司（场外商品拖累）",detail:"当日亏损 −44.43 万 · VAR 3,300（+80）"},
+  {id:"C3",name:"三重恶化",cond:"当日亏损＋Delta/Vega/Gamma 任一同方向绝对值扩大＋授信占用上升",hit:"场外业务",detail:"亏损 −44.43 万 · Delta +320（前日 +180，多头扩大）· 场外授信占用 93.3%（+2.1pct）"}
+];
+/* 敞口三维度：Delta/Vega/Gamma（金额口径：万元）；命中规则由 sectorRules 按数据计算 */
+const SECTORS=[
+  {name:"场外商品",pnl:-44.43,delta:320,vega:15.6,gamma:-8.2,credit:"+2.1pct",creditUp:true,c2:true,prev:{delta:180,vega:12.0,gamma:-5.0}},
+  {name:"做市商品",pnl:12.53,delta:-150,vega:-22.4,gamma:3.1,credit:"—",creditUp:false,c2:false,prev:{delta:-120,vega:-28.0,gamma:5.0}},
+  {name:"场外股指",pnl:181.33,delta:900,vega:38.5,gamma:-12.0,credit:"—",creditUp:false,c2:false,prev:{delta:650,vega:42.0,gamma:-9.5}},
+  {name:"做市股指",pnl:200.00,delta:50,vega:8.2,gamma:2.4,credit:"—",creditUp:false,c2:false,prev:{delta:80,vega:6.0,gamma:3.6}},
+  {name:"场外个股",pnl:30.79,delta:-30,vega:-5.8,gamma:-1.5,credit:"—",creditUp:false,c2:false,prev:{delta:-45,vega:-4.2,gamma:-2.4}},
+  {name:"期现",pnl:-15.20,delta:-200,vega:9.8,gamma:-1.2,credit:"—",creditUp:false,c2:false,prev:{delta:-120,vega:12.5,gamma:-0.8}}
+];
+/* C1：亏损＋任一敞口扩大；C2：VAR 为公司级指标、按拖累归因；C3：C1 条件＋授信占用上升
+   敞口为带符号水平值（正负＝方向）：同方向（同号）且绝对值较前一日扩大 → 敞口扩大（如 −100→−200）；方向反转不计 */
+function expoUp(c,p){return (c!==null&&c!==undefined&&p!==null&&p!==undefined)&&((c>=0&&p>=0&&c>p)||(c<=0&&p<=0&&c<p));}
+function sectorRules(s){
+  const loss=s.pnl!==null&&s.pnl!==undefined&&s.pnl<0;
+  const up=expoUp(s.delta,s.prev.delta)||expoUp(s.vega,s.prev.vega)||expoUp(s.gamma,s.prev.gamma);
+  const r=[];
+  if(loss&&up) r.push("C1");
+  if(s.c2) r.push("C2");
+  if(loss&&up&&s.creditUp) r.push("C3");
+  return r;
+}
+
+/* ================= 通知基础设施（演示环境前端模拟） ================= */
+const NOTIFIED={};          // 已发送通知的条目 key
+const NOTIFY_REGISTRY={};   // key -> {title, kind, lvText, rcpts, msg}
+let currentNotifyKey=null, toastTimer=null;
+
+/* 收件人按预警级别自动匹配（穿透至期货公司母公司层面） */
+const RCPT_OVER=[   /* 超限 / 触发：加报期货公司首席风险官 */
+  {g:"期货公司",n:"首席风险官"},
+  {g:"期货公司",n:"合规与风险管理部 · 负责人"},
+  {g:"期货公司",n:"合规与风险管理部 · 监控岗"},
+  {g:"风险管理子公司",n:"分管风险副总经理"},
+  {g:"风险管理子公司",n:"风控合规部 · 负责人"},
+  {g:"风险管理子公司",n:"风控合规部 · 风控专员"},
+  {g:"风险管理子公司",n:"相关业务部门 · 负责人"}
+];
+const RCPT_WARN=[   /* 预警：加报期货公司合规与风险管理部 */
+  {g:"期货公司",n:"合规与风险管理部 · 负责人"},
+  {g:"期货公司",n:"合规与风险管理部 · 监控岗"},
+  {g:"风险管理子公司",n:"分管风险副总经理"},
+  {g:"风险管理子公司",n:"风控合规部 · 负责人"},
+  {g:"风险管理子公司",n:"风控合规部 · 风控专员"}
+];
+const RCPT_WATCH=[  /* 关注：子公司风控合规部 */
+  {g:"风险管理子公司",n:"分管风险副总经理"},
+  {g:"风险管理子公司",n:"风控合规部 · 负责人"},
+  {g:"风险管理子公司",n:"风控合规部 · 风控专员"}
+];
+
+function regNotify(key,payload){ NOTIFY_REGISTRY[key]=payload; }
+function notifyBtn(key,done){
+  return done
+    ? '<button class="notify-btn done" onclick="openNotify(\''+key+'\')">✓ 已通知</button>'
+    : '<button class="notify-btn" onclick="openNotify(\''+key+'\')">🔔 通知</button>';
+}
+function openNotify(key){
+  const p=NOTIFY_REGISTRY[key];
+  if(!p) return;
+  currentNotifyKey=key;
+  document.getElementById("notifyTitle").textContent="发送预警通知 · "+p.title;
+  const lv=document.getElementById("notifyLv");
+  lv.textContent=p.lvText;
+  lv.className="lv-tag "+(p.kind==="over"?"red":p.kind==="warn"?"orange":"yellow");
+  document.getElementById("notifyMsg").value=p.msg;
+  document.getElementById("notifyRcpts").innerHTML=p.rcpts.map(function(r){
+    return '<label class="rcpt"><input type="checkbox" checked>'
+      +'<span class="rg'+(r.g==="期货公司"?" rg-hq":"")+'">'+r.g+'</span><span>'+r.n+'</span></label>';
+  }).join("");
+  document.getElementById("notifyMask").style.display="flex";
+}
+function closeNotify(){
+  document.getElementById("notifyMask").style.display="none";
+}
+function sendNotify(){
+  const rcpts=document.querySelectorAll("#notifyRcpts input:checked").length;
+  const chans=[].slice.call(document.querySelectorAll(".chan-row input:checked"))
+    .map(function(c){return c.parentNode.textContent.trim();});
+  if(currentNotifyKey) NOTIFIED[currentNotifyKey]=true;
+  closeNotify();
+  renderLimits(); renderTrends(); renderCombos();
+  showToast("✓ 预警通知已发送："+rcpts+" 位收件人 · "+(chans.length?chans.join("／"):"未选通道"));
+}
+function showToast(txt){
+  const t=document.getElementById("toast");
+  t.textContent=txt;
+  t.classList.add("show");
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer=setTimeout(function(){t.classList.remove("show");},2800);
+}
+/* 交易日选择（本页为 2026-10-15 快照，日期切换仅作界面反馈） */
+document.addEventListener("change",function(e){
+  if(e.target&&e.target.id==="tradeDate"&&e.target.value){
+    showToast("已选择交易日 "+e.target.value+"（本页为 2026-10-15 数据快照，日期切换仅作界面演示）");
+  }
+});
+
+/* ================= 渲染引擎 ================= */
+function stBadge(kind,txt){
+  const m={over:["超限","🔴"],warn:["预警","🟠"],watch:["关注","🟡"],ok:["正常","🟢"]};
+  const label=txt||m[kind][0];
+  return '<span class="st '+kind+'"><span class="st-dot"></span>'+label+'</span>';
+}
+function fmtWan(v){
+  if(v===null||v===undefined) return "—";
+  if(Math.abs(v)>=10000) return (v/10000).toFixed(2)+" 亿";
+  return v.toLocaleString("zh-CN",{minimumFractionDigits:0,maximumFractionDigits:2});
+}
+function fmtU(v,unit){   // 带单位：已换算为亿则不重复拼单位
+  const s=fmtWan(v);
+  if(s==="—"||s.indexOf("亿")>=0||!unit) return s;
+  return s+" "+unit;
+}
+
+/* ---- 预警总览 KPI ---- */
+function renderKpi(){
+  const pct=function(d){return d.val/d.lim*100;};
+  const over=LIMITS.filter(function(d){return pct(d)>=100;}).length;
+  const warn=LIMITS.filter(function(d){const p=pct(d);return p>=80&&p<100;}).length;
+  const watch=LIMITS.filter(function(d){const p=pct(d);return p>=70&&p<80;}).length;
+  const flagged=over+warn+watch;
+  const worst=LIMITS.reduce(function(a,b){return pct(a)>=pct(b)?a:b;});
+  const worstPct=pct(worst).toFixed(1);
+  const worstK=pct(worst)>=100?"over":pct(worst)>=80?"warn":pct(worst)>=70?"watch":"ok";
+  const KC={over:"#DC2626",warn:"#EA580C",watch:"#D97706",ok:"#16A34A"};
+  const CN={over:"超限",warn:"预警",watch:"关注",ok:"正常"};
+  const tHit=TRENDS.filter(function(d){return d.bad;}).length;
+  const cHit=COMBOS.filter(function(d){return d.hit;}).length;
+  document.getElementById("kpiRow").innerHTML=
+    '<div class="kpi-card" style="--kc:'+KC.over+'">'
+    +'<div class="kpi-tag">单指标超限</div>'
+    +'<div class="kpi-num">'+flagged+'<small>/ '+LIMITS.length+' 项触发</small></div>'
+    +'<div class="kpi-sub"><span class="d" style="background:#DC2626"></span>超限 '+over
+    +' · <span class="d" style="background:#EA580C"></span>预警 '+warn
+    +' · <span class="d" style="background:#D97706"></span>关注 '+watch+'</div></div>'
+    +'<div class="kpi-card" style="--kc:'+(tHit?KC.warn:KC.ok)+'">'
+    +'<div class="kpi-tag">趋势恶化</div>'
+    +'<div class="kpi-num">'+tHit+'<small>/ '+TRENDS.length+' 项触发</small></div>'
+    +'<div class="kpi-sub">连续 3 个交易日同向恶化即触发</div></div>'
+    +'<div class="kpi-card" style="--kc:'+(cHit?KC.over:KC.ok)+'">'
+    +'<div class="kpi-tag">组合恶化</div>'
+    +'<div class="kpi-num">'+cHit+'<small>/ '+COMBOS.length+' 条规则命中</small></div>'
+    +'<div class="kpi-sub">当日多项指标同时恶化</div></div>'
+    +'<div class="kpi-card" style="--kc:'+KC[worstK]+'">'
+    +'<div class="kpi-tag">当前最紧指标</div>'
+    +'<div class="kpi-num">'+worstPct+'<small>%</small></div>'
+    +'<div class="kpi-sub">'+worst.name+'（'+CN[worstK]+'）</div></div>';
+}
+
+/* ---- 单指标超限（仅展示超限/预警/关注项） ---- */
+function renderLimits(){
+  const C={over:"#DC2626",warn:"#EA580C",watch:"#D97706",ok:"#16A34A"};
+  const LVT={over:"超限",warn:"预警",watch:"关注"};
+  const tb=document.getElementById("tblLimit").querySelector("tbody");
+  tb.innerHTML=LIMITS.map(function(d,i){
+    const pct=d.val/d.lim*100;
+    const kind=pct>=100?"over":pct>=80?"warn":pct>=70?"watch":"ok";
+    if(kind==="ok") return "";   // 正常项不在表中列示
+    const bw=Math.min(100,pct);
+    const key="L"+i;
+    regNotify(key,{
+      title:d.name, kind:kind, lvText:LVT[kind],
+      rcpts: kind==="over"?RCPT_OVER : kind==="warn"?RCPT_WARN : RCPT_WATCH,
+      msg:"【单指标预警 · "+LVT[kind]+"】"+d.cat+" · "+d.name+"\n"
+        +"当前值 "+fmtU(d.val,d.unit)+"，授权限额 "+fmtU(d.lim,d.unit)
+        +"（"+pct.toFixed(1)+"%，"+LVT[kind]+"）。\n"
+        +"请相关责任人核查并反馈处置措施。\n"
+        +"数据快照：2026-08-04 ｜ 全面风险管理系统 · 内部指标预警"
+    });
+    return '<tr><td><span class="cat-tag">'+d.cat+'</span></td>'
+      +'<td style="text-align:left;padding-left:16px;font-weight:700;color:#1E293B">'+d.name+'</td>'
+      +'<td>'+fmtU(d.val,d.unit)+'</td><td>'+fmtU(d.lim,d.unit)+'</td>'
+      +'<td><div class="prog"><div class="prog-bar" style="width:'+bw+'%;background:'+C[kind]+'"></div><span>'+pct.toFixed(1)+'%</span></div></td>'
+      +'<td>'+stBadge(kind)+'</td>'
+      +'<td>'+notifyBtn(key,NOTIFIED[key])+'</td></tr>';
+  }).join("");
+}
+
+/* ---- 3 日趋势监测（触发项可发送通知） ---- */
+function renderTrends(){
+  const tb=document.getElementById("tblTrend").querySelector("tbody");
+  tb.innerHTML=TRENDS.map(function(d,i){
+    const maxA=Math.max.apply(null,d.seq.map(Math.abs));
+    const spark=d.seq.map(function(v){
+      const h=(6+18*Math.abs(v)/maxA).toFixed(1);
+      const col=d.bad?(v<0?"#DC2626":v>=Math.max.apply(null,d.seq)?"#EA580C":"#F59E0B"):(v<0?"#94A3B8":"#16A34A");
+      return '<i style="height:'+h+'px;background:'+col+'"></i>';
+    }).join("");
+    const cellCol=function(v){return d.bad&&v<0?"#B91C1C":(v<0?"#C2410C":v>0?"#15803D":"#475569");};
+    const signed=d.metric.indexOf("盈亏")>=0;   // 盈亏带符号，敞口/VAR 为水平值不带符号
+    const num=function(v){return v===null?"—":(signed&&v>0?"+":"")+v.toLocaleString("zh-CN",{minimumFractionDigits:2,maximumFractionDigits:2});};
+    const key="T"+i;
+    if(d.bad) regNotify(key,{
+      title:d.obj, kind:"over", lvText:"触发", rcpts:RCPT_OVER,
+      msg:"【趋势恶化预警 · 触发】"+d.obj+" · "+d.metric+"（"+d.rule+"）\n"
+        +"近 3 个交易日："+d.seq.map(function(v){return v.toLocaleString("zh-CN",{minimumFractionDigits:2,maximumFractionDigits:2});}).join(" / ")+"。\n"
+        +"已触发连续恶化规则（触发即升级处置），请相关责任人核查原因并反馈处置措施。\n"
+        +"（趋势序列为演示数据）｜ 全面风险管理系统 · 内部指标预警"
+    });
+    return '<tr><td style="font-weight:700;color:#1E293B">'+d.obj+'<div style="font-size:10px;color:var(--ink3);font-weight:400">'+d.metric+'</div></td>'
+      +d.seq.map(function(v){return '<td style="color:'+cellCol(v)+'">'+num(v)+'</td>';}).join("")
+      +'<td><div class="spark">'+spark+'</div></td>'
+      +'<td style="font-weight:600;color:#475569">'+d.rule+'</td>'
+      +'<td>'+(d.bad?stBadge("over","触发"):stBadge("ok","未触发"))+'</td>'
+      +'<td>'+(d.bad?notifyBtn(key,NOTIFIED[key]):'<span style="color:#94A3B8">—</span>')+'</td></tr>';
+  }).join("");
+}
+
+/* ---- 多指标组合恶化 ---- */
+function renderCombos(){
+  const tb=document.getElementById("tblCombo").querySelector("tbody");
+  tb.innerHTML=COMBOS.map(function(d){
+    regNotify(d.id,{
+      title:d.id+" · "+d.name, kind:"over", lvText:"触发", rcpts:RCPT_OVER,
+      msg:"【组合恶化预警 · 触发】规则 "+d.id+"（"+d.name+"）\n"
+        +"组合条件："+d.cond+"\n命中对象："+d.hit+"。\n"+d.detail+"。\n"
+        +"组合触发，请相关责任人立即核查并反馈。\n"
+        +"（组合明细为演示数据）｜ 全面风险管理系统 · 内部指标预警"
+    });
+    return '<tr>'
+      +'<td><b style="color:#B91C1C">'+d.id+'</b> '+d.name+'</td>'
+      +'<td style="white-space:normal;min-width:150px;font-weight:500;color:#475569">'+d.cond+'</td>'
+      +'<td style="white-space:normal"><span class="hit-name">'+d.hit+'</span><div style="font-size:10.5px;color:var(--ink2);font-weight:400">'+d.detail+'</div></td>'
+      +'<td>'+stBadge("over","触发")+'</td>'
+      +'<td>'+notifyBtn(d.id,NOTIFIED[d.id])+'</td></tr>';
+  }).join("");
+  const tb2=document.getElementById("tblSector").querySelector("tbody");
+  tb2.innerHTML=SECTORS.map(function(s){
+    const pnlCol=s.pnl===null?"#475569":s.pnl<0?"#B91C1C":"#15803D";
+    /* 敞口列：同方向绝对值扩大=红▲、缩小=绿▼、方向反转=橙⇄（悬停显示前日值与口径） */
+    const exCol=function(c,p){return expoUp(c,p)?"#B91C1C":(c*p<0?"#EA580C":"#15803D");};
+    const exArrow=function(c,p){return expoUp(c,p)?"▲":(c*p<0?"⇄":(Math.abs(c)!==Math.abs(p)?"▼":"—"));};
+    const exTip=function(c,p){return ' title="前日 '+(p>0?"+":"")+p+' · '+(expoUp(c,p)?"同方向绝对值扩大":(c*p<0?"方向反转":"绝对值缩小"))+'"';};
+    const gk=function(v,nd){return (v>0?"+":"")+v.toFixed(nd);};
+    const rules=sectorRules(s);
+    return '<tr><td style="text-align:left;padding-left:16px;font-weight:700;color:#1E293B">'+s.name+'</td>'
+      +'<td style="color:'+pnlCol+'">'+(s.pnl===null?"—":(s.pnl>0?"+":"")+s.pnl.toFixed(2))+'</td>'
+      +'<td style="color:'+exCol(s.delta,s.prev.delta)+'"'+exTip(s.delta,s.prev.delta)+'>'+gk(s.delta,0)+' '+exArrow(s.delta,s.prev.delta)+'</td>'
+      +'<td style="color:'+exCol(s.vega,s.prev.vega)+'"'+exTip(s.vega,s.prev.vega)+'>'+gk(s.vega,1)+' '+exArrow(s.vega,s.prev.vega)+'</td>'
+      +'<td style="color:'+exCol(s.gamma,s.prev.gamma)+'"'+exTip(s.gamma,s.prev.gamma)+'>'+gk(s.gamma,1)+' '+exArrow(s.gamma,s.prev.gamma)+'</td>'
+      +'<td>'+s.credit+'</td>'
+      +'<td>'+(rules.length?'<span class="badges" style="display:inline-flex;gap:3px">'+rules.map(function(r){return '<span class="bdg2">'+r+'</span>';}).join("")+'</span>':'<span style="color:#16A34A;font-size:11px">—</span>')+'</td></tr>';
+  }).join("");
+}
+
+/* ---- 主流程 ---- */
+(function(){
+  renderKpi();
+  renderLimits();
+  renderTrends();
+  renderCombos();
+  window.__RENDER_DONE__ = true;
+})();
+
+/* ================= Tab 切换（事件委托 + hash 记忆 + 已激活反馈） ================= */
+function switchTab(id, silent){
+  var btns=document.querySelectorAll(".tab-btn"),panes=document.querySelectorAll(".tabpane");
+  var already=false;
+  for(var i=0;i<btns.length;i++){
+    var on=btns[i].getAttribute("data-tab")===id;
+    if(on&&btns[i].classList.contains("active")) already=true;
+    btns[i].classList.toggle("active",on);
+  }
+  for(var j=0;j<panes.length;j++) panes[j].classList.toggle("active",panes[j].id==="pane-"+id);
+  if(already&&!silent&&typeof showToast==="function"){
+    showToast(id==="mkt"?"当前已在「行情监测与预警」页签":"当前已在「内部指标监测与预警」页签");
+  }
+  try{ window.scrollTo({top:0,behavior:"smooth"}); }catch(e){ try{ window.scrollTo(0,0); }catch(e2){} }
+  try{ history.replaceState(null,"","#"+id); }catch(e){ try{ location.hash="#"+id; }catch(e2){} }
+}
+(function(){
+  var h=(location.hash||"").replace("#","");
+  if(h!=="int"&&h!=="mkt") h="mkt";
+  switchTab(h,true);
+  /* 事件委托：不依赖按钮内联 onclick，点击按钮内部任意子元素同样生效 */
+  function upChain(el){ while(el&&el!==document.body){ if(el.classList&&el.classList.contains("tab-btn")) return el; el=el.parentNode; } return null; }
+  document.addEventListener("click",function(ev){
+    var b=upChain(ev.target);
+    if(b){ var t=b.getAttribute("data-tab"); if(t) switchTab(t); }
+  });
+  window.addEventListener("hashchange",function(){
+    var hh=(location.hash||"").replace("#","");
+    if(hh==="int"||hh==="mkt") switchTab(hh);
+  });
+  var pct=function(d){return d.val/d.lim*100;};
+  var flagged=LIMITS.filter(function(d){return pct(d)>=70;}).length;
+  var tHit=TRENDS.filter(function(d){return d.bad;}).length;
+  var cHit=COMBOS.filter(function(d){return d.hit;}).length;
+  var b=document.getElementById("tabIntBadge");
+  if(b) b.textContent=(flagged+tHit+cHit)+" 项预警";
+})();
+window.__RENDER_DONE__=true;
+</script>
+
+
+<script src="../../home-link.js"></script>
+</body></html>

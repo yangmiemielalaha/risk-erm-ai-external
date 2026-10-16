@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>情景参数调设与压力测试模块</title>
+<style>
+  :root{
+    --bg:#eef1f7;
+    --surface:#ffffff;
+    --ink:#0f172a;
+    --ink-2:#64748b;
+    --ink-3:#94a3b8;
+    --line:#e2e8f0;
+    --line-soft:#edf1f7;
+    --accent:#2563eb;
+    --accent-dark:#1d4ed8;
+    --accent-soft:rgba(37,99,235,.08);
+    --ai:#7c3aed;
+    --ai-dark:#6d28d9;
+    --ai-soft:rgba(124,58,237,.08);
+    --ok:#16a34a;
+    --warn:#d97706;
+    --err:#dc2626;
+    --radius:10px;
+    --shadow:0 1px 2px rgba(15,23,42,.05),0 4px 14px rgba(15,23,42,.05);
+    --mono:"Fira Code","JetBrains Mono",ui-monospace,"SF Mono",Consolas,"Courier New",monospace;
+    --sans:"Inter","PingFang SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    font-family:var(--sans);
+    background:
+      radial-gradient(1200px 300px at 80% -80px, rgba(37,99,235,.07), transparent 60%),
+      radial-gradient(900px 260px at 10% -60px, rgba(124,58,237,.06), transparent 60%),
+      var(--bg);
+    color:var(--ink);
+    font-size:13px;
+    line-height:1.45;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+  }
+  button{font-family:inherit;cursor:pointer;}
+  input,select{font-family:inherit;font-size:12px;color:var(--ink);}
+
+  /* ===== 顶层主栏 ===== */
+  .topbar{
+    height:46px;flex:0 0 46px;
+    background:linear-gradient(100deg,#0b1226 0%,#131c3a 55%,#1b1550 100%);
+    color:#fff;
+    display:flex;align-items:center;
+    padding:0 18px;gap:14px;
+    box-shadow:0 2px 12px rgba(11,18,38,.35);
+    position:relative;z-index:20;
+  }
+  .topbar .logo{
+    width:26px;height:26px;flex:0 0 26px;border-radius:7px;
+    display:grid;place-items:center;
+    background:linear-gradient(135deg,#2563eb,#7c3aed);
+    color:#fff;font-family:var(--mono);font-size:11px;font-weight:700;
+    box-shadow:0 2px 8px rgba(37,99,235,.5);
+  }
+  .topbar h1{font-size:14px;font-weight:600;letter-spacing:.03em;}
+  .topbar .sep{color:#3b4767;}
+  .topbar .crumb{font-size:11px;color:#8b96b3;font-family:var(--mono);}
+  .topbar .spacer{flex:1;}
+  .topbar .date-box{display:flex;align-items:center;gap:7px;font-size:11px;color:#8b96b3;}
+  .topbar input[type=date]{
+    background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);color:#e8ecf6;
+    height:26px;padding:0 8px;border-radius:6px;font-family:var(--mono);font-size:11px;
+    outline:none;cursor:pointer;color-scheme:dark;
+  }
+  .topbar input[type=date]:focus{border-color:var(--accent);}
+  .run-status{
+    display:flex;align-items:center;gap:7px;
+    font-family:var(--mono);font-size:10px;color:#8b96b3;
+    background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+    padding:4px 10px;border-radius:99px;
+  }
+  .run-status .dot{width:7px;height:7px;border-radius:50%;background:#34d399;box-shadow:0 0 6px #34d399;}
+  .run-status.busy .dot{background:#fbbf24;box-shadow:0 0 6px #fbbf24;animation:blink 1s infinite;}
+  @keyframes blink{50%{opacity:.25;}}
+
+  /* ===== 流程步骤条 ===== */
+  .stepper{
+    flex:0 0 auto;
+    display:flex;align-items:center;gap:0;
+    padding:10px 18px 4px;
+  }
+  .step{
+    display:flex;align-items:center;gap:10px;
+    background:var(--surface);border:1px solid var(--line);
+    border-radius:99px;padding:6px 18px 6px 8px;
+    box-shadow:var(--shadow);
+    transition:border-color .2s, box-shadow .2s;
+  }
+  .step.clickable{cursor:pointer;}
+  .step.clickable:hover{border-color:var(--ai);box-shadow:0 4px 16px rgba(124,58,237,.18);}
+  .step .s-no{
+    width:26px;height:26px;border-radius:50%;flex:0 0 26px;
+    display:grid;place-items:center;
+    background:#eef2fa;color:var(--ink-2);
+    font-family:var(--mono);font-size:12px;font-weight:700;
+    transition:all .25s;
+  }
+  .step .s-txt{display:flex;flex-direction:column;line-height:1.3;}
+  .step .s-txt b{font-size:12px;font-weight:600;}
+  .step .s-txt i{font-style:normal;font-size:10px;color:var(--ink-3);font-family:var(--mono);}
+  .step.on .s-no{background:linear-gradient(135deg,var(--accent),#4f46e5);color:#fff;box-shadow:0 2px 8px rgba(37,99,235,.4);}
+  .step.done .s-no{background:linear-gradient(135deg,#16a34a,#059669);color:#fff;}
+  .step.done{border-color:#bbf7d0;}
+  .step.s-ai.on .s-no{background:linear-gradient(135deg,var(--ai),#a855f7);box-shadow:0 2px 8px rgba(124,58,237,.4);}
+  .s-line{flex:0 0 34px;height:2px;background:linear-gradient(90deg,var(--line),#cbd5e1);margin:0 6px;border-radius:2px;}
+  .stepper .spacer{flex:1;}
+  .stepper .tip{font-size:10px;color:var(--ink-3);font-family:var(--mono);}
+
+  /* ===== 参数调设区 ===== */
+  .filterband{
+    flex:0 0 auto;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    margin:8px 18px 0;
+    padding:10px 14px 11px;
+  }
+  .filterband .band-title{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+  .src-badge{
+    display:inline-flex;align-items:center;gap:6px;
+    font-size:10px;font-family:var(--mono);color:var(--ink-2);
+    background:#f1f5f9;border:1px solid var(--line);border-radius:99px;
+    padding:3px 11px;max-width:420px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .src-badge::before{content:"";width:6px;height:6px;border-radius:50%;background:#34d399;flex:0 0 6px;}
+  .src-badge.excel{color:#15803d;background:#f0fdf4;border-color:#bbf7d0;}
+  .tag.dirbuy{border-color:#93c5fd;color:#1d4ed8;background:#eff6ff;}
+  .tag.dirsell{border-color:#fdba74;color:#c2410c;background:#fff7ed;}
+  .filterband .band-title b{font-size:12px;font-weight:600;}
+  .filterband .band-title b::before{
+    content:"";display:inline-block;width:3px;height:11px;border-radius:2px;
+    background:linear-gradient(180deg,var(--accent),#4f46e5);
+    margin-right:7px;vertical-align:-1px;
+  }
+  .filterband .band-title span{font-size:10px;color:var(--ink-2);font-family:var(--mono);}
+  .filter-row{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;}
+  .fld{display:flex;flex-direction:column;gap:4px;}
+  .fld label{
+    font-size:10px;color:var(--ink-2);letter-spacing:.05em;font-weight:600;
+    display:flex;align-items:center;gap:4px;
+  }
+  .fld select,.fld input[type=text]{
+    height:28px;border:1px solid var(--line);background:#f8fafc;border-radius:7px;
+    padding:0 9px;outline:none;min-width:130px;transition:all .15s;
+  }
+  .fld select:hover,.fld input[type=text]:hover{border-color:#cbd5e1;}
+  .fld select:focus,.fld input[type=text]:focus{border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px var(--accent-soft);}
+  .fld input[type=text]{min-width:170px;font-family:var(--mono);}
+
+  .btn{
+    height:28px;padding:0 16px;border-radius:7px;
+    border:1px solid var(--accent);
+    background:linear-gradient(135deg,var(--accent),#3b82f6);
+    color:#fff;font-size:12px;font-weight:600;letter-spacing:.05em;
+    box-shadow:0 2px 6px rgba(37,99,235,.28);
+    transition:all .15s;
+  }
+  .btn:hover{background:linear-gradient(135deg,var(--accent-dark),var(--accent));box-shadow:0 4px 10px rgba(37,99,235,.36);transform:translateY(-1px);}
+  .btn:active{transform:translateY(0);}
+  .btn.ghost{
+    background:#fff;color:var(--accent);border:1px solid #bfdbfe;box-shadow:none;
+  }
+  .btn.ghost:hover{background:var(--accent-soft);border-color:var(--accent);transform:none;}
+  .btn.plain{
+    background:#fff;color:var(--ink-2);border:1px solid var(--line);box-shadow:none;
+  }
+  .btn.plain:hover{border-color:var(--ink-3);color:var(--ink);transform:none;}
+  .btn:disabled{opacity:.45;cursor:not-allowed;transform:none!important;box-shadow:none;}
+  .btn.sm{height:24px;padding:0 10px;font-size:11px;}
+  .btn.ai{
+    background:linear-gradient(135deg,var(--ai),#a855f7);
+    border-color:transparent;
+    box-shadow:0 2px 8px rgba(124,58,237,.35);
+  }
+  .btn.ai:hover{background:linear-gradient(135deg,var(--ai-dark),var(--ai));box-shadow:0 4px 14px rgba(124,58,237,.45);}
+
+  /* ===== 主工作区 ===== */
+  .workspace{
+    flex:1 1 0;min-height:0;
+    display:flex;gap:12px;
+    padding:10px 18px 8px;
+  }
+  .panel{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    display:flex;flex-direction:column;min-height:0;
+    overflow:hidden;
+  }
+  .panel-head{
+    flex:0 0 36px;height:36px;
+    display:flex;align-items:center;gap:8px;
+    padding:0 12px;
+    border-bottom:1px solid var(--line-soft);
+    background:linear-gradient(180deg,#fbfcfe,#f6f8fc);
+  }
+  .panel-head b{font-size:12px;font-weight:600;}
+  .panel-head b::before{
+    content:"";display:inline-block;width:3px;height:11px;border-radius:2px;
+    background:linear-gradient(180deg,var(--accent),#4f46e5);
+    margin-right:7px;vertical-align:-1px;
+  }
+  .panel-head.ai-accent b::before{background:linear-gradient(180deg,var(--ai),#a855f7);}
+  .panel-head .count{
+    font-family:var(--mono);font-size:10px;font-weight:600;color:var(--accent-dark);
+    background:var(--accent-soft);border:1px solid #dbeafe;
+    padding:1px 8px;border-radius:99px;
+  }
+  .panel-head .spacer{flex:1;}
+  .panel-head .mini{font-size:10px;color:var(--ink-2);font-family:var(--mono);}
+  .panel-body{flex:1;min-height:0;overflow:auto;position:relative;}
+
+  /* 表格 */
+  table{width:100%;border-collapse:collapse;table-layout:fixed;}
+  thead th{
+    position:sticky;top:0;z-index:2;
+    background:#f6f8fc;
+    border-bottom:1px solid var(--line);
+    font-size:11px;font-weight:600;color:var(--ink-2);
+    text-align:left;padding:7px 10px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  thead th.num,td.num{text-align:right;font-family:var(--mono);font-size:11px;}
+  tbody td{
+    border-bottom:1px solid var(--line-soft);
+    padding:6px 10px;
+    font-size:12px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  tbody tr{transition:background .12s;}
+  tbody tr:hover{background:var(--accent-soft);}
+  tbody tr.selected{background:rgba(37,99,235,.12);}
+  tbody tr.row-head-edit{background:linear-gradient(90deg,#fffbeb,transparent 70%);}
+  .empty-tip{
+    position:absolute;inset:0;display:grid;place-items:center;
+    color:var(--ink-3);font-size:12px;font-family:var(--mono);
+  }
+  .ck{
+    appearance:none;width:14px;height:14px;border-radius:4px;
+    border:1.5px solid #b6c2d4;background:#fff;
+    cursor:pointer;position:relative;vertical-align:-2px;transition:all .12s;
+  }
+  .ck:hover{border-color:var(--accent);}
+  .ck:checked{background:var(--accent);border-color:var(--accent);}
+  .ck:checked::after{
+    content:"";position:absolute;left:3.5px;top:0.5px;
+    width:4px;height:8px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(42deg);
+  }
+  .tag{
+    display:inline-block;font-size:10px;font-family:var(--mono);font-weight:600;
+    border:1px solid var(--line);padding:1px 7px;border-radius:99px;color:var(--ink-2);
+    background:#f8fafc;
+  }
+  .tag.snowball{border-color:#93c5fd;color:#1d4ed8;background:#eff6ff;}
+  .tag.phoenix{border-color:#c4b5fd;color:#6d28d9;background:#f5f3ff;}
+  .tag.dcn{border-color:#86efac;color:#15803d;background:#f0fdf4;}
+  .tag.fcn{border-color:#fcd34d;color:#b45309;background:#fffbeb;}
+  .tag.vanilla{border-color:#cbd5e1;color:#475569;background:#f8fafc;}
+  .tag.shark{border-color:#f9a8d4;color:#be185d;background:#fdf2f8;}
+  .tag.dshark{border-color:#f0abfc;color:#a21caf;background:#fdf4ff;}
+  .tag.barrier{border-color:#5eead4;color:#0f766e;background:#f0fdfa;}
+
+  /* 穿梭箭头列 */
+  .shuttle{
+    flex:0 0 78px;
+    display:flex;flex-direction:column;justify-content:center;align-items:center;gap:9px;
+  }
+  .shuttle button{
+    width:48px;height:32px;border-radius:8px;
+    border:1px solid var(--line);background:var(--surface);
+    font-size:14px;color:var(--ink-2);
+    display:grid;place-items:center;
+    box-shadow:var(--shadow);
+    transition:all .15s;
+  }
+  .shuttle button:hover:not(:disabled){border-color:var(--accent);color:#fff;background:linear-gradient(135deg,var(--accent),#3b82f6);transform:scale(1.06);}
+  .shuttle button:disabled{opacity:.35;cursor:not-allowed;box-shadow:none;}
+  .shuttle .lbl{font-size:10px;color:var(--ink-3);font-family:var(--mono);text-align:center;line-height:1.5;}
+
+  /* 批量调整弹层 */
+  .batch-anchor{position:relative;}
+  .batch-pop{
+    position:absolute;right:0;top:30px;z-index:30;
+    width:292px;background:#fff;
+    border:1px solid var(--line);border-radius:12px;
+    box-shadow:0 12px 32px rgba(15,23,42,.16);
+    padding:12px 14px 10px;
+  }
+  .bp-title{font-size:11px;font-weight:600;margin-bottom:9px;}
+  .bp-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px 10px;}
+  .bp-grid label{display:flex;flex-direction:column;gap:4px;font-size:10px;color:var(--ink-2);font-weight:600;}
+  .bp-grid input{
+    height:26px;border:1px solid var(--line);border-radius:6px;padding:0 8px;
+    font-family:var(--mono);font-size:11px;outline:none;background:#f8fafc;
+  }
+  .bp-grid input:focus{border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px var(--accent-soft);}
+  .bp-actions{display:flex;gap:8px;margin-top:11px;}
+  .bp-hint{margin-top:8px;font-size:10px;color:var(--ink-3);line-height:1.5;}
+
+  /* 右侧参数表单元格内输入 */
+  .cell-in{
+    width:100%;border:1px solid transparent;border-radius:5px;background:transparent;
+    font-family:var(--mono);font-size:11px;text-align:right;
+    padding:2px 5px;outline:none;color:var(--ink);transition:all .12s;
+  }
+  .cell-in:hover{border-color:var(--line);background:#f8fafc;}
+  .cell-in:focus{border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px var(--accent-soft);}
+  .cell-in.changed{color:var(--accent-dark);font-weight:700;}
+
+  /* 首行批量同步条 */
+  .batchbar{
+    flex:0 0 auto;
+    display:flex;align-items:center;gap:10px;
+    padding:6px 12px;border-bottom:1px solid #fde68a;
+    background:linear-gradient(90deg,#fffbeb,#fffdf4);
+    font-size:11px;color:#92600a;
+  }
+  .batchbar b{font-weight:600;}
+  .batchbar .sw{margin-left:auto;display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;color:var(--ink-2);}
+  .switch{position:relative;width:32px;height:17px;flex:0 0 32px;}
+  .switch input{opacity:0;width:100%;height:100%;position:absolute;margin:0;cursor:pointer;z-index:2;}
+  .switch i{position:absolute;inset:0;background:#cbd5e1;transition:.2s;border-radius:99px;}
+  .switch i::after{
+    content:"";position:absolute;left:2px;top:2px;width:13px;height:13px;background:#fff;transition:.2s;border-radius:50%;
+    box-shadow:0 1px 3px rgba(0,0,0,.25);
+  }
+  .switch input:checked + i{background:var(--accent);}
+  .switch input:checked + i::after{left:17px;}
+
+  /* ===== 底部：计算参数 + 结果 ===== */
+  .splitter{flex:0 0 10px;height:10px;cursor:ns-resize;position:relative;}
+  .splitter::after{
+    content:"";position:absolute;left:40%;right:40%;top:4px;height:3px;border-radius:2px;
+    background:#cbd5e1;transition:background .15s;
+  }
+  .splitter:hover::after,.splitter.dragging::after{background:var(--accent);}
+  body.resizing{user-select:none;cursor:ns-resize;}
+
+  .bottomdock{
+    flex:0 0 42vh;
+    height:42vh;min-height:240px;max-height:72vh;
+    margin:0 18px 8px;
+    border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    background:var(--surface);
+    display:flex;flex-direction:column;overflow:hidden;
+  }
+  .calcbar{
+    flex:0 0 auto;
+    display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;
+    padding:9px 14px;
+    border-bottom:1px solid var(--line-soft);
+    background:linear-gradient(180deg,#fbfcfe,#f6f8fc);
+  }
+  .calcbar .fld select,.calcbar .fld input{min-width:96px;height:26px;}
+  .calcbar .fld input{font-family:var(--mono);}
+  .calcbar .compute-zone{margin-left:auto;display:flex;align-items:center;gap:10px;}
+  .progress{display:none;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--ink-2);}
+  .progress.on{display:flex;}
+  .progress .bar{width:130px;height:6px;background:var(--line-soft);border-radius:99px;position:relative;overflow:hidden;}
+  .progress .bar i{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:99px;background:linear-gradient(90deg,var(--accent),#4f46e5);transition:width .2s;}
+  .btn.compute{
+    height:32px;padding:0 30px;font-size:13px;letter-spacing:.2em;border-radius:8px;
+  }
+
+  .result-area{flex:1;min-height:0;display:flex;gap:0;}
+  .result-area .panel{border:none;border-radius:0;box-shadow:none;border-right:1px solid var(--line-soft);}
+  .result-area .panel:last-child{border-right:none;}
+  #greeksPanel{flex:1.5;}
+  #pnlPanel{flex:1;}
+  td.pos{color:var(--err);font-weight:600;}   /* 红涨 */
+  td.neg{color:var(--ok);font-weight:600;}   /* 绿跌 */
+
+  /* 损益分布条 */
+  .pnlbar{
+    position:relative;height:14px;width:100%;min-width:80px;
+    background:linear-gradient(90deg,transparent calc(50% - .5px),#cbd5e1 calc(50% - .5px),#cbd5e1 calc(50% + .5px),transparent calc(50% + .5px));
+  }
+  .pnlbar i{
+    position:absolute;top:3px;bottom:3px;border-radius:3px;
+  }
+  .pnlbar i.pos{left:50%;background:linear-gradient(90deg,#f87171,#dc2626);}
+  .pnlbar i.neg{right:50%;background:linear-gradient(90deg,#16a34a,#4ade80);}
+
+  /* KPI 卡片 */
+  .kpi-wrap{padding:12px;display:flex;flex-direction:column;gap:10px;height:100%;overflow:auto;}
+  .kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .kpi{
+    border:1px solid var(--line);border-radius:10px;padding:10px 12px;
+    background:linear-gradient(150deg,#fbfcfe,#f4f7fc);
+    position:relative;overflow:hidden;
+  }
+  .kpi::before{
+    content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
+    background:linear-gradient(180deg,var(--accent),#4f46e5);
+  }
+  .kpi.warn::before{background:linear-gradient(180deg,#f59e0b,#d97706);}
+  .kpi.up::before{background:linear-gradient(180deg,#f87171,#dc2626);}
+  .kpi.down::before{background:linear-gradient(180deg,#4ade80,#16a34a);}
+  .kpi .k-lbl{font-size:10px;color:var(--ink-2);font-weight:600;letter-spacing:.05em;}
+  .kpi .k-val{
+    font-family:var(--mono);font-size:19px;font-weight:700;margin-top:3px;
+    color:var(--ink);letter-spacing:-.01em;
+  }
+  .kpi .k-val.pos{color:var(--err);}
+  .kpi .k-val.neg{color:var(--ok);}
+  .kpi .k-sub{font-size:10px;color:var(--ink-3);font-family:var(--mono);margin-top:2px;}
+  .sum-meta{
+    font-size:10px;color:var(--ink-3);font-family:var(--mono);
+    border-top:1px dashed var(--line);padding-top:8px;line-height:1.7;
+  }
+
+  .foot-note{
+    flex:0 0 auto;padding:5px 14px;
+    font-size:10px;color:var(--ink-3);font-family:var(--mono);
+    border-top:1px solid var(--line-soft);
+    display:flex;gap:18px;background:#fbfcfe;
+  }
+  .foot-note .spacer{flex:1;}
+
+  ::-webkit-scrollbar{width:8px;height:8px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:rgba(100,116,139,.25);border-radius:99px;}
+  ::-webkit-scrollbar-thumb:hover{background:rgba(100,116,139,.45);}
+
+  /* ===== AI 情景设计 子界面 ===== */
+  .ai-mask{
+    position:fixed;inset:0;z-index:80;
+    background:rgba(15,23,42,.45);
+    backdrop-filter:blur(3px);
+    opacity:0;pointer-events:none;transition:opacity .25s;
+  }
+  .ai-mask.on{opacity:1;pointer-events:auto;}
+  .ai-panel{
+    position:fixed;top:0;right:0;bottom:0;z-index:90;
+    width:640px;max-width:94vw;
+    background:#f7f8fc;
+    border-left:1px solid var(--line);
+    box-shadow:-16px 0 48px rgba(15,23,42,.25);
+    display:flex;flex-direction:column;
+    transform:translateX(102%);
+    transition:transform .3s cubic-bezier(.32,.72,.35,1);
+  }
+  .ai-panel.on{transform:translateX(0);}
+  .ai-head{
+    flex:0 0 56px;height:56px;
+    background:linear-gradient(110deg,#2e1065 0%,#5b21b6 55%,#7c3aed 100%);
+    color:#fff;
+    display:flex;align-items:center;gap:11px;padding:0 16px;
+  }
+  .ai-head .ai-logo{
+    width:30px;height:30px;border-radius:8px;display:grid;place-items:center;
+    background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);
+    color:#fff;font-size:13px;font-family:var(--mono);font-weight:700;
+    box-shadow:0 0 14px rgba(168,85,247,.6);
+  }
+  .ai-head b{font-size:14px;font-weight:600;letter-spacing:.02em;}
+  .ai-head .crumb{font-size:10px;color:#d8b4fe;font-family:var(--mono);}
+  .ai-head .spacer{flex:1;}
+  .ai-close{
+    width:26px;height:26px;border-radius:7px;border:1px solid rgba(255,255,255,.25);
+    background:rgba(255,255,255,.1);color:#e9d5ff;
+    font-size:13px;line-height:1;display:grid;place-items:center;cursor:pointer;transition:all .15s;
+  }
+  .ai-close:hover{background:rgba(255,255,255,.25);color:#fff;}
+  .ai-body{flex:1;min-height:0;overflow:auto;padding:14px 16px;}
+
+  .ai-mode{
+    display:flex;align-items:center;gap:9px;
+    border-radius:10px;padding:9px 12px;margin-bottom:12px;
+    font-size:11px;line-height:1.5;
+    border:1px solid #ddd6fe;background:linear-gradient(90deg,#f5f3ff,#faf5ff);
+    color:#5b21b6;
+  }
+  .ai-mode.free{border-color:#bfdbfe;background:linear-gradient(90deg,#eff6ff,#f0f9ff);color:#1d4ed8;}
+  .ai-mode .m-ic{
+    width:22px;height:22px;border-radius:6px;flex:0 0 22px;
+    display:grid;place-items:center;font-size:12px;
+    background:var(--ai);color:#fff;
+  }
+  .ai-mode.free .m-ic{background:var(--accent);}
+  .ai-mode b{font-weight:700;}
+
+  .ai-sec{
+    background:#fff;border:1px solid var(--line);border-radius:12px;margin-bottom:12px;
+    box-shadow:var(--shadow);overflow:hidden;
+  }
+  .ai-sec-h{
+    display:flex;align-items:baseline;gap:8px;
+    padding:9px 12px;border-bottom:1px solid var(--line-soft);
+    background:linear-gradient(180deg,#fbfaff,#f7f5fd);
+  }
+  .ai-sec-h b{font-size:12px;font-weight:600;}
+  .ai-sec-h b::before{
+    content:"";display:inline-block;width:3px;height:11px;border-radius:2px;
+    background:linear-gradient(180deg,var(--ai),#a855f7);
+    margin-right:7px;vertical-align:-1px;
+  }
+  .ai-sec-h span{font-size:10px;color:var(--ink-2);font-family:var(--mono);}
+  .ai-sec-b{padding:12px;}
+  .ai-textarea{
+    width:100%;min-height:96px;resize:vertical;border-radius:8px;
+    border:1px solid var(--line);padding:8px 10px;outline:none;background:#f8fafc;
+    font-family:var(--sans);font-size:12px;line-height:1.6;transition:all .15s;
+  }
+  .ai-textarea:focus{border-color:var(--ai);background:#fff;box-shadow:0 0 0 3px var(--ai-soft);}
+  .ai-chips{display:flex;flex-wrap:wrap;gap:6px;}
+  .chip{
+    border:1px solid var(--line);background:#fff;color:var(--ink-2);border-radius:99px;
+    font-size:11px;padding:4px 12px;cursor:pointer;transition:all .13s;
+  }
+  .chip:hover{border-color:var(--ai);color:var(--ai);}
+  .chip.on{background:linear-gradient(135deg,var(--ai),#a855f7);border-color:transparent;color:#fff;box-shadow:0 2px 6px rgba(124,58,237,.3);}
+  .chip.custom{border-style:dashed;}
+  .chip .cx{margin-left:5px;opacity:.6;font-family:var(--mono);}
+  .chip .cx:hover{opacity:1;}
+  .ai-grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .ai-grid2 .fld select{min-width:0;width:100%;}
+  .under-add{display:flex;gap:8px;margin-top:10px;}
+  .under-add input{
+    flex:1;height:28px;border:1px dashed #c4b5fd;border-radius:7px;background:#fbfaff;
+    padding:0 10px;outline:none;font-size:12px;
+  }
+  .under-add input:focus{border-color:var(--ai);background:#fff;box-shadow:0 0 0 3px var(--ai-soft);}
+  .under-add select{
+    width:86px;height:28px;border:1px solid var(--line);border-radius:7px;background:#f8fafc;padding:0 6px;outline:none;
+  }
+
+  /* 分析过程 */
+  .ai-steps{display:none;flex-direction:column;gap:8px;padding:4px 2px;}
+  .ai-steps.on{display:flex;}
+  .ai-step{
+    display:flex;align-items:center;gap:9px;
+    font-size:11px;color:var(--ink-3);font-family:var(--mono);
+    opacity:.45;transition:all .25s;
+  }
+  .ai-step.doing{opacity:1;color:var(--ink);}
+  .ai-step.done{opacity:1;color:var(--ok);}
+  .ai-step .st-ic{
+    width:18px;height:18px;border-radius:50%;flex:0 0 18px;
+    display:grid;place-items:center;font-size:10px;
+    border:1.5px solid currentColor;
+  }
+  .ai-step.doing .st-ic{border-color:var(--ai);color:var(--ai);animation:spin 1s linear infinite;}
+  .ai-step.done .st-ic{border-color:var(--ok);background:var(--ok);color:#fff;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* 生成结果 */
+  .ai-result{display:none;}
+  .ai-result.on{display:block;}
+  .ai-result table{width:100%;border-collapse:collapse;}
+  .ai-result th{
+    background:#f5f3ff;border-bottom:1px solid #ddd6fe;
+    font-size:11px;font-weight:600;color:#5b21b6;text-align:left;padding:6px 9px;white-space:nowrap;
+  }
+  .ai-result td{
+    border-bottom:1px solid var(--line-soft);padding:6px 9px;font-size:12px;white-space:nowrap;
+  }
+  .ai-result td.num{text-align:right;font-family:var(--mono);font-size:11px;}
+  .ai-reason{
+    margin-top:10px;padding:9px 11px;border-radius:8px;
+    background:linear-gradient(120deg,#faf5ff,#f5f3ff);border:1px solid #e9d5ff;
+    font-size:11px;line-height:1.7;color:#4c1d95;
+    max-height:140px;overflow:auto;
+  }
+  .ai-reason b{color:#2e1065;}
+  .ai-foot{
+    flex:0 0 auto;padding:11px 16px;
+    border-top:1px solid var(--line);background:#fff;
+    display:flex;align-items:center;gap:10px;
+  }
+  .ai-foot .hint{font-size:10px;color:var(--ink-3);font-family:var(--mono);}
+  .ai-foot .spacer{flex:1;}
+</style>
+</head>
+<body>
+
+<!-- ═══ 一级主栏 ═══ -->
+<header class="topbar">
+  <div class="logo">RM</div>
+  <h1>情景参数调设与压力测试</h1>
+  <span class="sep">|</span>
+  <span class="crumb">风险计量管理 / 场外期权 / 情景计算</span>
+  <div class="spacer"></div>
+  <div class="run-status" id="runStatus"><span class="dot"></span><span id="runStatusText">IDLE</span></div>
+  <div class="date-box">
+    <span>业务日期</span>
+    <input type="date" id="bizDate" value="2026-09-09">
+  </div>
+</header>
+
+<!-- ═══ 流程步骤条 ═══ -->
+<nav class="stepper">
+  <div class="step on" id="step1">
+    <span class="s-no" id="step1No">1</span>
+    <div class="s-txt"><b>批量选择合约</b><i id="step1Sub">从合约池筛选并移入调设区</i></div>
+  </div>
+  <div class="s-line"></div>
+  <div class="step s-ai clickable" id="step2" title="点击打开 AI 情景设计">
+    <span class="s-no" id="step2No">2</span>
+    <div class="s-txt"><b>AI 情景设计</b><i id="step2Sub">跟随已选标的，或自由输入标的分析</i></div>
+  </div>
+  <div class="s-line"></div>
+  <div class="step" id="step3">
+    <span class="s-no" id="step3No">3</span>
+    <div class="s-txt"><b>调参与计算</b><i id="step3Sub">微调参数，输出希腊字母与 VaR</i></div>
+  </div>
+  <div class="spacer"></div>
+  <span class="tip">FLOW · SELECT → AI DESIGN → COMPUTE</span>
+</nav>
+
+<!-- ═══ 参数调设区（筛选带） ═══ -->
+<section class="filterband">
+  <div class="band-title">
+    <b>合约筛选</b>
+    <span>FILTER · 先筛出目标合约，再移入右侧调设区逐个 / 批量调参</span>
+    <div class="spacer" style="flex:1"></div>
+    <span class="src-badge" id="srcBadge">内置演示数据</span>
+    <button class="btn plain sm" id="btnDemo">演示数据</button>
+    <button class="btn sm" id="btnImport">⬆ 导入 Excel</button>
+    <input type="file" id="fileExcel" accept=".xlsx,.xls" style="display:none">
+  </div>
+  <div class="filter-row">
+    <div class="fld">
+      <label>产品结构</label>
+      <select id="fStruct">
+        <option value="">全部</option>
+        <option value="雪球">雪球</option>
+        <option value="凤凰">凤凰</option>
+        <option value="DCN">DCN</option>
+        <option value="FCN">FCN</option>
+        <option value="香草">香草</option>
+        <option value="单鲨">单鲨</option>
+        <option value="双鲨">双鲨</option>
+        <option value="单障碍敲入">单障碍敲入</option>
+      </select>
+    </div>
+    <div class="fld">
+      <label>标的类别</label>
+      <select id="fCat">
+        <option value="">全部</option>
+        <option value="商品">商品</option>
+        <option value="权益">权益</option>
+        <option value="其他">其他</option>
+      </select>
+    </div>
+    <div class="fld">
+      <label>挂钩标的</label>
+      <input type="text" id="fUnder" list="underList" placeholder="输入或选择标的" style="min-width:130px;">
+      <datalist id="underList">
+        <option value="全选"></option>
+        <option value="中证500"></option>
+        <option value="中证1000"></option>
+        <option value="沪深300"></option>
+        <option value="恒生科技"></option>
+        <option value="沪金"></option>
+        <option value="螺纹钢"></option>
+      </datalist>
+    </div>
+    <div class="fld">
+      <label>剩余期限 ≤</label>
+      <select id="fTenor">
+        <option value="">不限</option>
+        <option value="90">90 天</option>
+        <option value="180">180 天</option>
+        <option value="365">365 天</option>
+      </select>
+    </div>
+    <div class="fld">
+      <label>手动输入</label>
+      <input type="text" id="fKeyword" placeholder="合约名称关键字，回车添加">
+    </div>
+    <button class="btn ghost sm" id="btnAddManual" style="height:28px">＋ 添加</button>
+    <button class="btn sm" id="btnQuery" style="height:28px;padding:0 22px;">筛 选</button>
+    <button class="btn plain sm" id="btnReset" style="height:28px">重 置</button>
+  </div>
+</section>
+
+<!-- ═══ 主工作区 ═══ -->
+<main class="workspace">
+
+  <!-- 左：筛选结果 -->
+  <section class="panel" style="flex:1.05;">
+    <div class="panel-head">
+      <b>合约池 · 筛选结果</b>
+      <span class="count" id="leftCount">0</span>
+      <div class="spacer"></div>
+      <label class="mini"><input type="checkbox" class="ck" id="ckAllLeft"> 全选</label>
+    </div>
+    <div class="panel-body">
+      <table id="leftTable">
+        <thead>
+          <tr>
+            <th style="width:32px;"></th>
+            <th style="width:15%;">交易编号</th>
+            <th style="width:25%;">合约名称</th>
+            <th style="width:56px;">结构</th>
+            <th style="width:64px;">标的</th>
+            <th style="width:46px;">方向</th>
+            <th class="num" style="width:70px;">剩余期限(天)</th>
+            <th class="num">名义本金(万)</th>
+          </tr>
+        </thead>
+        <tbody id="leftBody"></tbody>
+      </table>
+      <div class="empty-tip" id="leftEmpty">点击「导入 Excel」读取交易记录，或设定条件后点击「筛选」</div>
+    </div>
+  </section>
+
+  <!-- 中：穿梭箭头 -->
+  <div class="shuttle">
+    <button id="mvRight" title="选中移入调设区" disabled>&#8594;</button>
+    <button id="mvRightAll" title="全部移入" disabled>&#187;</button>
+    <span class="lbl">移入<br>调设区</span>
+    <span class="lbl" style="margin-top:6px;">移出</span>
+    <button id="mvLeft" title="选中移出" disabled>&#8592;</button>
+    <button id="mvLeftAll" title="全部移出" disabled>&#171;</button>
+  </div>
+
+  <!-- 右：调设区 -->
+  <section class="panel" style="flex:1.5;">
+    <div class="panel-head ai-accent">
+      <b>情景调设 · 已选合约</b>
+      <span class="count" id="rightCount">0</span>
+      <div class="spacer"></div>
+      <button class="btn ai sm" id="btnAi" style="height:24px;padding:0 12px;font-size:11px;">✦ AI 情景设计</button>
+      <div class="batch-anchor">
+        <button class="btn ghost sm" id="btnBatch">批量调整</button>
+        <div class="batch-pop" id="batchPop" style="display:none;">
+          <div class="bp-title">统一设置选中合约的情景参数</div>
+          <div class="bp-grid">
+            <label>标的变动(%)<input type="text" id="bpSpot" placeholder="如 -10"></label>
+            <label>基差变动(bp)<input type="text" id="bpBasis" placeholder="如 50"></label>
+            <label>波动率变动(%)<input type="text" id="bpVol" placeholder="如 5"></label>
+            <label>期限变动(天)<input type="text" id="bpTenor" placeholder="如 30"></label>
+          </div>
+          <div class="bp-actions">
+            <button class="btn sm" id="bpApplySel">应用到选中</button>
+            <button class="btn plain sm" id="bpApplyAll">应用到全部</button>
+          </div>
+          <div class="bp-hint">留空的字段不改动；未勾选任何合约时「应用到选中」不可用</div>
+        </div>
+      </div>
+    </div>
+    <div class="batchbar" id="batchbar" style="display:none;">
+      <span><b>首行批量同步</b>：修改第一行参数 → 自动套用到全部合约；个别合约可再手动微调</span>
+      <span class="sw">
+        <span id="batchState">ON</span>
+        <span class="switch"><input type="checkbox" id="batchSync" checked><i></i></span>
+      </span>
+    </div>
+    <div class="panel-body">
+      <table id="rightTable">
+        <thead>
+          <tr>
+            <th style="width:32px;"></th>
+            <th style="width:24%;">合约名称</th>
+            <th style="width:56px;">结构</th>
+            <th class="num">标的变动(%)</th>
+            <th class="num">基差变动(bp)</th>
+            <th class="num">波动率变动(%)</th>
+            <th class="num">期限变动(天)</th>
+          </tr>
+        </thead>
+        <tbody id="rightBody"></tbody>
+      </table>
+      <div class="empty-tip" id="rightEmpty">从左侧合约池移入合约后在此调参<br>也可以直接点击「✦ AI 情景设计」自由分析标的</div>
+    </div>
+  </section>
+</main>
+
+<!-- 上下分隔条 -->
+<div class="splitter" id="splitter" title="拖拽调整结果区高度"></div>
+
+<!-- ═══ 底部：计算参数 + 结果 ═══ -->
+<footer class="bottomdock">
+  <div class="calcbar">
+    <div class="fld">
+      <label>VaR 算法</label>
+      <select id="pVarAlgo"><option>蒙特卡洛</option><option>历史模拟</option><option>正态法</option></select>
+    </div>
+    <div class="fld">
+      <label>模拟次数</label>
+      <select id="pSims"><option>10000</option><option selected>100000</option><option>500000</option></select>
+    </div>
+    <div class="fld">
+      <label>预测天数</label>
+      <input type="text" id="pHorizon" value="1" style="width:56px;min-width:56px;">
+    </div>
+    <div class="fld">
+      <label>置信水平</label>
+      <select id="pConf"><option>95%</option><option selected>99%</option></select>
+    </div>
+    <div class="fld">
+      <label>年化天数</label>
+      <input type="text" id="pAnnual" value="244" style="width:56px;min-width:56px;">
+    </div>
+    <div class="compute-zone">
+      <div class="progress" id="progress">
+        <span id="elapsed">已用时 00'00"</span>
+        <span class="bar"><i id="pbar"></i></span>
+      </div>
+      <button class="btn ghost sm" id="btnExport" style="height:32px;" disabled>导出明细</button>
+      <button class="btn ghost sm" id="btnQuick" style="height:32px;padding:0 18px;" disabled
+        title="对勾选合约（未勾选则全部）直接取台账 Delta/Gamma/Vega 做 Taylor 二阶展开估算，不经过估值模型">⚡ 快速计算</button>
+      <button class="btn compute" id="btnCompute" disabled>计 算</button>
+    </div>
+  </div>
+
+  <div class="result-area">
+    <section class="panel" id="greeksPanel">
+      <div class="panel-head">
+        <b>压测结果 · 希腊字母与 VaR</b>
+        <div class="spacer"></div>
+        <span class="mini" id="greeksMeta">—</span>
+      </div>
+      <div class="panel-body">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:20%;">合约名称</th>
+              <th class="num">Delta</th>
+              <th class="num">Gamma</th>
+              <th class="num">Vega</th>
+              <th class="num">Theta</th>
+              <th class="num">VaR(%)</th>
+              <th class="num">情景损益(万)</th>
+              <th style="width:110px;">损益分布</th>
+            </tr>
+          </thead>
+          <tbody id="greeksBody"></tbody>
+        </table>
+        <div class="empty-tip" id="greeksEmpty">调参完成后点击「计算」</div>
+      </div>
+    </section>
+    <section class="panel" id="pnlPanel">
+      <div class="panel-head">
+        <b>组合汇总</b>
+        <div class="spacer"></div>
+        <span class="mini" id="sumMeta">—</span>
+      </div>
+      <div class="panel-body">
+        <div class="kpi-wrap" id="sumWrap" style="display:none;">
+          <div class="kpi-grid" id="sumCards"></div>
+          <div class="sum-meta" id="sumFoot"></div>
+        </div>
+        <div class="empty-tip" id="sumEmpty">—</div>
+      </div>
+    </section>
+  </div>
+
+  <div class="foot-note">
+    <span>① 压测 + 估值：情景参数作用于合约估值模型</span>
+    <span>② 首行批量同步开启时，首行参数变动自动套用到全部行</span>
+    <span>③ AI 输出为情景建议，应用前请人工复核</span>
+    <span>④ ⚡ 快速计算：ΔP ≈ Delta·ΔS + ½·Gamma·ΔS² + Vega·Δσ，直取台账希腊字母，不经模型</span>
+    <span class="spacer"></span>
+    <span>数据为演示用模拟数据</span>
+  </div>
+</footer>
+
+<!-- ═══ AI 情景设计 子界面 ═══ -->
+<div class="ai-mask" id="aiMask"></div>
+<aside class="ai-panel" id="aiPanel">
+  <div class="ai-head">
+    <div class="ai-logo">✦</div>
+    <b>AI 情景设计</b>
+    <span class="crumb">研报解析 + 宏观情景映射 + 标的冲击校准</span>
+    <div class="spacer"></div>
+    <button class="ai-close" id="aiClose" title="关闭">✕</button>
+  </div>
+
+  <div class="ai-body">
+    <!-- 模式提示 -->
+    <div class="ai-mode" id="aiModeBanner"></div>
+
+    <!-- 1. 目标标的 -->
+    <section class="ai-sec">
+      <div class="ai-sec-h"><b>① 目标标的</b><span>已选合约自动带入 · 可自由增删 · 支持手动输入任意标的</span></div>
+      <div class="ai-sec-b">
+        <div class="ai-chips" id="aiUnders"></div>
+        <div class="under-add">
+          <input type="text" id="aiCustomUnder" placeholder="输入任意标的名称，如：纳斯达克100 / 沪银 / 原油，回车添加">
+          <select id="aiCustomCat">
+            <option value="权益">权益</option>
+            <option value="商品">商品</option>
+            <option value="其他" selected>其他</option>
+          </select>
+          <button class="btn ai sm" id="btnAddUnder" style="height:28px;">＋ 添加标的</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. 研报输入 -->
+    <section class="ai-sec">
+      <div class="ai-sec-h"><b>② 研报 / 观点输入</b><span>粘贴相关标的的研报摘要、路演纪要或分析师观点</span></div>
+      <div class="ai-sec-b">
+        <textarea class="ai-textarea" id="aiReport" placeholder="示例：某券商9月研报认为，中证500盈利预期下修，估值处于历史30%分位，短期风格切换压力下或延续震荡偏弱；股指期货基差贴水有望走阔……"></textarea>
+        <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+          <span style="font-size:10px;color:var(--ink-3);">快捷示例：</span>
+          <button class="chip" data-demo="eq">权益看空研报</button>
+          <button class="chip" data-demo="gold">贵金属看多研报</button>
+          <button class="chip" data-demo="cmd">商品需求走弱</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. 宏观情景 -->
+    <section class="ai-sec">
+      <div class="ai-sec-h"><b>③ 宏观情景设定</b><span>可多选，与研报观点叠加</span></div>
+      <div class="ai-sec-b">
+        <div class="ai-chips" id="aiMacro">
+          <button class="chip" data-macro="美联储加息超预期">美联储加息超预期</button>
+          <button class="chip" data-macro="国内降息降准">国内降息降准</button>
+          <button class="chip" data-macro="经济衰退担忧升温">经济衰退担忧升温</button>
+          <button class="chip" data-macro="地缘政治风险发酵">地缘政治风险发酵</button>
+          <button class="chip" data-macro="流动性环境收紧">流动性环境收紧</button>
+          <button class="chip" data-macro="风险偏好快速修复">风险偏好快速修复</button>
+        </div>
+        <div class="ai-grid2" style="margin-top:11px;">
+          <div class="fld">
+            <label>情景强度</label>
+            <select id="aiLevel">
+              <option value="mild">温和（历史 60% 分位冲击）</option>
+              <option value="mid" selected>中性（历史 80% 分位冲击）</option>
+              <option value="severe">极端（历史 95% 分位冲击）</option>
+            </select>
+          </div>
+          <div class="fld">
+            <label>作用期限</label>
+            <select id="aiHorizon">
+              <option value="20">1 个月</option>
+              <option value="60" selected>1 个季度</option>
+              <option value="120">半年</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. 分析过程 -->
+    <section class="ai-sec" id="aiStepSec" style="display:none;">
+      <div class="ai-sec-h"><b>④ AI 分析过程</b><span id="aiStepMeta">—</span></div>
+      <div class="ai-sec-b">
+        <div class="ai-steps" id="aiSteps">
+          <div class="ai-step" data-step="0"><span class="st-ic">◌</span>解析研报文本，提取方向性观点与关键数据</div>
+          <div class="ai-step" data-step="1"><span class="st-ic">◌</span>识别目标标的，建立观点—标的映射</div>
+          <div class="ai-step" data-step="2"><span class="st-ic">◌</span>叠加宏观情景，按历史分位数校准冲击幅度</div>
+          <div class="ai-step" data-step="3"><span class="st-ic">◌</span>生成标的 / 基差 / 波动率 / 期限四维情景参数</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. 生成结果 -->
+    <section class="ai-sec ai-result" id="aiResultSec">
+      <div class="ai-sec-h"><b>⑤ 生成结果 · 按标的汇总</b><span id="aiResultMeta">与调设区合约匹配后可一键回填</span></div>
+      <div class="ai-sec-b">
+        <table>
+          <thead>
+            <tr>
+              <th>挂钩标的</th>
+              <th style="text-align:right;">标的变动(%)</th>
+              <th style="text-align:right;">基差变动(bp)</th>
+              <th style="text-align:right;">波动率变动(%)</th>
+              <th style="text-align:right;">期限变动(天)</th>
+              <th>影响合约数</th>
+            </tr>
+          </thead>
+          <tbody id="aiResultBody"></tbody>
+        </table>
+        <div class="ai-reason" id="aiReason"></div>
+      </div>
+    </section>
+  </div>
+
+  <div class="ai-foot">
+    <span class="hint" id="aiFootHint">AI 输出为情景建议，应用前请人工复核</span>
+    <div class="spacer"></div>
+    <button class="btn plain sm" id="aiApply" style="height:30px;display:none;" disabled>应用到调设区</button>
+    <button class="btn ai sm" id="aiGen" style="height:30px;padding:0 22px;">✦ 生成情景参数</button>
+  </div>
+</aside>
+
+<script type="module" src="./app.js"></script>
+<script src="../../../home-link.js"></script>
+</body>
+</html>

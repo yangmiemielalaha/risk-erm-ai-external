@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.vite/
+__pycache__/
+*.py[cod]
+
+.env
+.env.local
+.env.*.local
+
+*.log
+npm-debug.log*
+.DS_Store
+.idea/
+.vscode/

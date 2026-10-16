@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>合规与风险管理部 · 知识中心</title>
+<style>
+/* ============================================================
+   风格语言：参照《风险子驾驶舱》浅蓝科技金融风
+   - PingFang SC 字体
+   - 浅蓝渐变背景 + 网格纹 + 径向光晕
+   - 半透明白卡 + 蓝色边框 + 阴影
+   - 主蓝 #2b8eff / #5cd1ff，深蓝文字 #0e4d92
+   - 数字字体 DIN Alternate
+   ============================================================ */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: "PingFang SC", "Microsoft YaHei", -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #1a3552;
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(96,180,255,0.25) 0%, transparent 45%),
+    radial-gradient(ellipse at 80% 100%, rgba(140,200,255,0.28) 0%, transparent 50%),
+    linear-gradient(135deg, #eaf4ff 0%, #f5faff 50%, #e3f1ff 100%);
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    linear-gradient(rgba(64,158,255,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(64,158,255,0.06) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none; z-index: 0;
+}
+.wrap { position: relative; z-index: 1; padding: 16px 22px 22px; }
+
+/* ---------- 顶部 Header ---------- */
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 24px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.85) 0%, rgba(220,238,255,0.85) 100%);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(120,180,255,0.35);
+  border-radius: 14px;
+  box-shadow: 0 6px 24px rgba(64,158,255,0.12);
+  margin-bottom: 16px;
+  position: relative; overflow: hidden;
+}
+.header::before {
+  content: ''; position: absolute; left: 0; top: 0;
+  width: 4px; height: 100%;
+  background: linear-gradient(180deg, #2b8eff 0%, #5cd1ff 100%);
+  box-shadow: 0 0 12px rgba(64,158,255,0.6);
+}
+.header-left { display: flex; align-items: center; gap: 14px; }
+.logo {
+  width: 42px; height: 42px;
+  background: linear-gradient(135deg, #2b8eff 0%, #5cd1ff 100%);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 12px rgba(64,158,255,0.4);
+  position: relative; font-size: 22px; font-weight: 800; color: #fff;
+}
+.logo::after { content:''; position:absolute; inset:2px; border-radius:8px; border:1px solid rgba(255,255,255,0.4); }
+.title {
+  font-size: 22px; font-weight: 700; letter-spacing: 2px;
+  background: linear-gradient(90deg, #0e4d92 0%, #2b8eff 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.sub { font-size: 12px; color: #6b8db5; letter-spacing: 1px; margin-top: 2px; }
+.header-right { display: flex; align-items: center; gap: 14px; }
+
+/* 搜索框 */
+.search-box {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,0.85); border: 1px solid rgba(120,180,255,0.4);
+  border-radius: 20px; padding: 8px 16px; transition: all 0.3s;
+}
+.search-box:focus-within { border-color: #2b8eff; box-shadow: 0 0 0 3px rgba(43,142,255,0.12); }
+.search-box svg { width: 16px; height: 16px; stroke: #6b8db5; }
+.search-box input { background: transparent; border: none; outline: none; color: #1a3552; font-family: inherit; font-size: 13px; width: 200px; }
+.search-box input::placeholder { color: #9bb4d0; }
+
+.info-chip {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 14px;
+  background: rgba(64,158,255,0.08);
+  border: 1px solid rgba(64,158,255,0.25);
+  border-radius: 20px; font-size: 12px; color: #2b5a8a;
+}
+.info-chip .avatar {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: linear-gradient(135deg, #2b8eff, #5cd1ff);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: #fff;
+}
+.info-chip .u-role { color: #6b8db5; font-size: 10px; }
+
+/* ---------- 标题条 ---------- */
+.section-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.section-head .zone-title {
+  font-size: 16px; font-weight: 700; color: #0e4d92; letter-spacing: 1px;
+  display: flex; align-items: center; gap: 8px;
+}
+.section-head .zone-num {
+  width: 24px; height: 24px; border-radius: 7px; font-size: 12px;
+  background: linear-gradient(135deg, #2b8eff, #5cd1ff);
+  color: #fff; display: inline-flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 6px rgba(64,158,255,0.4);
+}
+.section-head .zone-line { flex: 1; height: 2px; border-radius: 1px;
+  background: linear-gradient(90deg, rgba(43,142,255,0.5), transparent); }
+.section-head .zone-hint { font-size: 12px; color: #6b8db5; }
+
+/* ============================================================
+   顶部链接导航栏
+============================================================ */
+.topnav {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  padding: 9px 18px; margin-bottom: 14px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.92) 0%, rgba(225,240,255,0.92) 100%);
+  border: 1px solid rgba(120,180,255,0.35); border-radius: 11px;
+  box-shadow: 0 3px 12px rgba(64,158,255,0.08);
+}
+.nav-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 8px;
+  font-size: 13px; font-weight: 500; color: #2b5a8a; text-decoration: none;
+  transition: all 0.2s; white-space: nowrap;
+}
+.nav-link svg { width: 15px; height: 15px; }
+.nav-link:hover { background: rgba(43,142,255,0.12); color: #2b8eff; }
+.nav-link.active { background: linear-gradient(135deg, #2b8eff, #5cd1ff); color: #fff; font-weight: 600;
+  box-shadow: 0 3px 10px rgba(43,142,255,0.3); }
+.nav-home { border: 1px solid rgba(43,142,255,0.3); font-weight: 600; color: #0e4d92; }
+.nav-sep { color: #c3d6ea; }
+.nav-spacer { flex: 1; }
+.nav-total { font-size: 12px; color: #6b8db5; white-space: nowrap; }
+.nav-total b { font-family: 'DIN Alternate','Arial Black',sans-serif; color: #2b8eff; font-size: 15px; }
+
+/* ============================================================
+   上传区
+============================================================ */
+.upload-bar {
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  padding: 16px 20px; margin-bottom: 16px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(235,245,255,0.9) 100%);
+  border: 2px dashed rgba(43,142,255,0.5); border-radius: 12px;
+  transition: all 0.3s;
+}
+.upload-bar.dragging { background: rgba(92,209,255,0.15); border-color: #2b8eff; }
+.upload-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 11px 22px; border: none; border-radius: 9px; cursor: pointer;
+  background: linear-gradient(135deg, #2b8eff, #5cd1ff); color: #fff;
+  font-family: inherit; font-size: 14px; font-weight: 600;
+  box-shadow: 0 4px 12px rgba(43,142,255,0.35); transition: all 0.25s; flex-shrink: 0;
+}
+.upload-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(43,142,255,0.5); }
+.upload-btn svg { width: 17px; height: 17px; }
+
+/* 分类选择器 */
+.select-wrap { display: flex; align-items: center; gap: 8px; }
+.select-wrap label { font-size: 12px; color: #6b8db5; white-space: nowrap; }
+.kb-select {
+  padding: 9px 12px; border: 1px solid rgba(120,180,255,0.45); border-radius: 8px;
+  background: rgba(255,255,255,0.9); color: #1a3552; font-family: inherit; font-size: 13px;
+  outline: none; transition: all 0.25s; cursor: pointer;
+}
+.kb-select:focus { border-color: #2b8eff; box-shadow: 0 0 0 3px rgba(43,142,255,0.12); }
+
+.file-types { display: flex; gap: 6px; flex-wrap: wrap; }
+.ft {
+  font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 6px;
+  font-family: 'DIN Alternate', 'Arial Black', sans-serif; letter-spacing: .5px;
+  background: rgba(43,142,255,0.1); color: #2b6cb0; border: 1px solid rgba(43,142,255,0.25);
+}
+
+/* 上传进度 */
+.progress-wrap { display: none; margin-bottom: 16px; padding: 12px 20px;
+  background: rgba(255,255,255,0.8); border: 1px solid rgba(120,180,255,0.3); border-radius: 12px; }
+.progress-wrap.show { display: block; }
+.progress-track { height: 8px; background: rgba(43,142,255,0.1); border-radius: 4px; overflow: hidden; }
+.progress-fill { height: 100%; width: 0%; border-radius: 4px;
+  background: linear-gradient(90deg, #2b8eff, #5cd1ff); transition: width 0.3s; }
+.progress-label { display: flex; justify-content: space-between; margin-top: 6px; font-size: 12px; color: #6b8db5; }
+
+/* ============================================================
+   四大类导航卡片  — 上面两个下面两个
+============================================================ */
+.cat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+/* 第3、4个卡片换行为新的一行（上面两个下面两个） */
+.cat-card {
+  position: relative;
+  background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,248,255,0.95) 100%);
+  border: 1px solid rgba(120,180,255,0.4);
+  border-radius: 12px;
+  padding: 20px 22px 16px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 16px rgba(64,158,255,0.08);
+}
+.cat-card:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(64,158,255,0.2); }
+.cat-card::before {
+  content:''; position: absolute; left: 0; top: 0;
+  width: 4px; height: 100%;
+  background: linear-gradient(180deg, var(--cc,#2b8eff) 0%, var(--cc2,#5cd1ff) 100%);
+  box-shadow: 0 0 10px var(--cc2, rgba(64,158,255,0.6));
+}
+.cat-card.c1 { --cc:#2b8eff; --cc2:#5cd1ff; }
+.cat-card.c2 { --cc:#2bd576; --cc2:#8af0b0; }
+.cat-card.c3 { --cc:#ff9f1a; --cc2:#ffc25c; }
+.cat-card.c4 { --cc:#1a9d52; --cc2:#5cd1a2; }
+.c5 { --cc:#a855f7; --cc2:#d8b4fe; }
+
+.cat-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+.cat-title-wrap { display: flex; align-items: center; gap: 10px; }
+.cat-name { font-size: 20px; font-weight: 700; color: #0e4d92; letter-spacing: 1px; }
+.cat-badge {
+  font-size: 11px; font-weight: 700; padding: 3px 11px; border-radius: 12px;
+  font-family: 'DIN Alternate','Arial Black',sans-serif; white-space: nowrap;
+  background: var(--cc,#2b8eff); color: #fff; box-shadow: 0 2px 8px rgba(64,158,255,0.3);
+}
+.cat-desc { font-size: 12.5px; color: #6b8db5; margin-bottom: 14px; }
+
+.cat-sub {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding-top: 12px; margin-bottom: 14px;
+  border-top: 1px dashed rgba(64,158,255,0.25);
+}
+.cat-sub-1col { grid-template-columns: 1fr 1fr; }
+.cat-sub-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 7px 10px; border-radius: 8px;
+  background: rgba(64,158,255,0.05); border: 1px solid rgba(64,158,255,0.15);
+  transition: all 0.2s;
+}
+.cat-sub-item:hover { background: rgba(92,209,255,0.12); border-color: rgba(43,142,255,0.4); }
+.cat-sub-name { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #1a3a5c; }
+.cat-sub-name .cat-sub-count {
+  font-family: 'DIN Alternate','Arial Black',sans-serif; font-size: 11px; font-weight: 700;
+  color: #2b6cb0; background: rgba(255,255,255,0.8); padding: 1px 8px; border-radius: 8px;
+  border: 1px solid rgba(43,142,255,0.2);
+}
+.cat-enter {
+  display: flex; align-items: center; gap: 5px; justify-content: flex-end;
+  font-size: 12.5px; font-weight: 600; color: var(--cc,#2b8eff);
+}
+.cat-enter .arr { font-family: inherit; transition: transform .25s; }
+.cat-card:hover .cat-enter .arr { transform: translateX(4px); }
+
+/* ============================================================
+   分类详情区
+============================================================ */
+.detail-block { display: none; }
+.detail-block.open { display: block; animation: fadeUp 0.4s ease; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+.detail-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 18px; margin-bottom: 14px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.9), rgba(220,238,255,0.9));
+  border: 1px solid rgba(120,180,255,0.35); border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(64,158,255,0.08);
+}
+.detail-title { display: flex; align-items: center; gap: 12px; }
+.detail-title h3 { font-size: 18px; font-weight: 700; color: #0e4d92; }
+.detail-title .crumb { font-family: 'DIN Alternate',sans-serif; font-size: 11px; color: #6b8db5; letter-spacing: .8px; }
+.back-btn {
+  display: flex; align-items: center; gap: 5px;
+  padding: 7px 16px; border-radius: 8px; cursor: pointer;
+  background: linear-gradient(135deg, #2b8eff, #5cd1ff); color: #fff;
+  border: none; font-family: inherit; font-size: 13px; font-weight: 600;
+  box-shadow: 0 4px 12px rgba(43,142,255,0.3); transition: all 0.25s;
+}
+.back-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(43,142,255,0.45); }
+
+.sub-chips { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.sub-chip {
+  padding: 7px 16px; font-size: 13px; border-radius: 20px; cursor: pointer;
+  background: rgba(255,255,255,0.8); color: #6b8db5; border: 1px solid rgba(120,180,255,0.35);
+  transition: all 0.25s; font-family: inherit;
+}
+.sub-chip:hover { color: #2b6cb0; border-color: #2b8eff; }
+.sub-chip.active {
+  background: linear-gradient(135deg, #2b8eff, #5cd1ff); color: #fff; border-color: transparent;
+  box-shadow: 0 3px 10px rgba(43,142,255,0.3); font-weight: 600;
+}
+.sub-chip .cnt { font-family: 'DIN Alternate',sans-serif; font-size: 11px; margin-left: 4px; opacity: .8; }
+
+/* 文档列表 */
+.doc-list { display: flex; flex-direction: column; gap: 10px; padding-bottom: 8px; }
+.doc-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 13px 16px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.92) 0%, rgba(240,248,255,0.92) 100%);
+  border: 1px solid rgba(120,180,255,0.35); border-radius: 11px;
+  cursor: pointer; transition: all 0.25s; box-shadow: 0 2px 10px rgba(64,158,255,0.05);
+  animation: fadeUp 0.4s ease both;
+}
+.doc-row:hover { transform: translateX(4px); border-color: #2b8eff; box-shadow: 0 6px 18px rgba(64,158,255,0.18); }
+.doc-type-icon {
+  width: 42px; height: 42px; border-radius: 10px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DIN Alternate','Arial Black',sans-serif; font-weight: 800; font-size: 12px; color: #fff;
+  box-shadow: 0 2px 8px rgba(64,158,255,0.25);
+}
+.doc-type-icon.excel { background: linear-gradient(135deg, #1f9d55, #48bb78); }
+.doc-type-icon.html { background: linear-gradient(135deg, #dd6b20, #ed8936); }
+.doc-type-icon.word { background: linear-gradient(135deg, #2b6cb0, #4299e1); }
+.doc-type-icon.ppt  { background: linear-gradient(135deg, #c53030, #ed8936); }
+.doc-type-icon.pdf  { background: linear-gradient(135deg, #e53e3e, #f56565); }
+.doc-type-icon.skill  { background: linear-gradient(135deg, #7c3aed, #a855f7); }
+.doc-row-main { flex: 1; min-width: 0; }
+.doc-row-main h4 { font-size: 15px; font-weight: 600; color: #1a3a5c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px; }
+.doc-row-main p { font-size: 12.5px; color: #6b8db5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.doc-type-tag {
+  font-size: 10.5px; font-weight: 700; padding: 2px 9px; border-radius: 6px;
+  background: rgba(43,142,255,0.1); color: #2b6cb0; border: 1px solid rgba(43,142,255,0.25); flex-shrink: 0; white-space: nowrap;
+}
+.doc-row-meta { display: flex; align-items: center; gap: 16px; font-size: 12px; color: #6b8db5; flex-shrink: 0; }
+.doc-row-meta .size { font-family: 'DIN Alternate',sans-serif; color: #2b6cb0; }
+.doc-row-meta .time { font-family: 'DIN Alternate',sans-serif; white-space: nowrap; }
+.view-link {
+  display: flex; align-items: center; gap: 4px; font-size: 12.5px; font-weight: 600; color: #2b8eff; flex-shrink: 0;
+  opacity: 0; transition: opacity 0.2s;
+}
+.doc-row:hover .view-link { opacity: 1; }
+
+.empty-state { text-align: center; padding: 40px; color: #6b8db5; font-size: 13px;
+  background: rgba(255,255,255,0.6); border: 1px dashed rgba(120,180,255,0.4); border-radius: 12px; }
+
+/* ============================================================
+   文档查看 Modal
+============================================================ */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(8,20,40,0.55); backdrop-filter: blur(4px);
+  display: none; align-items: center; justify-content: center;
+}
+.modal-overlay.show { display: flex; animation: fadeUp 0.2s ease; }
+.modal {
+  width: 880px; max-width: 94vw; height: 88vh;
+  background: linear-gradient(180deg, #f8fbff 0%, #eef5ff 100%);
+  border: 1px solid rgba(92,209,255,0.4); border-radius: 14px;
+  box-shadow: 0 16px 48px rgba(14,77,146,0.35);
+  display: flex; flex-direction: column; overflow: hidden;
+  animation: fadeUp 0.3s ease;
+}
+.modal-head {
+  flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  padding: 14px 20px;
+  background: linear-gradient(90deg, #0e3a8a, #1e5fc4); color: #fff;
+  border-bottom: 2px solid rgba(92,209,255,0.3);
+}
+.modal-title-wrap { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.modal-title-wrap h3 { font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.modal-title-wrap .m-sub { font-size: 11px; color: rgba(255,255,255,0.75); font-family: 'DIN Alternate',sans-serif; }
+.modal-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.icon-btn {
+  width: 32px; height: 32px; border-radius: 7px; cursor: pointer;
+  background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.22); color: #fff;
+  display: flex; align-items: center; justify-content: center; font-size: 16px; transition: all 0.2s;
+}
+.icon-btn:hover { background: rgba(255,255,255,0.3); }
+.modal-body { flex: 1; overflow-y: auto; padding: 20px 24px; }
+.modal-body::-webkit-scrollbar { width: 6px; }
+.modal-body::-webkit-scrollbar-track { background: rgba(43,142,255,0.05); border-radius: 3px; }
+.modal-body::-webkit-scrollbar-thumb { background: rgba(43,142,255,0.3); border-radius: 3px; }
+
+.viewer-meta { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 16px; }
+.vm { background: rgba(255,255,255,0.85); border: 1px solid rgba(120,180,255,0.3); border-radius: 9px; padding: 10px 12px; }
+.vm label { display: block; font-size: 10px; color: #6b8db5; letter-spacing: .5px; margin-bottom: 3px; }
+.vm div { font-size: 13px; font-weight: 600; color: #0e4d92; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.preview-frame { border: 1px solid rgba(120,180,255,0.4); border-radius: 10px; overflow: hidden; background: #fff; }
+.preview-toolbar {
+  display: flex; align-items: center; gap: 10px; padding: 9px 16px;
+  background: linear-gradient(90deg, #eaf4ff, #f0f8ff); border-bottom: 1px solid rgba(64,158,255,0.2);
+  font-size: 12px; color: #2b6cb0;
+}
+.preview-toolbar .file-badge { font-family: 'DIN Alternate',sans-serif; font-weight: 800; color: #2b8eff; }
+.preview-page { padding: 30px 38px; max-height: 46vh; overflow-y: auto; }
+.s3-preview-frame { width:100%; height:62vh; min-height:420px; border:0; background:#fff; }
+.preview-content { min-height:420px;max-height:62vh;overflow:auto;padding:22px;background:#f7fbff; }
+.preview-loading,.preview-error { min-height:360px;display:grid;place-items:center;text-align:center;color:#6b8db5;line-height:1.8; }
+.preview-error strong { display:block;color:#d9485f;font-size:16px;margin-bottom:6px; }
+.preview-error button { margin-top:14px;border:0;border-radius:8px;padding:8px 16px;background:#2b8eff;color:#fff;cursor:pointer; }
+.sheet-tabs { display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px;position:sticky;top:-22px;padding:10px 0;background:#f7fbff;z-index:2; }
+.sheet-tab { border:1px solid #a9cff8;border-radius:7px;padding:6px 12px;background:#fff;color:#286aa9;cursor:pointer; }
+.sheet-tab.active { background:#2b8eff;color:#fff;border-color:#2b8eff; }
+.sheet-table-wrap { overflow:auto;border:1px solid #cfe4fa;border-radius:8px;background:#fff; }
+.sheet-table { border-collapse:collapse;min-width:100%;font-size:12px;color:#2e5276; }
+.sheet-table th,.sheet-table td { border:1px solid #dfebf7;padding:7px 10px;white-space:nowrap;max-width:360px;overflow:hidden;text-overflow:ellipsis; }
+.sheet-table th { position:sticky;top:0;background:#e9f4ff;color:#0e4d92;z-index:1; }
+.docx-preview-host { background:#dfe7ef;padding:20px; }
+.docx-preview-host .docx-wrapper { background:transparent;padding:0; }
+.slides-preview { display:grid;gap:18px; }
+.slide-page { aspect-ratio:16/9;max-width:920px;width:100%;margin:auto;padding:34px 42px;border-radius:8px;background:linear-gradient(145deg,#fff,#edf6ff);border:1px solid #bfdcff;box-shadow:0 8px 24px rgba(38,103,171,.14);overflow:auto; }
+.slide-page h4 { color:#0e4d92;font-size:14px;margin-bottom:20px; }
+.slide-page p { color:#315d88;font-size:16px;line-height:1.75;margin:6px 0; }
+.markdown-preview { max-width:920px;margin:auto;padding:30px 38px;border:1px solid #d6e8fa;border-radius:10px;background:#fff;line-height:1.8;color:#334f6d; }
+.markdown-preview h1,.markdown-preview h2,.markdown-preview h3 { color:#0e4d92;margin:20px 0 10px; }
+.markdown-preview h1:first-child,.markdown-preview h2:first-child { margin-top:0; }
+.markdown-preview pre { overflow:auto;padding:14px;border-radius:8px;background:#102a43;color:#e7f4ff; }
+.markdown-preview code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+.markdown-preview ul { padding-left:24px; }
+.icon-btn.danger:hover { background:rgba(255,75,75,.8); }
+.pp-title { font-size: 22px; font-weight: 700; color: #0e4d92; line-height: 1.4; margin-bottom: 14px; }
+.pp-meta { font-size: 12px; color: #6b8db5; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px dashed rgba(64,158,255,0.25); }
+.pp-section { margin-bottom: 18px; }
+.pp-block { margin-top: 8px; padding: 10px 12px; border-left: 3px solid #a855f7; background: #faf5ff; border-radius: 6px; font-size: 12.5px; color: #6b46c1; }
+.pp-section h5 {
+  font-size: 14px; font-weight: 700; color: #0e4d92; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 6px;
+}
+.pp-section h5::before { content:''; width: 3px; height: 13px; border-radius: 2px;
+  background: linear-gradient(180deg, #2b8eff, #5cd1ff); }
+.pp-section p { font-size: 13.5px; line-height: 1.9; color: #4a6a8a; text-align: justify; }
+.pp-list { list-style: none; font-size: 13.5px; line-height: 1.9; color: #4a6a8a; }
+.pp-list li { padding-left: 20px; position: relative; margin-bottom: 7px; }
+.pp-list li::before { content:'▸'; position: absolute; left: 4px; color: #2b8eff; }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 30px; left: 50%; z-index: 99999;
+  transform: translateX(-50%) translateY(80px);
+  background: linear-gradient(135deg, #1e5fc4, #2b8eff); color: #fff;
+  border: 1px solid rgba(92,209,255,0.4); border-radius: 10px;
+  padding: 12px 22px; display: flex; align-items: center; gap: 8px;
+  font-size: 14px; opacity: 0; transition: all 0.4s; box-shadow: 0 10px 30px rgba(14,77,146,0.4);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+@media (max-width: 900px) {
+  .cat-grid { grid-template-columns: 1fr; }
+  .viewer-meta { grid-template-columns: repeat(3, 1fr); }
+  .cat-sub { grid-template-columns: 1fr; }
+  .header { flex-wrap: wrap; gap: 10px; }
+  .search-box input { width: 130px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ========== 顶部 Header ========== -->
+  <header class="header">
+    <div class="header-left">
+      <div class="logo">知</div>
+      <div>
+        <div class="title">合规与风险管理部 · 知识中心</div>
+        <div class="sub">RISK KNOWLEDGE HUB · 全业务线知识一体化管理</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4-4"/></svg>
+        <input type="text" id="searchInput" placeholder="搜索知识文档…" />
+      </div>
+      <div class="info-chip">
+        <span class="avatar">风</span>
+        <div><div style="font-weight:600">风险控制岗</div><div class="u-role">127535 · 合规风控</div></div>
+      </div>
+    </div>
+  </header>
+
+
+  <!-- ========== 顶部链接导航栏 ========== -->
+  <nav class="topnav">
+    <a class="nav-link nav-home" href="javascript:void(0)" data-cat="__home__" id="navHome">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5"/><path d="M5 8.5V21h14V8.5"/></svg>
+      <span>知识导航</span>
+    </a>
+    <span class="nav-sep">/</span>
+    <a class="nav-link" href="javascript:void(0)" onclick="topNavEnter('business')">业务知识</a>
+    <a class="nav-link" href="javascript:void(0)" onclick="topNavEnter('policy')">制度</a>
+    <a class="nav-link" href="javascript:void(0)" onclick="topNavEnter('case')">风控案例</a>
+    <a class="nav-link" href="javascript:void(0)" onclick="topNavEnter('industry')">行业信息</a>
+    <a class="nav-link" href="javascript:void(0)" onclick="topNavEnter('skill')">AI Skill 库</a>
+    <span class="nav-spacer"></span>
+    <span class="nav-total">全部文档 <b id="navTotal">0</b> 份</span>
+  </nav>
+  <!-- ========== 上传区 ========== -->
+  <section class="upload-bar" id="uploadBar">
+    <button class="upload-btn" id="uploadBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 16V4"/><path d="m6 9 6-6 6 6"/><path d="M4 20h16"/></svg>
+      上传知识文档
+    </button>
+    <div class="select-wrap">
+      <label>上传到分类</label>
+      <select class="kb-select" id="uploadCatSelect"></select>
+    </div>
+    <div class="file-types">
+      <span class="ft">XLSX</span><span class="ft">HTML</span><span class="ft">DOCX</span><span class="ft">PPTX</span><span class="ft">PDF</span><span class="ft">SKILL</span>
+    </div>
+    <span style="flex:1"></span>
+    <span style="font-size:12px;color:#6b8db5;white-space:nowrap">拖拽文档到此处 · 支持多文件上传</span>
+  </section>
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-label"><span id="progressName">正在上传…</span><span id="progressPct">0%</span></div>
+  </div>
+
+  <!-- ========== 导航标题条 ========== -->
+  <div class="section-head">
+    <div class="zone-title"><span class="zone-num">◈</span>知识导航 DISCOVER</div>
+    <div class="zone-line"></div>
+    <div class="zone-hint">请选择知识分类进入</div>
+  </div>
+  <div id="homeNav"><nav class="wrap" style="padding:0"><div class="cat-grid" id="catGrid"></div></nav></div>
+
+  <!-- ========== 分类详情区 ========== -->
+  <div class="detail-block" id="detailBlock">
+    <div style="padding-top:4px">
+      <div class="detail-head">
+        <div class="detail-title">
+          <span class="zone-num" style="width:26px;height:26px;background:linear-gradient(135deg,#2b8eff,#5cd1ff);border-radius:7px;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:12px">◈</span>
+          <h3 id="detailName"></h3>
+          <span class="crumb" id="detailCrumb"></span>
+        </div>
+        <button class="back-btn" id="backHome">‹ 返回导航</button>
+      </div>
+      <div class="sub-chips" id="subChips"></div>
+      <div class="doc-list" id="docList"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ========== 文档查看 Modal ========== -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title-wrap">
+        <div class="doc-type-icon" id="mIcon" style="width:36px;height:36px;border-radius:9px;font-size:11px"></div>
+        <div>
+          <h3 id="mTitle"></h3>
+          <div class="m-sub" id="mSub"></div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="icon-btn" title="在新窗口预览" id="previewBtn">◉</button>
+        <button class="icon-btn" title="下载" id="dlBtn">⤓</button>
+        <button class="icon-btn danger" title="删除文件" id="deleteBtn">🗑</button>
+        <button class="icon-btn" title="关闭" onclick="closeModal()">✕</button>
+      </div>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"><span>✓</span><span id="toastMsg"></span></div>
+
+<!-- 隐藏文件输入 -->
+<input type="file" id="fileInput" multiple hidden accept=".xlsx,.xls,.html,.htm,.docx,.doc,.pptx,.ppt,.pdf,.skill,.skl,.md" />
+
+<script type="module">
+window.previewLibrariesReady = Promise.all([
+  import('xlsx').then(function(module){ window.XLSX = module.default || module; }),
+  import('jszip').then(function(module){ window.JSZip = module.default || module; }),
+  import('docx-preview').then(function(module){ window.docxPreview = module; })
+]);
+</script>
+
+<script>
+/* ============================================================
+   数据层
+============================================================ */
+const CATS = {
+  business: { name:"业务知识", num:"一", colorClass:"c1",
+    children:[
+      {name:"期现业务", code:"biz-arbitrage"},
+      {name:"场外业务", code:"biz-otc"},
+      {name:"做市业务", code:"biz-market"}
+    ]},
+  policy: { name:"制度", num:"二", colorClass:"c2",
+    children:[
+      {name:"外规", code:"policy-external"},
+      {name:"内规", code:"policy-internal"}
+    ]},
+  case: { name:"风控案例", num:"三", colorClass:"c3",
+    children:[
+      {name:"外部案例", code:"case-external"},
+      {name:"内部案例", code:"case-internal"}
+    ]},
+  industry: { name:"行业信息", num:"四", colorClass:"c4",
+    children:[
+      {name:"公开统计数据", code:"industry-data"},
+      {name:"调研信息", code:"industry-research"}
+    ]},
+  skill: { name:"AI Skill 库", num:"", colorClass:"c5",
+    children:[
+      {name:"提示词模板", code:"skill-prompt"},
+      {name:"自动化脚本", code:"skill-script"},
+      {name:"知识库技能", code:"skill-knowledge"}
+    ]}
+};
+const CAT_ORDER = ["business","policy","case","industry","skill"];
+
+const S3_API_PREFIX = '/allinasset/api/s3';
+const S3_SCENARIO = 'ATTACHMENT';
+const S3_BIZ_ROOT = 'wuyucongtest';
+const S3_FILE_FIELD = 'file';
+const APP_PATH_PREFIX = window.location.pathname.startsWith('/risk-erm-ai/') ? '/risk-erm-ai' : '';
+const MANIFEST_API = APP_PATH_PREFIX + '/api/knowledge-manifest';
+const DOC_CACHE_KEY = 'risk-knowledge-files-v1';
+const LOGIN_PATH = '/tologin.do';
+const USERINFO_API = '/oauth2/userinfo';
+let allDocs = loadCachedDocs();
+let authRedirecting = false;
+
+function redirectToLogin(){
+  if (authRedirecting || window.location.pathname === LOGIN_PATH || window.location.pathname.startsWith('/oauth2/')) return;
+  authRedirecting = true;
+  const loginUrl = LOGIN_PATH + '?url=' + encodeURIComponent(window.location.href);
+  window.location.replace(loginUrl);
+}
+
+function isLocalPreview(){
+  return ['localhost', '127.0.0.1'].includes(window.location.hostname);
+}
+
+async function ensureAuthenticated(){
+  if (isLocalPreview()) return true;
+  let response;
+  try {
+    response = await window.fetch(USERINFO_API, {
+      method:'GET',
+      credentials:'include',
+      cache:'no-store'
+    });
+  } catch (error) {
+    console.error('登录状态检查失败', error);
+    showToast('暂时无法验证登录状态，请稍后重试');
+    return false;
+  }
+  if (!response.ok) {
+    if (response.status === 401 || response.status === 403) redirectToLogin();
+    else showToast('登录状态检查失败 HTTP ' + response.status);
+    return false;
+  }
+  let userInfo = null;
+  try { userInfo = await response.json(); } catch (error) {}
+  if (!userInfo || !String(userInfo.email || '').trim()) {
+    redirectToLogin();
+    return false;
+  }
+  return true;
+}
+
+async function authFetch(input, init){
+  const response = await window.fetch(input, init);
+  if (response.status === 401) redirectToLogin();
+  return response;
+}
+
+function loadCachedDocs(){
+  try {
+    const data = JSON.parse(localStorage.getItem(DOC_CACHE_KEY) || '[]');
+    return Array.isArray(data) ? data : [];
+  } catch (e) { return []; }
+}
+function saveCachedDocs(){
+  localStorage.setItem(DOC_CACHE_KEY, JSON.stringify(allDocs));
+}
+function manifestToDocs(manifest){
+  if (!manifest || typeof manifest !== 'object') return null;
+  if (Array.isArray(manifest.files)) return manifest.files;
+  if (!manifest.modules || typeof manifest.modules !== 'object') return null;
+  return Object.keys(manifest.modules).reduce(function(list, key){
+    const docs = manifest.modules[key];
+    return list.concat(Array.isArray(docs) ? docs : []);
+  }, []);
+}
+async function parseManifestResponse(response){
+  const text = await response.text();
+  if (!text) throw new Error('清单文件内容为空');
+  let payload = JSON.parse(text);
+  if (payload && typeof payload === 'object' && !Array.isArray(payload) && Object.prototype.hasOwnProperty.call(payload, 'code')) {
+    const businessCode = Number(payload.code);
+    if (businessCode === 404) {
+      const error = new Error(payload.msg || payload.message || '清单文件不存在');
+      error.status = 404;
+      throw error;
+    }
+    if (![0, 200].includes(businessCode)) {
+      const error = new Error(payload.msg || payload.message || ('读取清单失败，业务状态码 ' + businessCode));
+      error.status = businessCode;
+      throw error;
+    }
+  }
+  if (payload && Object.prototype.hasOwnProperty.call(payload, 'data')) payload = payload.data;
+  if (typeof payload === 'string') {
+    const value = payload.trim();
+    if (value.startsWith('{') || value.startsWith('[')) payload = JSON.parse(value);
+    else {
+      const nested = await authFetch(value, { credentials:'include' });
+      if (!nested.ok) throw new Error('清单文件地址访问失败');
+      payload = JSON.parse(await nested.text());
+    }
+  }
+  return payload;
+}
+async function loadSharedManifest(){
+  const response = await authFetch(MANIFEST_API, { credentials:'include' });
+  if (!response.ok) {
+    const detail = await response.text();
+    const error = new Error('读取共享清单失败 HTTP ' + response.status + (detail ? ': ' + detail : ''));
+    error.status = response.status;
+    throw error;
+  }
+  const manifest = await parseManifestResponse(response);
+  const docs = manifestToDocs(manifest);
+  if (!docs) throw new Error('清单文件格式不正确');
+  allDocs = docs;
+  saveCachedDocs();
+  return docs;
+}
+function isManifestMissingError(error){
+  const message = String(error && error.message || error || '');
+  return error && error.status === 404 || /NoSuchKey|not\s*found|不存在|未找到|没有这个文件/i.test(message);
+}
+function safePathPart(value){
+  return String(value || '').trim().replace(/[\\/?#%:*|"<>]/g, '_').replace(/\s+/g, '-');
+}
+function selectedBizCode(cat, sub){
+  return [S3_BIZ_ROOT, safePathPart(CATS[cat].name), safePathPart(subName(cat, sub))].join('/');
+}
+function formatFileSize(bytes){
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+}
+function extractUploadedFile(response, fallbackName){
+  const payload = response && Object.prototype.hasOwnProperty.call(response, 'data') ? response.data : response;
+  if (typeof payload === 'string') return { objectKey: payload, storedName: payload.split('/').pop() };
+  const p = payload || {};
+  const objectKey = p.objectKey || p.fileKey || p.key || p.path || p.filePath || p.url || '';
+  return { objectKey, storedName: p.fileName || p.name || (objectKey ? objectKey.split('/').pop() : fallbackName), response: p };
+}
+// 文档清单会同时缓存在浏览器，并通过同域 Node 接口保存到固定 S3 key。
+
+/* 子分类名映射 */
+function subName(cat, sub){ try { return CATS[cat].children.find(c=>c.code===sub).name; }catch(e){ return ''; } }
+
+/* 各格式正文渲染 */
+const TYPE_LABEL = { docx:'WORD', pptx:'PPT', xlsx:'EXCEL', pdf:'PDF', html:'HTML', skill:'SKILL' };
+function renderBody(d){
+  const cats = CATS[d.cat].name, subs = subName(d.cat,d.sub);
+  const env = { d, cats, subs };
+  return `
+    <div class="pp-title">${d.title}</div>
+    <div class="pp-meta">分类：${cats} · ${subs} ｜ 维护：${d.updater} ｜ 更新：${d.time} ｜ 大小：${d.size} ｜ 格式：.${d.type}</div>
+    <div class="pp-section"><h5>文档摘要</h5><p>${d.body}</p></div>
+    ${d.type==='docx'?`
+      <div class="pp-section"><h5>核心要点</h5><ul class="pp-list">
+        <li>本文件为 Word 知识文档，支持在线查看与本地下载编辑。</li>
+        <li>内容依据部门最新业务口径编制，持续更新维护。</li>
+        <li>涉密信息请按《部门知识文档上传与管理规范》脱敏处理。</li>
+      </ul></div>`:''}
+    ${d.type==='pdf'?`<div class="pp-section"><h5>在线阅读</h5><p>该文件以 PDF 格式归档，支持在线翻页预览，下方为自动抽取的文档摘要概览。</p></div>`:''} ${d.type==='skill'?`<div class="pp-section"><h5>Skill 说明</h5><p>该文件为 AI Skill 知识库技能文档，用于沉淀提示词模板、自动化脚本与知识库技能等可复用技能资产。</p><div class="pp-block">可挂载到 AI Skill 库分类下的「提示词模板 / 自动化脚本 / 知识库技能」子目录。</div></div>`:''}
+    ${d.type==='pptx'?`<div class="pp-section"><h5>演示提纲</h5><ul class="pp-list">
+        <li>第一章：背景与业务概述</li><li>第二章：关键要点与风险识别</li>
+        <li>第三章：处置与应对措施</li><li>第四章：结论与后续建议</li>
+      </ul></div>`:''}
+    ${d.type==='xlsx'?`<div class="pp-section"><h5>表格数据说明</h5><ul class="pp-list">
+        <li>数据口径与统计周期</li><li>核心指标及其计算规则</li><li>异常数据校验与报送要求</li>
+      </ul></div>`:''}
+    ${d.type==='html'?`<div class="pp-section"><h5>页面要点</h5><ul class="pp-list">
+        <li>在线网页形式呈现，便于快速阅读与交互查看。</li><li>含相关数据图表与链接跳转。</li>
+      </ul></div>`:''}
+  `;
+}
+
+/* ============================================================
+   渲染：四大类导航卡（上面两个下面两个）
+============================================================ */
+function renderCatGrid(){
+  const grid = document.getElementById("catGrid");
+  let html = '';
+  CAT_ORDER.forEach(function(key, i){
+    const c = CATS[key];
+    const cnt = allDocs.filter(d=>d.cat===key).length;
+    const subs = c.children;
+    let subHtml = '';
+    subs.forEach(function(s, j){
+      const sc = allDocs.filter(d=>d.cat===key&&d.sub===s.code).length;
+      subHtml += `<div class="cat-sub-item">
+        <span class="cat-sub-name">${s.name}</span>
+        <span class="cat-sub-count">${sc}</span>
+      </div>`;
+    });
+    html += `
+    <div class="cat-card ${c.colorClass}" onclick="enterCat('${key}')">
+      <div class="cat-head">
+        <div class="cat-title-wrap">
+          <span class="cat-name">${c.name}</span>
+        </div>
+        <span class="cat-badge">${cnt} 份文档</span>
+      </div>
+      <div class="cat-desc">${c.name==='业务知识'?'期现、场外、做市各业务条线操作知识沉淀':c.name==='制度'?'公司及监管机构各类制度规范文件':c.name==='风控案例'?'内外部典型风险事件的分析与复盘':c.name==='行业信息'?'公开统计数据与产业调研信息':'提示词模板、自动化脚本与知识库技能沉淀'}</div>
+      <div class="cat-sub">${subHtml}</div>
+      <div class="cat-enter">进入 ${c.name} 知识库 <span class="arr">→</span></div>
+    </div>`;
+  });
+  grid.innerHTML = html;
+}
+
+/* ============================================================
+   分类选择器填充
+============================================================ */
+function fillUploadSelect(){
+  const sel = document.getElementById("uploadCatSelect");
+  let html = '';
+  CAT_ORDER.forEach(function(key){
+    const c = CATS[key];
+    html += `<optgroup label="${c.name}">`;
+    c.children.forEach(function(s,j){
+      html += `<option value="${key}|${s.code}">${c.name} — ${s.name}</option>`;
+    });
+    html += `</optgroup>`;
+  });
+  sel.innerHTML = html;
+}
+
+/* ============================================================
+   进入分类
+============================================================ */
+let currentCatKey = null;
+function enterCat(key){
+  currentCatKey = key;
+  const c = CATS[key];
+  document.getElementById("homeNav").style.display = "none";
+  document.getElementById("detailName").textContent = c.name;
+  document.getElementById("detailCrumb").textContent = c.name + ' 知识库';
+  const block = document.getElementById("detailBlock");
+  block.classList.add("open");
+  renderSubChips();
+  renderDocs();
+  updateNavActive(key);
+  refreshNavTotal();
+  block.scrollIntoView({behavior:"smooth", block:"start"});
+}
+function backToNav(){
+  document.getElementById("detailBlock").classList.remove("open");
+  document.getElementById("homeNav").style.display = "block";
+  window.scrollTo({top:0, behavior:"smooth"});
+  updateNavActive(null);
+  refreshNavTotal();
+}
+/* ============================================================
+   顶部链接导航功能
+============================================================ */
+function updateNavActive(cat){
+  document.querySelectorAll('.topnav .nav-link').forEach(function(a){
+    var key = a.getAttribute('data-cat');
+    if (key === '__home__'){ a.classList.toggle('active', !cat); return; }
+    a.classList.toggle('active', a.getAttribute('onclick') === "topNavEnter('" + cat + "')");
+  });
+}
+function topNavEnter(cat){
+  if (document.getElementById("detailBlock").classList.contains("open")){
+    // 已在详情页，直接切换分类
+    if (currentCatKey === cat) return;
+    currentCatKey = cat;
+    var cc = CATS[cat];
+    document.getElementById("detailName").textContent = cc.name;
+    document.getElementById("detailCrumb").textContent = cc.name + ' 知识库';
+    renderSubChips(); renderDocs();
+  } else {
+    // 在首页，进入分类
+    enterCat(cat);
+  }
+  updateNavActive(cat);
+}
+function refreshNavTotal(){
+  var el = document.getElementById("navTotal");
+  if (el) el.textContent = allDocs.length;
+}
+// 选中态高亮：在点击都生效以外，首次空库时高亮"知识导航"
+
+
+function renderSubChips(){
+  const c = CATS[currentCatKey];
+  const wrap = document.getElementById("subChips");
+  let html = `<div class="sub-chip active" data-sub="all" onclick="selectSub('all',this)">全部 <span class="cnt">${allDocs.filter(d=>d.cat===currentCatKey).length}</span></div>`;
+  c.children.forEach(function(s,j){
+    const sc = allDocs.filter(d=>d.cat===currentCatKey&&d.sub===s.code).length;
+    html += `<div class="sub-chip" data-sub="${s.code}" onclick="selectSub('${s.code}',this)">${s.name} <span class="cnt">${sc}</span></div>`;
+  });
+  wrap.innerHTML = html;
+}
+function selectSub(sub, el){
+  document.querySelectorAll('#subChips .sub-chip').forEach(x=>x.classList.remove('active'));
+  if (el) el.classList.add('active');
+  renderDocs(sub);
+}
+
+function renderDocs(sub){
+  const key = currentCatKey, query = stateSearch || '';
+  let list = allDocs.filter(d=>d.cat===key);
+  if (sub && sub!=='all') list = list.filter(d=>d.sub===sub);
+  if (query) list = list.filter(d=>d.title.toLowerCase().includes(query.toLowerCase()));
+  const wrap = document.getElementById("docList");
+  if (!list.length){ wrap.innerHTML = '<div class="empty-state">该分类暂无文档，可通过上方"上传知识文档"添加</div>'; return; }
+  let html = '';
+  list.forEach((d,i)=>{
+    html += `
+    <div class="doc-row" onclick="openDoc(${d.id})">
+      <div class="doc-type-icon ${d.type}">${TYPE_LABEL[d.type]}</div>
+      <div class="doc-row-main">
+        <h4>${d.title}</h4>
+        <p>${d.body}</p>
+      </div>
+      <div class="doc-type-tag">${CATS[d.cat].name} / ${subName(d.cat,d.sub)}</div>
+      <div class="doc-row-meta">
+        <span class="size">${d.size}</span>
+        <span class="time">${d.time}</span>
+      </div>
+      <span class="view-link">查看文档 ›</span>
+    </div>`;
+  });
+  wrap.innerHTML = html;
+}
+
+/* ============================================================
+   文档查看 Modal
+============================================================ */
+let curDoc = null;
+async function openDoc(id){
+  const d = allDocs.find(x=>x.id===id); if(!d) return;
+  curDoc = d;
+  document.getElementById("mTitle").textContent = d.title;
+  document.getElementById("mSub").textContent = TYPE_LABEL[d.type] + ' 在线预览 · ' + CATS[d.cat].name + ' · ' + subName(d.cat,d.sub);
+  const mi = document.getElementById("mIcon");
+  mi.className = "doc-type-icon " + d.type;
+  mi.textContent = TYPE_LABEL[d.type];
+  if (d.objectKey) {
+    document.getElementById("modalBody").innerHTML = previewShell(d);
+  } else {
+    document.getElementById("modalBody").innerHTML = renderBody(d);
+  }
+  document.getElementById("modal").classList.add("show");
+  document.getElementById("modalBody").scrollTop = 0;
+  if (d.objectKey) await renderFilePreview(d);
+}
+function closeModal(){ document.getElementById("modal").classList.remove("show"); }
+document.getElementById("modal").addEventListener("click", function(e){ if(e.target===this) closeModal(); });
+
+function getS3FileUrl(action, key){
+  return S3_API_PREFIX + '/' + action + '?' + new URLSearchParams({ key }).toString();
+}
+function escapeHtml(value){
+  return String(value == null ? '' : value).replace(/[&<>"']/g, function(ch){
+    return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch];
+  });
+}
+function fileExtension(d){
+  const name = d.originalName || d.storedName || d.title || '';
+  return (name.split('.').pop() || '').toLowerCase();
+}
+function previewShell(d){
+  return `<div class="preview-frame"><div class="preview-toolbar"><span class="file-badge">${escapeHtml(TYPE_LABEL[d.type] || d.type)}</span><span>${escapeHtml(d.originalName || d.title)}</span></div><div class="preview-content" id="filePreviewContent"><div class="preview-loading">正在从 S3 加载并解析文件…</div></div></div>`;
+}
+async function fetchPreviewBlob(key){
+  const response = await authFetch(getS3FileUrl('preview', key), { credentials:'include' });
+  if (!response.ok) throw new Error('文件读取失败 HTTP ' + response.status);
+  const contentType = response.headers.get('content-type') || '';
+  if (contentType.includes('application/json')) {
+    const payload = await response.json();
+    if (payload && ![undefined, 0, 200].includes(payload.code)) throw new Error(payload.msg || payload.message || '文件读取失败');
+    const data = payload && Object.prototype.hasOwnProperty.call(payload, 'data') ? payload.data : payload;
+    const url = typeof data === 'string' ? data : data && (data.url || data.previewUrl);
+    if (!url) return new Blob([typeof data === 'string' ? data : JSON.stringify(data)], { type:'application/json' });
+    const nested = await authFetch(url, { credentials:'include' });
+    if (!nested.ok) throw new Error('文件地址访问失败 HTTP ' + nested.status);
+    return nested.blob();
+  }
+  return response.blob();
+}
+function showPreviewError(error){
+  const host = document.getElementById('filePreviewContent');
+  if (!host) return;
+  host.innerHTML = `<div class="preview-error"><div><strong>暂时无法在线预览</strong><div>${escapeHtml(error && error.message || '文件解析失败')}</div><button type="button" onclick="document.getElementById('dlBtn').click()">下载文件查看</button></div></div>`;
+}
+async function renderFilePreview(d){
+  const host = document.getElementById('filePreviewContent');
+  if (!host) return;
+  const extension = fileExtension(d);
+  const directUrl = getS3FileUrl('preview', d.objectKey);
+  try {
+    if (d.type === 'pdf' || d.type === 'html') {
+      host.className = '';
+      const sandbox = d.type === 'html' ? ' sandbox="allow-scripts allow-forms allow-popups"' : '';
+      host.innerHTML = `<iframe class="s3-preview-frame" title="${escapeHtml(d.title)}" src="${directUrl}"${sandbox}></iframe>`;
+      return;
+    }
+    if (['doc', 'ppt', 'xls'].includes(extension)) {
+      throw new Error('旧版二进制 .' + extension + ' 暂不支持浏览器解析，请另存为新版格式后上传');
+    }
+    const blob = await fetchPreviewBlob(d.objectKey);
+    if (d.type === 'skill') return renderMarkdownPreview(await blob.text(), host);
+    await window.previewLibrariesReady;
+    const buffer = await blob.arrayBuffer();
+    if (d.type === 'xlsx') return renderWorkbookPreview(buffer, host);
+    if (d.type === 'docx') return renderDocxPreview(buffer, host);
+    if (d.type === 'pptx') return renderPptxPreview(buffer, host);
+    throw new Error('暂不支持该文件格式的在线预览');
+  } catch (error) {
+    console.error('文件预览失败', error);
+    showPreviewError(error);
+  }
+}
+function renderWorkbookPreview(buffer, host){
+  const workbook = XLSX.read(buffer, { type:'array', cellDates:true });
+  if (!workbook.SheetNames.length) throw new Error('Excel 文件没有可展示的工作表');
+  host.innerHTML = '<div class="sheet-tabs" id="sheetTabs"></div><div class="sheet-table-wrap" id="sheetTableWrap"></div>';
+  const tabs = document.getElementById('sheetTabs');
+  function showSheet(name){
+    tabs.querySelectorAll('.sheet-tab').forEach(function(btn){ btn.classList.toggle('active', btn.dataset.sheet === name); });
+    const rows = XLSX.utils.sheet_to_json(workbook.Sheets[name], { header:1, defval:'', raw:false });
+    const limited = rows.slice(0, 500);
+    const width = Math.max(1, ...limited.map(function(row){ return row.length; }));
+    const head = limited[0] || [];
+    const body = limited.slice(1);
+    document.getElementById('sheetTableWrap').innerHTML = `<table class="sheet-table"><thead><tr>${Array.from({length:width}, function(_,i){ return '<th>' + escapeHtml(head[i] || XLSX.utils.encode_col(i)) + '</th>'; }).join('')}</tr></thead><tbody>${body.map(function(row){ return '<tr>' + Array.from({length:width}, function(_,i){ return '<td title="' + escapeHtml(row[i]) + '">' + escapeHtml(row[i]) + '</td>'; }).join('') + '</tr>'; }).join('')}</tbody></table>${rows.length > 500 ? '<div style="padding:10px;color:#6b8db5">仅展示前 500 行，请下载查看完整数据。</div>' : ''}`;
+  }
+  workbook.SheetNames.forEach(function(name, index){
+    const button = document.createElement('button');
+    button.type = 'button'; button.className = 'sheet-tab' + (index ? '' : ' active'); button.dataset.sheet = name; button.textContent = name;
+    button.onclick = function(){ showSheet(name); };
+    tabs.appendChild(button);
+  });
+  showSheet(workbook.SheetNames[0]);
+}
+async function renderDocxPreview(buffer, host){
+  host.className = 'preview-content docx-preview-host';
+  host.innerHTML = '';
+  await docxPreview.renderAsync(buffer, host, null, { className:'docx', inWrapper:true, ignoreWidth:false, ignoreHeight:false, renderHeaders:true, renderFooters:true, renderFootnotes:true });
+}
+async function renderPptxPreview(buffer, host){
+  const zip = await JSZip.loadAsync(buffer);
+  const names = Object.keys(zip.files).filter(function(name){ return /^ppt\/slides\/slide\d+\.xml$/.test(name); }).sort(function(a,b){ return Number(a.match(/\d+/)[0]) - Number(b.match(/\d+/)[0]); });
+  if (!names.length) throw new Error('PPTX 文件中没有可展示的幻灯片');
+  host.innerHTML = '<div class="slides-preview" id="slidesPreview"></div>';
+  const wrap = document.getElementById('slidesPreview');
+  for (let i = 0; i < names.length; i++) {
+    const xml = await zip.file(names[i]).async('string');
+    const doc = new DOMParser().parseFromString(xml, 'application/xml');
+    const texts = Array.from(doc.getElementsByTagNameNS('*', 't')).map(function(node){ return node.textContent.trim(); }).filter(Boolean);
+    const page = document.createElement('section');
+    page.className = 'slide-page';
+    page.innerHTML = '<h4>第 ' + (i + 1) + ' 页</h4>' + (texts.length ? texts.map(function(text){ return '<p>' + escapeHtml(text) + '</p>'; }).join('') : '<p style="color:#8ba5bf">该页没有可提取的文本内容</p>');
+    wrap.appendChild(page);
+  }
+}
+function renderMarkdownPreview(source, host){
+  const lines = String(source || '').replace(/\r/g, '').split('\n');
+  let html = '', inCode = false, inList = false;
+  lines.forEach(function(line){
+    if (/^```/.test(line)) { if (inList) { html += '</ul>'; inList = false; } html += inCode ? '</code></pre>' : '<pre><code>'; inCode = !inCode; return; }
+    if (inCode) { html += escapeHtml(line) + '\n'; return; }
+    const heading = line.match(/^(#{1,3})\s+(.+)$/);
+    if (heading) { if (inList) { html += '</ul>'; inList = false; } const level = heading[1].length; html += '<h' + level + '>' + escapeHtml(heading[2]) + '</h' + level + '>'; return; }
+    const item = line.match(/^\s*[-*]\s+(.+)$/);
+    if (item) { if (!inList) { html += '<ul>'; inList = true; } html += '<li>' + escapeHtml(item[1]) + '</li>'; return; }
+    if (inList) { html += '</ul>'; inList = false; }
+    if (line.trim()) html += '<p>' + escapeHtml(line).replace(/`([^`]+)`/g, '<code>$1</code>') + '</p>';
+  });
+  if (inList) html += '</ul>';
+  if (inCode) html += '</code></pre>';
+  host.innerHTML = '<article class="markdown-preview">' + html + '</article>';
+}
+document.getElementById("previewBtn").addEventListener("click", function(){
+  if (!curDoc || !curDoc.objectKey) return showToast('该文档缺少 S3 key，无法预览');
+  window.open(getS3FileUrl('preview', curDoc.objectKey), '_blank', 'noopener');
+});
+document.getElementById("dlBtn").addEventListener("click", function(){
+  if (!curDoc || !curDoc.objectKey) return showToast('该文档缺少 S3 key，无法下载');
+  window.open(getS3FileUrl('download', curDoc.objectKey), '_blank', 'noopener');
+});
+document.getElementById("deleteBtn").addEventListener("click", async function(){
+  if (!curDoc || !curDoc.objectKey) return showToast('该文档缺少 S3 key，无法删除');
+  if (!window.confirm('确定删除「' + curDoc.title + '」吗？此操作会同步删除 S3 文件。')) return;
+  const btn = this;
+  btn.disabled = true;
+  try {
+    const response = await authFetch(S3_API_PREFIX + '/delete', {
+      method:'POST', credentials:'include',
+      headers:{ 'Content-Type':'application/json' },
+      body:JSON.stringify({ key:curDoc.objectKey })
+    });
+    let result = null;
+    try { result = await response.json(); } catch (e) {}
+    if (!response.ok) throw new Error((result && (result.message || result.msg)) || ('删除失败 HTTP ' + response.status));
+    const deletedId = curDoc.id;
+    const deletedTitle = curDoc.title;
+    allDocs = allDocs.filter(function(doc){ return doc.id !== deletedId; });
+    saveCachedDocs();
+    closeModal();
+    curDoc = null;
+    renderCatGrid(); refreshNavTotal();
+    if (document.getElementById("detailBlock").classList.contains("open")){ renderSubChips(); renderDocs(); }
+    try { await uploadManifest(); } catch (manifestError) { console.warn('更新清单文件失败', manifestError); }
+    showToast('已删除「' + deletedTitle + '」');
+  } catch (error) {
+    showToast(error.message || '文件删除失败');
+  } finally { btn.disabled = false; }
+});
+
+/* ============================================================
+   搜索
+============================================================ */
+let stateSearch = '';
+document.getElementById("searchInput").addEventListener("input", function(e){
+  stateSearch = e.target.value.trim();
+  if (document.getElementById("detailBlock").classList.contains("open")){
+    const sc = document.querySelector('#subChips .sub-chip.active');
+    const sub = sc ? sc.dataset.sub : 'all';
+    renderDocs(sub);
+  }
+});
+
+/* ============================================================
+   上传 — 支持选择知识分类
+============================================================ */
+const uploadBar = document.getElementById("uploadBar");
+const fileInput = document.getElementById("fileInput");
+document.getElementById("uploadBtn").addEventListener("click", async ()=>{
+  if (await ensureAuthenticated()) fileInput.click();
+});
+fileInput.addEventListener("change", (e)=>{ if(e.target.files.length) handleFiles(e.target.files); });
+
+// 拖拽
+let dragDepth = 0;
+uploadBar.addEventListener("dragenter", (e)=>{ e.preventDefault(); dragDepth++; uploadBar.classList.add("dragging"); });
+uploadBar.addEventListener("dragover", e=>e.preventDefault());
+uploadBar.addEventListener("dragleave", (e)=>{ e.preventDefault(); dragDepth--; if(dragDepth<=0){dragDepth=0; uploadBar.classList.remove("dragging");} });
+uploadBar.addEventListener("drop", (e)=>{ e.preventDefault(); dragDepth=0; uploadBar.classList.remove("dragging"); if(e.dataTransfer.files.length) handleFiles(e.dataTransfer.files); });
+
+function getType(name){
+  const ext = name.split('.').pop().toLowerCase();
+  if(/(xlsx|xls|csv|tsv)/.test(ext)) return 'xlsx';
+  if(/(docx|doc)/.test(ext)) return 'docx';
+  if(/(pptx|ppt)/.test(ext)) return 'pptx';
+  if(/pdf/.test(ext)) return 'pdf';
+  if(/(skill|skl|md)/.test(ext)) return 'skill';
+  return 'html';
+}
+async function uploadToS3(file, bizCode, onProgress){
+  const query = new URLSearchParams({ scenario: S3_SCENARIO, bizCode });
+  return new Promise(function(resolve, reject){
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', S3_API_PREFIX + '/upload?' + query.toString());
+    xhr.upload.onprogress = function(e){ if (e.lengthComputable && onProgress) onProgress(e.loaded / e.total); };
+    xhr.onload = function(){
+      let body = xhr.responseText;
+      try { body = body ? JSON.parse(body) : {}; } catch (e) {}
+      if (xhr.status === 401) {
+        redirectToLogin();
+        reject(new Error('登录状态已失效，正在跳转登录页'));
+        return;
+      }
+      if (xhr.status >= 200 && xhr.status < 300) resolve(body);
+      else reject(new Error((body && (body.message || body.msg)) || ('上传失败 HTTP ' + xhr.status)));
+    };
+    xhr.onerror = function(){ reject(new Error('网络错误，无法连接文件服务')); };
+    const form = new FormData();
+    form.append(S3_FILE_FIELD, file, file.name);
+    xhr.send(form);
+  });
+}
+async function uploadManifest(){
+  const manifest = {
+    schemaVersion: 1,
+    generatedAt: new Date().toISOString(),
+    total: allDocs.length,
+    modules: CAT_ORDER.reduce(function(out, key){ out[key] = allDocs.filter(d=>d.cat===key); return out; }, {})
+  };
+  const response = await authFetch(MANIFEST_API, {
+    method:'PUT',
+    credentials:'include',
+    headers:{ 'Content-Type':'application/json' },
+    body:JSON.stringify(manifest)
+  });
+  let result = null;
+  try { result = await response.json(); } catch (e) {}
+  if (!response.ok || !result || ![0, 200].includes(Number(result.code))) {
+    throw new Error(result && (result.msg || result.message) || ('保存共享清单失败 HTTP ' + response.status));
+  }
+  return result.data && result.data.key;
+}
+async function handleFiles(files){
+  if (!await ensureAuthenticated()) {
+    fileInput.value = '';
+    return;
+  }
+  const [cat, sub] = document.getElementById("uploadCatSelect").value.split("|");
+  const arr = Array.from(files);
+  const panel = document.getElementById("progressWrap");
+  panel.classList.add("show");
+  const step = 100 / (arr.length || 1);
+  const bizCode = selectedBizCode(cat, sub);
+  let uploaded = 0;
+  try {
+    for (let i = 0; i < arr.length; i++){
+      const f = arr[i];
+      document.getElementById("progressName").textContent = "正在上传： " + f.name;
+      const response = await uploadToS3(f, bizCode, function(ratio){
+        const totalPct = Math.round(i * step + ratio * step);
+        document.getElementById("progressFill").style.width = totalPct + "%";
+        document.getElementById("progressPct").textContent = totalPct + "%";
+      });
+      const stored = extractUploadedFile(response, f.name);
+      allDocs.unshift({
+        id: Date.now() + i,
+        cat, sub,
+        title: f.name.replace(/\.[^.]+$/, ''),
+        body: '上传的知识文档：' + f.name,
+        updater: '当前用户',
+        time: new Date().toLocaleDateString('zh-CN'),
+        size: formatFileSize(f.size),
+        sizeBytes: f.size,
+        type: getType(f.name),
+        originalName: f.name,
+        storedName: stored.storedName,
+        objectKey: stored.objectKey,
+        bizCode,
+        scenario: S3_SCENARIO,
+        uploadedAt: new Date().toISOString()
+      });
+      uploaded++;
+      saveCachedDocs();
+    }
+    document.getElementById("progressName").textContent = "正在更新文件清单…";
+    try { await uploadManifest(); }
+    catch (manifestError) { console.warn('清单文件上传失败', manifestError); }
+    document.getElementById("progressPct").textContent = "100%";
+    document.getElementById("progressFill").style.width = "100%";
+    document.getElementById("progressName").textContent = "上传完成";
+    showToast("已上传 " + uploaded + " 份文档到「" + CATS[cat].name + " / " + subName(cat, sub) + "」");
+  } catch (error) {
+    document.getElementById("progressName").textContent = "上传失败";
+    showToast(error.message || '文件上传失败');
+  } finally {
+    renderCatGrid(); fillUploadSelect(); refreshNavTotal();
+    if (document.getElementById("detailBlock").classList.contains("open")){ renderSubChips(); renderDocs(); }
+    fileInput.value = '';
+    setTimeout(function(){ panel.classList.remove("show"); document.getElementById("progressFill").style.width = '0%'; }, 900);
+  }
+}
+
+function showToast(msg){
+  const t = document.getElementById("toast");
+  document.getElementById("toastMsg").textContent = msg;
+  t.classList.add("show");
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(()=>t.classList.remove("show"), 2200);
+}
+
+/* ============================================================
+   初始化
+============================================================ */
+async function initKnowledgeCenter(){
+  fillUploadSelect();
+  updateNavActive(null);
+  document.getElementById("backHome").addEventListener("click", backToNav);
+  document.addEventListener("keydown", e=>{ if(e.key==='Escape') closeModal(); });
+  renderCatGrid();
+  refreshNavTotal();
+  try {
+    await loadSharedManifest();
+    renderCatGrid();
+    refreshNavTotal();
+  } catch (error) {
+    if (isManifestMissingError(error)) {
+      saveCachedDocs();
+      try {
+        const initializedKey = await uploadManifest();
+        renderCatGrid();
+        refreshNavTotal();
+        console.info('共享清单不存在，已初始化清单', initializedKey);
+      } catch (initError) {
+        console.error('共享空清单初始化失败', initError);
+      }
+    } else {
+      console.info('共享清单暂不可用，已使用本地缓存', error);
+    }
+  }
+}
+initKnowledgeCenter();
+</script>
+<script src="../../home-link.js"></script>
+</body>
+</html>

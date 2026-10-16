@@ -1,0 +1,1661 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>当日敞口与盈亏 - 风险管理子公司驾驶舱</title>
+<!-- ECharts: 国内 CDN 优先,海外兜底 -->
+<script src="https://cdn.staticfile.org/echarts/5.4.3/echarts.min.js"></script>
+<script>
+  // 国内 CDN 失败时回退到 jsdelivr
+  if (typeof echarts === 'undefined') {
+    document.write('<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"><\/script>');
+  }
+</script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #1a3552;
+    background:
+      radial-gradient(ellipse at 20% 0%, rgba(96,180,255,0.25) 0%, transparent 45%),
+      radial-gradient(ellipse at 80% 100%, rgba(140,200,255,0.28) 0%, transparent 50%),
+      linear-gradient(135deg, #eaf4ff 0%, #f5faff 50%, #e3f1ff 100%);
+    min-height: 100vh;
+    overflow-x: hidden;
+    padding: 16px 22px 22px;
+    position: relative;
+  }
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(64,158,255,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(64,158,255,0.06) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    top: -200px; right: -200px;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(64,158,255,0.15) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .wrap { position: relative; z-index: 1; }
+
+  /* 顶部 Header */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 24px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.85) 0%, rgba(220,238,255,0.85) 100%);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(120,180,255,0.35);
+    border-radius: 14px;
+    box-shadow: 0 6px 24px rgba(64,158,255,0.12);
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0;
+    width: 4px; height: 100%;
+    background: linear-gradient(180deg, #2b8eff 0%, #5cd1ff 100%);
+    box-shadow: 0 0 12px rgba(64,158,255,0.6);
+  }
+  .header-left { display: flex; align-items: center; gap: 14px; }
+  .logo {
+    width: 42px; height: 42px;
+    background: linear-gradient(135deg, #2b8eff 0%, #5cd1ff 100%);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 12px rgba(64,158,255,0.4);
+    position: relative;
+  }
+  .logo::after {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.4);
+  }
+  .logo svg { width: 22px; height: 22px; fill: #fff; }
+  .title { font-size: 22px; font-weight: 700; letter-spacing: 2px;
+    background: linear-gradient(90deg, #0e4d92 0%, #2b8eff 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .sub { font-size: 12px; color: #6b8db5; letter-spacing: 1px; margin-top: 2px; }
+  .header-right { display: flex; align-items: center; gap: 18px; }
+  .info-chip {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 14px;
+    background: rgba(64,158,255,0.08);
+    border: 1px solid rgba(64,158,255,0.25);
+    border-radius: 20px;
+    font-size: 12px;
+    color: #2b5a8a;
+  }
+
+  /* KPI 区 */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+  .kpi-card {
+    position: relative;
+    background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,248,255,0.95) 100%);
+    border: 1px solid rgba(120,180,255,0.35);
+    border-radius: 12px;
+    padding: 16px 18px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(64,158,255,0.08);
+    transition: all 0.3s;
+  }
+  .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(64,158,255,0.18); }
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 80px; height: 80px;
+    background: radial-gradient(circle, var(--accent, rgba(64,158,255,0.18)) 0%, transparent 70%);
+  }
+  .kpi-card.highlight {
+    background: linear-gradient(135deg, #1e5fc4 0%, #2b8eff 50%, #5cd1ff 100%);
+    border-color: rgba(255,255,255,0.3);
+    box-shadow: 0 8px 28px rgba(43,142,255,0.35);
+  }
+  .kpi-card.highlight .kpi-label,
+  .kpi-card.highlight .kpi-meta { color: rgba(255,255,255,0.85); }
+  .kpi-card.highlight .kpi-value { color: #fff; }
+  .kpi-card.highlight .kpi-meta strong { color: #fff; }
+  .kpi-label { font-size: 12px; color: #6b8db5; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+  .kpi-label .icon { width: 18px; height: 18px; border-radius: 5px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .kpi-label .icon svg { width: 12px; height: 12px; }
+  .kpi-label .icon.pl { background: linear-gradient(135deg, #2b8eff 0%, #5cd1ff 100%); box-shadow: 0 2px 6px rgba(64,158,255,0.4); }
+  .kpi-label .icon.pl svg { fill: #fff; }
+  .kpi-label .icon.scale { background: linear-gradient(135deg, #2b8eff 0%, #5cd1ff 100%); box-shadow: 0 2px 6px rgba(64,158,255,0.4); }
+  .kpi-label .icon.scale svg { fill: #fff; }
+  .kpi-value { font-size: 30px; font-weight: 800; color: #0e4d92; line-height: 1.1;
+    font-family: 'DIN Alternate', 'Arial Black', sans-serif;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.5);
+  }
+  .kpi-value .unit { font-size: 14px; color: #6b8db5; font-weight: 500; margin-left: 4px; }
+  .kpi-card.highlight .kpi-value .unit { color: rgba(255,255,255,0.7); }
+  .kpi-meta { font-size: 11px; color: #6b8db5; margin-top: 6px; display: flex; align-items: center; gap: 6px; }
+  .kpi-meta .up { color: #ff5c5c; font-weight: 700; }
+  .kpi-meta .down { color: #2bd576; font-weight: 700; }
+  .kpi-card.highlight .kpi-meta .up,
+  .kpi-card.highlight .kpi-meta .down { color: #ff5c5c; font-weight: 700; }
+
+  /* 仪表盘卡片 - 4 列并排,改用纯 SVG 渲染 */
+  .gauge-card {
+    background: linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(240,248,255,0.95) 100%);
+    border: 1px solid rgba(120,180,255,0.35);
+    border-radius: 12px;
+    padding: 14px 12px 12px;
+    text-align: center;
+    box-shadow: 0 4px 16px rgba(64,158,255,0.08);
+    position: relative;
+  }
+  .gauge-title {
+    font-size: 12px; color: #6b8db5; margin-bottom: 6px; font-weight: 600;
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    width: 100%;
+  }
+  .gauge-title .gt-text { white-space: nowrap; flex: 0 1 auto; }
+  /* 比例徽章 (固定在标题行最右侧) - 科技发光质感 */
+  .gauge-pct {
+    font-size: 11px; font-weight: 800; line-height: 1.5;
+    font-family: 'DIN Alternate', 'Arial Black', sans-serif;
+    padding: 1px 8px; border-radius: 8px; white-space: nowrap;
+    text-shadow: 0 0 6px currentColor;
+    margin-left: auto;
+    flex: 0 0 auto;
+    position: relative;
+  }
+  .gauge-pct::before {
+    content: ''; position: absolute; inset: 0;
+    border-radius: 8px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.25) 0%, transparent 50%);
+    pointer-events: none;
+  }
+  .gauge-pct.lv-ok { color: #1f8a4a; background: rgba(43,213,118,0.12); border: 1px solid rgba(43,213,118,0.4); box-shadow: 0 0 8px rgba(43,213,118,0.25), inset 0 0 6px rgba(43,213,118,0.08); }
+  .gauge-pct.lv-warn { color: #ffb000; background: rgba(255,176,0,0.16); border: 1px solid rgba(255,176,0,0.6); box-shadow: 0 0 12px rgba(255,176,0,0.45), 0 0 20px rgba(255,176,0,0.15), inset 0 0 6px rgba(255,210,63,0.15); animation: techPulseWarn 2s ease-in-out infinite; }
+  .gauge-pct.lv-danger { color: #ff3b5c; background: rgba(255,23,68,0.16); border: 1px solid rgba(255,23,68,0.6); box-shadow: 0 0 14px rgba(255,23,68,0.55), 0 0 26px rgba(255,23,68,0.2), inset 0 0 6px rgba(255,107,107,0.18); animation: techPulse 1.4s ease-in-out infinite; }
+  @keyframes techPulse {
+    0%, 100% { box-shadow: 0 0 10px rgba(255,23,68,0.45), 0 0 18px rgba(255,23,68,0.15), inset 0 0 6px rgba(255,107,107,0.15); }
+    50% { box-shadow: 0 0 22px rgba(255,23,68,0.85), 0 0 36px rgba(255,23,68,0.3), inset 0 0 8px rgba(255,107,107,0.25); }
+  }
+  @keyframes techPulseWarn {
+    0%, 100% { box-shadow: 0 0 10px rgba(255,176,0,0.4), 0 0 16px rgba(255,176,0,0.12), inset 0 0 6px rgba(255,210,63,0.12); }
+    50% { box-shadow: 0 0 18px rgba(255,176,0,0.7), 0 0 28px rgba(255,176,0,0.2), inset 0 0 8px rgba(255,210,63,0.2); }
+  }
+  .gauge-svg-wrap { width: 100%; display: flex; justify-content: center; align-items: center; padding: 0 4px; }
+  .gauge-svg-wrap svg { width: 100%; max-width: 220px; height: auto; display: block; }
+  .gauge-value { font-size: 16px; font-weight: 700; color: #0e4d92; margin-top: 4px; }
+  .gauge-value .unit { font-size: 11px; color: #6b8db5; font-weight: 500; }
+
+  /* 主体网格 */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+
+  /* 三大区域 - 并排布局 */
+  .wrap { display: flex; flex-direction: column; min-width: 1100px; }
+
+  /* 关注事项与监管动态板块 */
+  .alert-bar {
+    background: linear-gradient(180deg, rgba(255,255,255,0.7) 0%, rgba(238,246,255,0.7) 100%);
+    border: 1px solid rgba(120,180,255,0.3);
+    border-radius: 14px;
+    padding: 10px 16px;
+    margin-bottom: 14px;
+    box-shadow: 0 4px 16px rgba(64,158,255,0.08);
+  }
+  .alert-bar-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-bottom: 8px; margin-bottom: 8px;
+    border-bottom: 1px dashed rgba(64,158,255,0.25);
+  }
+  .alert-bar-head .zone-title { font-size: 15px; }
+  .alert-bar-head .zone-title .zone-num {
+    background: linear-gradient(135deg, #ff6b6b, #ff1744);
+    color: #fff;
+  }
+  .alert-table {
+    display: grid;
+    grid-template-columns: 50px 80px 2.5fr 3fr 72px;
+    gap: 0;
+    align-items: center;
+  }
+  /* 事件属性徽章 - 颜色与标识一致 (按 level 着色, 不按 category) */
+  .alert-cat {
+    display: inline-block;
+    font-size: 10px; font-weight: 700; line-height: 1.4;
+    padding: 2px 8px; border-radius: 6px;
+    white-space: nowrap; text-align: center;
+    border: 1px solid;
+  }
+  .alert-cat.lv-red   { color: #ff1744; background: rgba(255,23,68,0.10);  border-color: rgba(255,23,68,0.40); }
+  .alert-cat.lv-star3 { color: #ff6b00; background: rgba(255,107,0,0.10);  border-color: rgba(255,107,0,0.40); }
+  .alert-cat.lv-star2 { color: #ffb000; background: rgba(255,176,0,0.12);  border-color: rgba(255,176,0,0.40); }
+  .alert-cat.lv-star1 { color: #c0a020; background: rgba(192,160,32,0.12); border-color: rgba(192,160,32,0.40); }
+  .alert-cat.lv-green { color: #1a9d52; background: rgba(43,213,118,0.12); border-color: rgba(43,213,118,0.40); }
+  .alert-body {
+    max-height: 126px;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .alert-body::-webkit-scrollbar { width: 5px; }
+  .alert-body::-webkit-scrollbar-track { background: rgba(43,142,255,0.05); border-radius: 3px; }
+  .alert-body::-webkit-scrollbar-thumb { background: rgba(43,142,255,0.3); border-radius: 3px; }
+  .alert-body::-webkit-scrollbar-thumb:hover { background: rgba(43,142,255,0.5); }
+  .alert-th {
+    font-size: 10px; font-weight: 700; color: #6b8db5;
+    padding: 4px 8px; text-transform: uppercase; letter-spacing: 0.5px;
+    border-bottom: 1px solid rgba(64,158,255,0.15);
+  }
+  .alert-cell {
+    padding: 6px 8px; font-size: 12px; color: #1a3a5c;
+    border-bottom: 1px solid rgba(64,158,255,0.08);
+    line-height: 1.4;
+  }
+  .alert-cell:last-child { border-bottom: none; }
+  .alert-light {
+    display: flex; align-items: center; justify-content: center;
+    padding: 6px 4px;
+    border-bottom: 1px solid rgba(64,158,255,0.08);
+  }
+  .alert-badge {
+    font-size: 11px; font-weight: 700; white-space: nowrap;
+    display: flex; align-items: center; gap: 2px;
+  }
+  .alert-badge.red { color: #ff1744; }
+  .alert-badge.star3 { color: #ff6b00; }
+  .alert-badge.star2 { color: #ffb000; }
+  .alert-badge.star1 { color: #c0a020; }
+  .alert-badge.green { color: #2bd576; }
+  .alert-badge .stars { letter-spacing: -1px; }
+  .alert-item-name { font-weight: 700; color: #0e4d92; cursor: pointer; transition: color 0.2s; }
+  .alert-item-name:hover { color: #2b8eff; text-decoration: underline; }
+  .alert-item-desc { font-size: 11px; color: #6b8db5; margin-top: 1px; }
+  .alert-status-tag {
+    font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 8px;
+    white-space: nowrap; text-align: center; display: inline-flex; align-items: center; gap: 3px;
+  }
+  .alert-status-tag.read { background: rgba(43,213,118,0.12); color: #1a9d52; border: 1px solid rgba(43,213,118,0.25); }
+  .alert-status-tag.unread { background: rgba(255,176,0,0.12); color: #d97c0a; border: 1px solid rgba(255,176,0,0.25); }
+  .alert-status-tag.unsent { background: rgba(120,140,170,0.12); color: #6b7a8e; border: 1px solid rgba(120,140,170,0.25); }
+  .alert-status-tag .status-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+  }
+  .alert-status-tag.read .status-dot { background: #2bd576; }
+  .alert-status-tag.unread .status-dot { background: #ffb000; }
+  .alert-status-tag.unsent .status-dot { background: #9aa8bc; }
+  .alert-bar-foot {
+    display: flex; align-items: center; gap: 16px;
+    padding-top: 8px; margin-top: 4px;
+    border-top: 1px dashed rgba(64,158,255,0.15);
+    font-size: 11px; color: #6b8db5;
+  }
+  .alert-bar-foot .foot-item { display: flex; align-items: center; gap: 4px; }
+  .alert-bar-foot .foot-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  /* ========== 通知弹窗 ========== */
+  .notify-overlay {
+    position: fixed; inset: 0; z-index: 9999;
+    background: rgba(8,20,40,0.55);
+    backdrop-filter: blur(4px);
+    display: none; align-items: center; justify-content: center;
+    animation: notifyFadeIn 0.2s ease;
+  }
+  .notify-overlay.show { display: flex; }
+  @keyframes notifyFadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .notify-modal {
+    width: 560px; max-width: 92vw; max-height: 80vh;
+    background: linear-gradient(180deg, #f8fbff 0%, #eef5ff 100%);
+    border: 1px solid rgba(92,209,255,0.4);
+    border-radius: 14px;
+    box-shadow: 0 16px 48px rgba(14,77,146,0.35), 0 0 0 1px rgba(92,209,255,0.15);
+    display: flex; flex-direction: column; overflow: hidden;
+    animation: notifySlide 0.3s ease;
+  }
+  @keyframes notifySlide { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .notify-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px;
+    background: linear-gradient(90deg, #0e3a8a, #1e5fc4);
+    color: #fff;
+    border-bottom: 2px solid rgba(92,209,255,0.3);
+  }
+  .notify-head .notify-title { font-size: 15px; font-weight: 700; letter-spacing: 1px; }
+  .notify-head .notify-close {
+    cursor: pointer; width: 28px; height: 28px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2);
+    font-size: 16px; color: #fff; transition: all 0.2s;
+  }
+  .notify-head .notify-close:hover { background: rgba(255,255,255,0.3); }
+  .notify-body { padding: 16px 20px; overflow-y: auto; flex: 1; }
+  .notify-body::-webkit-scrollbar { width: 6px; }
+  .notify-body::-webkit-scrollbar-track { background: rgba(43,142,255,0.05); border-radius: 3px; }
+  .notify-body::-webkit-scrollbar-thumb { background: rgba(43,142,255,0.3); border-radius: 3px; }
+  .notify-section-title {
+    font-size: 12px; font-weight: 700; color: #0e4d92; margin-bottom: 8px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .notify-section-title::before {
+    content: ''; width: 3px; height: 12px; border-radius: 2px;
+    background: linear-gradient(180deg, #2b8eff, #5cd1ff);
+  }
+  .notify-alert-info {
+    font-size: 11px; color: #6b8db5; background: rgba(64,158,255,0.06);
+    border: 1px solid rgba(64,158,255,0.15); border-radius: 8px;
+    padding: 8px 12px; margin-bottom: 14px; line-height: 1.5;
+  }
+  .notify-alert-info b { color: #0e4d92; }
+  .contact-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+  .contact-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px; border-radius: 8px; cursor: pointer;
+    background: rgba(255,255,255,0.7); border: 1px solid rgba(120,180,255,0.25);
+    transition: all 0.2s;
+  }
+  .contact-item:hover { background: rgba(92,209,255,0.08); border-color: rgba(92,209,255,0.4); }
+  .contact-item.selected { background: rgba(43,142,255,0.1); border-color: rgba(43,142,255,0.5); box-shadow: 0 0 0 1px rgba(43,142,255,0.2); }
+  .contact-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0;
+  }
+  .contact-info { flex: 1; min-width: 0; }
+  .contact-name { font-size: 13px; font-weight: 600; color: #1a3a5c; }
+  .contact-role { font-size: 10px; color: #6b8db5; margin-top: 1px; }
+  .contact-check {
+    width: 18px; height: 18px; border-radius: 4px;
+    border: 2px solid rgba(120,180,255,0.4);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: all 0.2s;
+  }
+  .contact-item.selected .contact-check {
+    background: linear-gradient(135deg, #2b8eff, #5cd1ff); border-color: transparent;
+  }
+  .contact-item.selected .contact-check::after {
+    content: '✓'; color: #fff; font-size: 11px; font-weight: 700;
+  }
+  .notify-textarea {
+    width: 100%; min-height: 80px; resize: vertical;
+    padding: 10px 12px; font-size: 12px; font-family: inherit;
+    color: #1a3a5c; line-height: 1.5;
+    background: rgba(255,255,255,0.9); border: 1px solid rgba(120,180,255,0.3);
+    border-radius: 8px; outline: none; transition: border-color 0.2s;
+  }
+  .notify-textarea:focus { border-color: #2b8eff; box-shadow: 0 0 0 3px rgba(43,142,255,0.1); }
+  .notify-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 20px; border-top: 1px solid rgba(64,158,255,0.15);
+    background: rgba(240,248,255,0.6);
+  }
+  .notify-selected-count { font-size: 11px; color: #6b8db5; }
+  .notify-selected-count b { color: #0e4d92; font-weight: 700; }
+  .notify-btn {
+    padding: 8px 22px; font-size: 13px; font-weight: 700;
+    border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s;
+  }
+  .notify-btn-cancel { background: rgba(120,140,170,0.12); color: #6b7a8e; border: 1px solid rgba(120,140,170,0.2); }
+  .notify-btn-cancel:hover { background: rgba(120,140,170,0.2); }
+  .notify-btn-send {
+    background: linear-gradient(135deg, #2b8eff, #5cd1ff); color: #fff;
+    box-shadow: 0 4px 12px rgba(43,142,255,0.35);
+  }
+  .notify-btn-send:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(43,142,255,0.45); }
+  .notify-btn-send:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  /* 阅读状态视图 */
+  .read-status-list { display: flex; flex-direction: column; gap: 6px; }
+  .read-status-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px; border-radius: 8px;
+    background: rgba(255,255,255,0.7); border: 1px solid rgba(120,180,255,0.25);
+  }
+  .read-status-item.read { border-color: rgba(43,213,118,0.35); background: rgba(43,213,118,0.05); }
+  .read-status-item.unread { border-color: rgba(255,176,0,0.35); background: rgba(255,176,0,0.05); }
+  .read-status-badge {
+    font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px;
+    margin-left: auto; white-space: nowrap;
+  }
+  .read-status-badge.read { background: rgba(43,213,118,0.15); color: #1a9d52; border: 1px solid rgba(43,213,118,0.3); }
+  .read-status-badge.unread { background: rgba(255,176,0,0.15); color: #d97c0a; border: 1px solid rgba(255,176,0,0.3); }
+  .read-status-empty { text-align: center; padding: 24px; color: #6b8db5; font-size: 12px; }
+
+  .alert-status-tag { cursor: pointer; transition: all 0.2s; }
+  .alert-status-tag:hover { transform: scale(1.05); }
+
+  /* ========== 聚光灯跳转高亮 ========== */
+  /* 仅保留紫框突出: 所有事项点击都给目标加紫色边框, 删除蒙层/箭头/发光等其他突出效果 */
+  .spotlight-target {
+    position: relative; z-index: 9999;
+    border-radius: 8px;
+    border: 3px solid #a855f7 !important;
+  }
+
+  /* ========== 回到顶部悬浮按钮 ========== */
+  .back-to-top {
+    position: fixed; right: 28px; bottom: 28px;
+    width: 48px; height: 48px;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, rgba(43,142,255,0.92), rgba(92,209,255,0.92));
+    color: #fff; font-size: 22px; font-weight: 700;
+    border-radius: 50%;
+    border: 1px solid rgba(92,209,255,0.5);
+    box-shadow: 0 6px 20px rgba(43,142,255,0.45), 0 0 12px rgba(92,209,255,0.3);
+    cursor: pointer; z-index: 10001;
+    opacity: 0.45; transform: translateY(0) scale(1);
+    pointer-events: auto;
+    transition: opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .back-to-top.show {
+    opacity: 1; transform: translateY(0) scale(1);
+    box-shadow: 0 8px 28px rgba(43,142,255,0.6), 0 0 18px rgba(92,209,255,0.5);
+  }
+  .back-to-top:hover {
+    box-shadow: 0 8px 28px rgba(43,142,255,0.6), 0 0 18px rgba(92,209,255,0.5);
+    transform: translateY(-3px) scale(1.05);
+  }
+  .back-to-top:active { transform: translateY(0) scale(0.95); }
+  .spotlight-target.active {
+  }
+
+  /* ========== 历史控制措施弹窗 ========== */
+  .ctrl-history-overlay {
+    position: fixed; inset: 0; z-index: 9998;
+    background: rgba(8,20,40,0.6); backdrop-filter: blur(6px);
+    display: none; align-items: center; justify-content: center;
+    animation: ctrlFadeIn 0.2s ease;
+  }
+  .ctrl-history-overlay.show { display: flex; }
+  @keyframes ctrlFadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .ctrl-history-modal {
+    width: 640px; max-width: 92vw; max-height: 82vh;
+    background: linear-gradient(180deg, #f8fbff 0%, #eef5ff 100%);
+    border: 1px solid rgba(92,209,255,0.4);
+    border-radius: 14px;
+    box-shadow: 0 16px 48px rgba(14,77,146,0.35), 0 0 0 1px rgba(92,209,255,0.15);
+    display: flex; flex-direction: column; overflow: hidden;
+    animation: ctrlSlide 0.3s ease;
+  }
+  @keyframes ctrlSlide { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .ctrl-history-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px;
+    background: linear-gradient(90deg, #0e3a8a, #1e5fc4);
+    color: #fff;
+    border-bottom: 2px solid rgba(92,209,255,0.3);
+  }
+  .ctrl-history-head .ctrl-title { font-size: 15px; font-weight: 700; letter-spacing: 1px; }
+  .ctrl-history-head .ctrl-close {
+    cursor: pointer; width: 28px; height: 28px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2);
+    font-size: 16px; color: #fff; transition: all 0.2s;
+  }
+  .ctrl-history-head .ctrl-close:hover { background: rgba(255,255,255,0.3); }
+  .ctrl-history-body { padding: 16px 20px; overflow-y: auto; flex: 1; }
+  .ctrl-history-body::-webkit-scrollbar { width: 6px; }
+  .ctrl-history-body::-webkit-scrollbar-track { background: rgba(43,142,255,0.05); border-radius: 3px; }
+  .ctrl-history-body::-webkit-scrollbar-thumb { background: rgba(43,142,255,0.3); border-radius: 3px; }
+  .ctrl-alert-info {
+    font-size: 11px; color: #6b8db5; background: rgba(64,158,255,0.06);
+    border: 1px solid rgba(64,158,255,0.15); border-radius: 8px;
+    padding: 8px 12px; margin-bottom: 14px; line-height: 1.5;
+  }
+  .ctrl-alert-info b { color: #0e4d92; }
+  .ctrl-add-section {
+    background: rgba(64,158,255,0.05); border: 1px dashed rgba(64,158,255,0.3);
+    border-radius: 10px; padding: 14px; margin-bottom: 18px;
+  }
+  .ctrl-add-section h5 { font-size: 13px; color: #0e4d92; margin-bottom: 8px; font-weight: 700; }
+  .ctrl-add-section textarea {
+    width: 100%; min-height: 64px; resize: vertical;
+    padding: 10px 12px; font-size: 12px; font-family: inherit;
+    color: #1a3a5c; line-height: 1.5;
+    background: rgba(255,255,255,0.9); border: 1px solid rgba(120,180,255,0.3);
+    border-radius: 8px; outline: none; transition: border-color 0.2s;
+  }
+  .ctrl-add-section textarea:focus { border-color: #2b8eff; box-shadow: 0 0 0 3px rgba(43,142,255,0.1); }
+  .ctrl-add-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+  .ctrl-add-row label { font-size: 12px; color: #6b8db5; font-weight: 600; white-space: nowrap; }
+  .ctrl-add-row input[type="text"] {
+    padding: 6px 10px; border: 1px solid rgba(120,180,255,0.3); border-radius: 6px;
+    font-size: 12px; color: #1a3a5c; outline: none; width: 130px;
+    background: rgba(255,255,255,0.9); transition: border-color 0.2s;
+  }
+  .ctrl-add-row input[type="text"]:focus { border-color: #2b8eff; }
+  .ctrl-add-btn {
+    margin-left: auto; padding: 7px 18px; border: none; border-radius: 8px;
+    background: linear-gradient(135deg, #2b8eff, #5cd1ff); color: #fff;
+    font-size: 12px; font-weight: 700; cursor: pointer;
+    box-shadow: 0 4px 12px rgba(43,142,255,0.3); transition: all 0.2s;
+  }
+  .ctrl-add-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(43,142,255,0.4); }
+  .ctrl-timeline { position: relative; padding-left: 20px; }
+  .ctrl-timeline::before {
+    content: ''; position: absolute; left: 6px; top: 0; bottom: 0;
+    width: 2px; background: linear-gradient(180deg, rgba(43,142,255,0.3), rgba(92,209,255,0.1));
+  }
+  .ctrl-entry { position: relative; margin-bottom: 14px; }
+  .ctrl-entry::before {
+    content: ''; position: absolute; left: -17px; top: 4px;
+    width: 10px; height: 10px; border-radius: 50%;
+    background: linear-gradient(135deg, #2b8eff, #5cd1ff);
+    box-shadow: 0 0 6px rgba(43,142,255,0.4);
+    border: 2px solid white;
+  }
+  .ctrl-entry-card {
+    background: rgba(255,255,255,0.8); border: 1px solid rgba(64,158,255,0.15);
+    border-radius: 10px; padding: 10px 14px;
+    box-shadow: 0 2px 8px rgba(64,158,255,0.06);
+  }
+  .ctrl-entry-date {
+    font-size: 11px; font-weight: 700; color: #1e5fc4;
+    margin-bottom: 4px; display: flex; align-items: center; gap: 6px;
+  }
+  .ctrl-entry-date .ctrl-dot { width: 6px; height: 6px; border-radius: 50%; background: #2b8eff; }
+  .ctrl-entry-text { font-size: 12px; color: #1a3a5c; line-height: 1.6; }
+  .ctrl-empty { text-align: center; padding: 24px; color: #6b8db5; font-size: 12px; }
+  .ctrl-history-btn {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 10px; font-weight: 700; cursor: pointer;
+    color: #1e5fc4; transition: color 0.2s;
+    margin-left: 6px; white-space: nowrap;
+    background: none; border: none; padding: 0;
+  }
+  .ctrl-history-btn:hover { color: #2b8eff; text-decoration: underline; }
+  .ctrl-history-btn .ctrl-count {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 16px; height: 16px; border-radius: 8px;
+    background: linear-gradient(135deg, #2b8eff, #5cd1ff); color: white;
+    font-size: 9px; font-weight: 700; padding: 0 4px;
+  }
+
+  /* ========== Tab 导航 ========== */
+  .tab-nav {
+    display: flex; gap: 0; margin-bottom: 14px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.6), rgba(220,238,255,0.6));
+    border: 1px solid rgba(120,180,255,0.3);
+    border-radius: 12px; padding: 4px;
+    box-shadow: 0 4px 16px rgba(64,158,255,0.08);
+  }
+  .tab-btn {
+    flex: 1; padding: 10px 24px; border: none; border-radius: 8px;
+    font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.3s;
+    background: transparent; color: #6b8db5; letter-spacing: 1px;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .tab-btn:hover { color: #0e4d92; background: rgba(64,158,255,0.06); }
+  .tab-btn.active {
+    background: linear-gradient(135deg, #2b8eff 0%, #5cd1ff 100%);
+    color: #fff; box-shadow: 0 4px 14px rgba(43,142,255,0.35);
+  }
+  .tab-page { display: none; }
+  .tab-page.active { display: block; animation: tabFade 0.3s ease; }
+  @keyframes tabFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ========== 当日敞口与盈亏 ========== */
+  .expo-pnl-summary {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px;
+  }
+  .expo-pnl-summary .kpi-card { padding: 14px 18px; }
+  .expo-pnl-summary .kpi-value { font-size: 24px; }
+
+  .greek-compare-card {
+    background: linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(245,251,255,0.95) 100%);
+    border: 1px solid rgba(120,180,255,0.35); border-radius: 14px;
+    padding: 18px 20px; box-shadow: 0 4px 16px rgba(64,158,255,0.08); margin-bottom: 14px;
+  }
+  .greek-compare-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-bottom: 10px; border-bottom: 1px dashed rgba(64,158,255,0.25); margin-bottom: 14px;
+  }
+  .greek-compare-head .zone-title { font-size: 15px; font-weight: 700; color: #0e4d92; display: flex; align-items: center; gap: 8px; }
+  .greek-legend { display: flex; gap: 16px; }
+  .greek-legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #4a6a8a; font-weight: 600; }
+  .greek-legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+
+  .greek-table {
+    width: 100%; border-collapse: collapse; font-size: 13px;
+  }
+  .greek-table th {
+    text-align: center; padding: 10px 12px;
+    background: linear-gradient(180deg, rgba(64,158,255,0.08), rgba(64,158,255,0.04));
+    color: #0e4d92; font-weight: 700; border-bottom: 2px solid rgba(64,158,255,0.25);
+    white-space: nowrap;
+  }
+  .greek-table td {
+    padding: 10px 12px; border-bottom: 1px solid rgba(64,158,255,0.08);
+    text-align: center; color: #1a3552;
+  }
+  .greek-table tbody tr:hover { background: rgba(64,158,255,0.04); }
+  .greek-table .biz-name { font-weight: 700; color: #0e4d92; text-align: left; }
+  .greek-table .val-pos { color: #1a9d52; font-weight: 700; }
+  .greek-table .val-neg { color: #ff3b5c; font-weight: 700; }
+  .greek-table .val-zero { color: #6b8db5; }
+  .greek-table tfoot td { font-weight: 800; border-top: 2px solid rgba(64,158,255,0.2); border-bottom: none; color: #0e4d92; }
+
+  .pnl-detail-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+  }
+  .pnl-detail-card {
+    background: linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(245,251,255,0.95) 100%);
+    border: 1px solid rgba(120,180,255,0.35); border-radius: 14px;
+    padding: 16px 18px; box-shadow: 0 4px 16px rgba(64,158,255,0.08);
+  }
+  .pnl-detail-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-bottom: 8px; border-bottom: 1px dashed rgba(64,158,255,0.25); margin-bottom: 12px;
+  }
+  .pnl-detail-head .zone-title { font-size: 14px; font-weight: 700; color: #0e4d92; display: flex; align-items: center; gap: 8px; }
+  .pnl-detail-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .pnl-detail-table th { text-align: left; padding: 8px 10px; color: #6b8db5; font-weight: 700; border-bottom: 1px solid rgba(64,158,255,0.12); }
+  .pnl-detail-table td { padding: 8px 10px; border-bottom: 1px solid rgba(64,158,255,0.06); color: #1a3552; }
+  .pnl-detail-table .val-pos { color: #1a9d52; font-weight: 700; }
+  .pnl-detail-table .val-neg { color: #ff3b5c; font-weight: 700; }
+
+  /* ===== 场外盈亏排名表 ===== */
+  .pnl-rank-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px;
+  }
+  .pnl-rank-card {
+    background: linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(245,251,255,0.96) 100%);
+    border: 1px solid rgba(120,180,255,0.35); border-radius: 14px;
+    padding: 16px 18px; box-shadow: 0 4px 16px rgba(64,158,255,0.08);
+    overflow: hidden;
+  }
+  .pnl-rank-card.pnl-rank-profit { border-top: 3px solid #1a9d52; }
+  .pnl-rank-card.pnl-rank-loss { border-top: 3px solid #e74c3c; }
+  .pnl-rank-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-bottom: 8px; border-bottom: 1px dashed rgba(64,158,255,0.25); margin-bottom: 10px;
+  }
+  .pnl-rank-head .zone-title { font-size: 14px; font-weight: 700; color: #0e4d92; display: flex; align-items: center; gap: 8px; }
+  .pnl-rank-table { width: 100%; border-collapse: collapse; font-size: 11px; table-layout: fixed; }
+  .pnl-rank-table th {
+    text-align: right; padding: 7px 6px; color: #6b8db5; font-weight: 700;
+    border-bottom: 1px solid rgba(64,158,255,0.12); white-space: nowrap;
+    background: rgba(240,248,255,0.6); position: sticky; top: 0;
+  }
+  .pnl-rank-table th:nth-child(1) { text-align: center; width: 24px; }
+  .pnl-rank-table th:nth-child(2) { text-align: left; width: 40px; }
+  .pnl-rank-table td {
+    padding: 7px 6px; border-bottom: 1px solid rgba(64,158,255,0.06);
+    color: #1a3552; text-align: right; font-family: 'DIN Alternate', monospace;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .pnl-rank-table td:nth-child(1) { text-align: center; color: #6b8db5; font-weight: 700; }
+  .pnl-rank-table td:nth-child(2) { text-align: left; font-weight: 700; color: #0e4d92; font-family: inherit; }
+  .pnl-rank-table .val-pos { color: #1a9d52; font-weight: 600; }
+  .pnl-rank-table .val-neg { color: #ff3b5c; font-weight: 600; }
+  .pnl-rank-table tr:hover td { background: rgba(64,158,255,0.04); }
+  .pnl-rank-table .rank-badge {
+    display: inline-block; width: 20px; height: 20px; line-height: 20px;
+    border-radius: 50%; font-size: 10px; font-weight: 700; text-align: center;
+    color: #fff;
+  }
+  .pnl-rank-profit .rank-badge { background: linear-gradient(135deg,#1a9d52,#2ecc71); }
+  .pnl-rank-loss .rank-badge { background: linear-gradient(135deg,#c0392b,#e74c3c); }
+  .pnl-rank-profit .rank-badge:nth-child(1) { }
+  /* Mini bar in PnL cells */
+  .pnl-bar-cell { position: relative; min-width: 60px; }
+  .pnl-bar-bg {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    left: 0; height: 16px; border-radius: 3px; opacity: 0.15; z-index: 0;
+  }
+  .pnl-bar-val { position: relative; z-index: 1; }
+
+  /* ===== Tab2: 盈亏敞口快报 (基于index.html适配驾驶舱风格) ===== */
+  .expo-section-title {
+    font-size: 15px; font-weight: 700; color: #0e4d92; margin: 18px 0 10px;
+    padding-left: 12px; border-left: 4px solid #2b8eff;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .expo-section-title.mm { border-left-color: #f5921b; }
+  .expo-section-title span { font-size: 12px; font-weight: 400; color: #6b8db5; }
+  .expo-section-title .zone-num { border: none; padding: 0; margin: 0; width: auto; height: auto; line-height: 1; font-size: 14px; }
+
+  .expo-head-grid { display: grid; grid-template-columns: 1fr 1.35fr; gap: 16px; margin-bottom: 4px; }
+  @media (max-width: 1400px) { .expo-head-grid { grid-template-columns: 1fr; } }
+  .expo-head-grid .greek-compare-card { margin-bottom: 0; }
+
+  .expo-chart { width: 100%; height: 500px; }
+
+  /* 气泡图缩放控制栏 */
+  .bubble-zoom-bar {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 10px; margin-bottom: 4px;
+    background: linear-gradient(180deg, rgba(64,158,255,0.06), rgba(64,158,255,0.02));
+    border-radius: 8px; border: 1px solid rgba(64,158,255,0.12);
+  }
+  .zoom-btn {
+    width: 30px; height: 30px; border-radius: 6px; border: 1px solid rgba(64,158,255,0.25);
+    background: #fff; color: #2b8eff; font-size: 16px; font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; line-height: 1;
+    transition: all 0.15s; user-select: none;
+  }
+  .zoom-btn:hover { background: #2b8eff; color: #fff; border-color: #2b8eff; box-shadow: 0 2px 8px rgba(43,142,255,0.3); }
+  .zoom-btn:active { transform: scale(0.92); }
+  .zoom-hint { font-size: 11px; color: #8aa5c8; margin-left: 8px; }
+
+  /* ===== Tab3: 关键客户百分比条 ===== */
+  .pct-cell { min-width: 140px; }
+  .pct-wrap { display: flex; align-items: center; gap: 8px; }
+  .pct-bar { height: 14px; background: rgba(64,158,255,0.08); border-radius: 3px; flex: 1; overflow: hidden; }
+  .pct-fill { height: 100%; background: linear-gradient(90deg, #2b8eff, #5cd1ff); border-radius: 3px; transition: width 0.6s ease; }
+  .pct-txt { font-variant-numeric: tabular-nums; color: #1a3552; width: 56px; text-align: right; font-weight: 600; font-size: 12px; font-family: 'DIN Alternate', monospace; }
+  table.vz td.dcash { font-weight: 700; font-family: 'DIN Alternate', monospace; }
+  table.vz td.dcash.pos { color: #ff3b5c; }
+  table.vz td.dcash.neg { color: #08979c; }
+
+  .expo-tbl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 4px; }
+  @media (max-width: 1400px) { .expo-tbl-grid { grid-template-columns: 1fr; } }
+  .expo-tbl-grid .greek-compare-card { margin-bottom: 0; }
+  .expo-tbl-head { font-size: 13px; font-weight: 700; margin: 0 0 8px 4px; display: flex; align-items: center; gap: 6px; }
+  .expo-tbl-head.pos-h { color: #1a9d52; }
+  .expo-tbl-head.neg-h { color: #e74c3c; }
+
+  /* 覆盖vz表格风格为驾驶舱蓝白科技风 */
+  table.vz { width: 100%; border-collapse: collapse; font-size: 12px; }
+  table.vz thead th {
+    background: linear-gradient(180deg, rgba(64,158,255,0.1), rgba(64,158,255,0.05));
+    color: #0e4d92; font-weight: 700; padding: 8px 10px;
+    text-align: left; border-bottom: 2px solid rgba(64,158,255,0.2); white-space: nowrap;
+  }
+  table.vz tbody td { padding: 7px 10px; border-bottom: 1px solid rgba(64,158,255,0.06); white-space: nowrap; color: #1a3552; }
+  table.vz tbody tr:hover { background: rgba(64,158,255,0.04); }
+  table.vz tbody tr:last-child td { border-bottom: none; }
+  table.vz td.rank { color: #6b8db5; font-weight: 700; width: 28px; text-align: center; }
+  table.vz td.num { text-align: right; font-variant-numeric: tabular-nums; color: #3d4f66; font-family: 'DIN Alternate', monospace; }
+  table.vz td.pos { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; color: #1a9d52; font-family: 'DIN Alternate', monospace; }
+  table.vz td.neg { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; color: #ff3b5c; font-family: 'DIN Alternate', monospace; }
+  /* 当日盈亏突出显示 */
+  table.vz td.pnl-hl { font-size: 14px; font-weight: 800; padding: 8px 10px; }
+  table.vz td.pnl-hl.pos { color: #1a9d52; background: rgba(26,157,82,0.08); border-radius: 4px; text-shadow: 0 0 6px rgba(26,157,82,0.2); }
+  table.vz td.pnl-hl.neg { color: #ff3b5c; background: rgba(255,59,92,0.08); border-radius: 4px; text-shadow: 0 0 6px rgba(255,59,92,0.2); }
+  table.vz .cn { color: #8aa5c8; font-size: 11px; }
+  table.vz b { color: #0e4d92; }
+
+  .expo-stk-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-top: 4px; }
+  @media (max-width: 1400px) { .expo-stk-grid { grid-template-columns: 1fr; } }
+  .expo-stk-grid .greek-compare-card { margin-bottom: 0; }
+  .expo-stk-head { font-size: 14px; font-weight: 700; color: #0e4d92; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+  .expo-stk-chart { width: 100%; height: 600px; }
+  .seg-btns { display: inline-flex; gap: 0; border: 1px solid rgba(64,158,255,0.3); border-radius: 6px; overflow: hidden; }
+  .seg-btn { border: none; background: #fff; color: #5a6b82; font-size: 12px; padding: 4px 14px; cursor: pointer; transition: all 0.2s; }
+  .seg-btn.active { background: #2b8eff; color: #fff; }
+
+  /* ========== 净敞口柱 + 品种聚焦 ========== */
+  .fc-kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 12px; }
+  .fc-kpi { background: #f7fafd; border: 1px solid #e2eaf5; border-radius: 10px; padding: 10px 14px; }
+  .fc-kpi .k { font-size: 12px; color: #6b8db5; }
+  .fc-kpi .v { font-size: 20px; font-weight: 700; margin-top: 2px; font-family: 'DIN Alternate', monospace; }
+  .fc-kpi .t { font-size: 11px; color: #6b8db5; margin-top: 2px; }
+  .fc-kpi.wide { grid-column: 1 / -1; background: #eef5ff; }
+  .fc-mini-charts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .fc-mini { height: 200px; border: 1px solid #eef3f9; border-radius: 10px; }
+  table.vz.fc-table { margin-top: 14px; }
+  table.vz.fc-table tr.net td { background: #f7fafd; font-weight: 700; }
+  .fc-pos { color: #ff3b5c; font-weight: 700; }
+  .fc-neg { color: #08979c; font-weight: 700; }
+  .fc-zero { color: #8aa2bd; }
+
+  .three-col {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr 1.4fr;
+    gap: 14px;
+    align-items: stretch;
+  }
+  .zone-col {
+    background: linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(240,248,255,0.55) 100%);
+    border: 1px solid rgba(120,180,255,0.3);
+    border-radius: 14px;
+    padding: 12px 14px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-shadow: 0 4px 16px rgba(64,158,255,0.06);
+    position: relative;
+  }
+  .zone-col.zone-risk { background: linear-gradient(180deg, rgba(255,255,255,0.65) 0%, rgba(230,245,255,0.65) 100%); }
+  .zone-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed rgba(64,158,255,0.25);
+  }
+  .zone-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0e4d92;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .zone-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px; height: 24px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #2b8eff 0%, #5cd1ff 100%);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    box-shadow: 0 2px 6px rgba(64,158,255,0.35);
+    font-family: 'DIN Alternate', sans-serif;
+  }
+  .zone-tag {
+    font-size: 12px;
+    color: #6b8db5;
+    letter-spacing: 1px;
+    padding: 3px 10px;
+    background: rgba(64,158,255,0.06);
+    border: 1px solid rgba(64,158,255,0.2);
+    border-radius: 10px;
+  }
+  .zone-tag.risk-ok { color: #fff; background: linear-gradient(90deg, #2bd576 0%, #5cd97f 100%);
+    border-color: rgba(43,213,118,0.5); font-weight: 700; box-shadow: 0 2px 8px rgba(43,213,118,0.4);
+    letter-spacing: 1.5px; padding: 4px 14px; animation: statusPulse 2s ease-in-out infinite; }
+  @keyframes statusPulse {
+    0%, 100% { box-shadow: 0 2px 8px rgba(43,213,118,0.4); }
+    50% { box-shadow: 0 2px 16px rgba(43,213,118,0.8), 0 0 24px rgba(43,213,118,0.3); }
+  }
+  .zone-tag.risk-warn { color: #ffaa3c; background: rgba(255,170,60,0.08); border-color: rgba(255,170,60,0.3); font-weight: 700; letter-spacing: 1.5px; padding: 4px 14px; }
+  .zone-tag.risk-danger { color: #ff5c5c; background: rgba(255,92,92,0.08); border-color: rgba(255,92,92,0.3); font-weight: 700; letter-spacing: 1.5px; padding: 4px 14px; }
+
+  /* 风控区 2x2 仪表盘 */
+  .risk-grid-2x2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    flex: 1;
+  }
+  .risk-grid-2x2 .gauge-card { padding: 10px 8px 8px; }
+  .risk-grid-2x2 .gauge-title { font-size: 11px; margin-bottom: 4px; }
+  .risk-grid-2x2 .gauge-value { font-size: 14px; }
+  .risk-grid-2x2 .gauge-value .unit { font-size: 10px; }
+  .risk-grid-2x2 .gauge-svg-wrap svg { max-width: 160px; }
+  .risk-grid-2x2 .gauge-pct { font-size: 10px; padding: 1px 6px; }
+
+  /* KPI 纵向堆叠 */
+  .kpi-stack { display: flex; flex-direction: column; gap: 12px; }
+  .kpi-stack .kpi-card { padding: 14px 18px; }
+  .kpi-stack .kpi-value { font-size: 26px; }
+  /* KPI 水平排列 (盈亏两个) */
+  .kpi-row-inline { flex-direction: row; gap: 10px; }
+  .kpi-row-inline .kpi-card { flex: 1; padding: 10px 12px; }
+  .kpi-row-inline .kpi-label { font-size: 11px; }
+  .kpi-row-inline .kpi-value { font-size: 20px; }
+  .kpi-row-inline .kpi-meta { font-size: 10px; }
+
+  /* 区域 KPI 卡片 (单卡片) */
+  .zone-col .kpi-card { padding: 14px 18px; }
+  .zone-col .kpi-card .kpi-value { font-size: 26px; }
+
+  /* ========== 双风险大方框 (市场风险 + 信用风险 并列) ========== */
+  .risk-dual {
+    display: grid;
+    grid-template-columns: 4fr 3fr 3fr;
+    gap: 10px;
+    margin-top: 6px;
+    align-items: stretch;
+  }
+  .risk-dual > .risk-box { min-width: 0; }
+  .risk-box {
+    background: linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(245,251,255,0.95) 100%);
+    border: 1px solid rgba(120,180,255,0.35);
+    border-radius: 14px;
+    padding: 12px 16px 14px;
+    box-shadow: 0 4px 16px rgba(64,158,255,0.08);
+    position: relative;
+    display: flex; flex-direction: column;
+  }
+  .risk-box-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed rgba(64,158,255,0.25);
+    margin-bottom: 10px;
+  }
+
+  /* 集中度风险 - 文字卡片 */
+  .conc-card {
+    background: linear-gradient(135deg, rgba(240,248,255,0.9), rgba(235,245,255,0.7));
+    border: 1px solid rgba(64,158,255,0.2);
+    border-radius: 10px;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px;
+    transition: all 0.3s ease;
+  }
+  .conc-card:hover { border-color: rgba(64,158,255,0.5); box-shadow: 0 2px 10px rgba(64,158,255,0.12); }
+  .conc-card.warn { border-color: rgba(255,176,0,0.5); background: linear-gradient(135deg, rgba(255,248,235,0.9), rgba(255,245,225,0.7)); }
+  .conc-card.danger { border-color: rgba(255,23,68,0.5); background: linear-gradient(135deg, rgba(255,240,240,0.9), rgba(255,230,230,0.7)); }
+  .conc-info { flex: 0 0 auto; min-width: 0; }
+  .conc-name { font-size: 11px; font-weight: 700; color: #0e4d92; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .conc-sub { font-size: 10px; color: #6b8db5; font-weight: 500; }
+  .conc-subject { font-size: 12px; font-weight: 700; color: #2b5a8a; text-align: center; flex: 1; white-space: nowrap; padding: 0 8px; }
+  .conc-vals { text-align: right; white-space: nowrap; flex: 0 0 auto; }
+  .conc-val { font-size: 14px; font-weight: 800; color: #1e5fc4; font-family: 'DIN Alternate', sans-serif; }
+  .conc-th { font-size: 9px; color: #6b8db5; margin-top: 1px; }
+  .conc-badge {
+    font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 10px;
+    margin-left: 6px; white-space: nowrap;
+  }
+  .conc-badge.ok { background: rgba(43,213,118,0.15); color: #1a9d52; border: 1px solid rgba(43,213,118,0.3); }
+  .conc-badge.warn { background: rgba(255,176,0,0.15); color: #d97c0a; border: 1px solid rgba(255,176,0,0.3); }
+  .conc-badge.danger { background: rgba(255,23,68,0.15); color: #c41e3a; border: 1px solid rgba(255,23,68,0.3); }
+
+  /* 敞口使用率条 - 每个业务独立归一化到自身限额, 不画共享阈值线 */
+  .expo-group { margin-bottom: 12px; }
+  .expo-group:last-child { margin-bottom: 0; }
+  .expo-group-head {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; font-weight: 700; color: #0e4d92;
+    margin-bottom: 6px;
+  }
+  .expo-group-title-box {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: #0e3a8a;
+    border-radius: 0;
+    padding: 0;
+    font-weight: 800;
+  }
+  .expo-group-total-inline {
+    font-size: 10px; color: #6b8db5; font-weight: 700;
+    border-left: 1px solid rgba(14,58,138,0.2);
+    padding-left: 8px; margin-left: 2px;
+  }
+  .expo-group-total-inline b { color: #0e3a8a; font-weight: 800; font-family: 'DIN Alternate', sans-serif; margin: 0 2px; }
+  .expo-group-dot { width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 6px currentColor; flex-shrink: 0; }
+  .expo-group-total { margin-left: auto; font-size: 10px; color: #6b8db5; font-weight: 500; }
+  .expo-group-total b { color: #0e4d92; font-weight: 800; font-family: 'DIN Alternate', sans-serif; margin: 0 2px; }
+
+  .expo-row {
+    display: grid;
+    grid-template-columns: 60px minmax(0,1fr) 66px;
+    align-items: center; gap: 4px;
+    padding: 4px 0;
+  }
+  .expo-name { font-size: 11px; color: #2b5a8a; font-weight: 600; line-height: 1.3; }
+  .expo-name .expo-dir { display: block; font-size: 9px; color: #6b8db5; font-weight: 500; }
+  /* 双向条容器: 中心 0, 左负右正 */
+  .expo-bar-wrap { position: relative; height: 18px; width: 100%; min-width: 0; }
+  /* 进度条轨道: 长度代表阈值 (居中, 宽度由 JS 按阈值/全局刻度设定) */
+  .expo-bar-track {
+    position: absolute; top: 0; bottom: 0;
+    background: rgba(64,158,255,0.08);
+    border-radius: 8px; overflow: hidden;
+    border: 1px solid rgba(64,158,255,0.18);
+  }
+  /* 中心 0 基准线 */
+  .expo-bar-zero {
+    position: absolute; top: -3px; bottom: -3px; left: 50%;
+    width: 1.5px; transform: translateX(-50%);
+    background: rgba(14,77,146,0.55);
+    z-index: 3;
+  }
+  /* 填充: 长度代表敞口金额, 在轨道范围内 */
+  .expo-bar-fill {
+    position: absolute; top: 0; bottom: 0;
+    border-radius: 8px;
+    transition: width 0.6s ease, left 0.6s ease, right 0.6s ease;
+  }
+  /* 阈值刻度 (在轨道末端) */
+  .expo-th-mark {
+    position: absolute; top: -3px; bottom: -3px; width: 2px;
+    background: #ffaa3c; border-radius: 1px;
+    box-shadow: 0 0 4px rgba(255,176,0,0.8);
+    z-index: 2;
+  }
+  .expo-th-label {
+    position: absolute; top: -14px; transform: translateX(-50%);
+    font-size: 8px; font-weight: 700; color: #ffaa3c;
+    font-family: 'DIN Alternate', sans-serif;
+    white-space: nowrap; pointer-events: none; z-index: 3;
+    text-shadow: 0 0 3px rgba(255,255,255,0.8);
+  }
+  /* 比例值 (显示在空侧/左侧) */
+  .expo-bar-pct {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    font-size: 9px; font-weight: 800; color: #0e4d92;
+    font-family: 'DIN Alternate', sans-serif;
+    text-shadow: 0 0 3px rgba(255,255,255,0.6);
+    pointer-events: none; white-space: nowrap; z-index: 4;
+  }
+  /* 敞口金额值 (显示在填充末端旁) */
+  .expo-bar-val {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    font-size: 10px; font-weight: 800; color: #0e4d92;
+    font-family: 'DIN Alternate', sans-serif;
+    text-shadow: 0 0 3px rgba(255,255,255,0.6);
+    pointer-events: none; white-space: nowrap; z-index: 4;
+  }
+  .expo-vals { font-size: 10px; color: #6b8db5; font-family: 'DIN Alternate', monospace; text-align: right; line-height: 1.3; }
+  .expo-vals b { color: #0e4d92; font-weight: 800; }
+  .expo-status {
+    font-size: 9px; font-weight: 800; text-align: center;
+    padding: 2px 0; border-radius: 8px;
+  }
+  .expo-status.ok { color: #2bd576; background: rgba(43,213,118,0.12); }
+  .expo-status.warn { color: #ffb000; background: rgba(255,176,0,0.14); }
+  .expo-status.danger { color: #ff3b5c; background: rgba(255,23,68,0.14); box-shadow: 0 0 6px rgba(255,23,68,0.25); }
+  .expo-status.na { color: #6b8db5; background: rgba(107,141,181,0.12); }
+
+  /* 信用风险条目 (复用 expo 条样式) */
+  .cr-cell-list { display: flex; flex-direction: column; gap: 6px; }
+  .cr-meter-foot { font-size: 10px; color: #6b8db5; font-family: 'DIN Alternate', monospace; text-align: right; line-height: 1.3; }
+  .cr-meter-foot b { color: #0e4d92; font-weight: 800; }
+  /* 信用风险条状态徽章 */
+  .cr-status-tag {
+    display: inline-block; font-size: 9px; font-weight: 700; line-height: 1.4;
+    padding: 1px 6px; border-radius: 5px; white-space: nowrap;
+    border: 1px solid;
+  }
+  .cr-status-tag.lv-danger { color: #ff1744; background: rgba(255,23,68,0.10);  border-color: rgba(255,23,68,0.40); }
+  .cr-status-tag.lv-warn   { color: #d97c0a; background: rgba(255,176,0,0.18);  border-color: rgba(255,176,0,0.55); }
+  .cr-status-tag.lv-ok     { color: #1a9d52; background: rgba(43,213,118,0.12); border-color: rgba(43,213,118,0.40); }
+  .cr-status-tag.lv-na     { color: #6b8db5; background: rgba(107,141,181,0.10); border-color: rgba(107,141,181,0.30); }
+
+  /* 追保警示条 (信用风险大方框内) */
+  .cr-warn-strip {
+    margin-top: 10px;
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 14px;
+    background: linear-gradient(90deg, rgba(255,170,60,0.12) 0%, rgba(255,248,235,0.5) 100%);
+    border: 1px solid rgba(255,170,60,0.4);
+    border-left: 4px solid #ffaa3c;
+    border-radius: 8px;
+    position: relative; overflow: hidden;
+  }
+  .cr-warn-strip::before {
+    content: ''; position: absolute; top: 0; right: 0;
+    width: 100px; height: 100px;
+    background: radial-gradient(circle, rgba(255,170,60,0.14) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .cr-warn-icon {
+    width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0;
+    background: linear-gradient(135deg, #ffaa3c 0%, #ffc46b 100%);
+    color: #fff; font-size: 13px; font-weight: 800;
+    display: inline-flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 6px rgba(255,170,60,0.4);
+  }
+  .cr-warn-title { font-size: 12px; font-weight: 700; color: #d97c0a; white-space: nowrap; }
+  .cr-warn-text { font-size: 12px; color: #c47820; font-weight: 600; margin-left: 4px; }
+  .panel {
+    background: linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(245,251,255,0.95) 100%);
+    border: 1px solid rgba(120,180,255,0.35);
+    border-radius: 12px;
+    padding: 14px 16px 12px;
+    position: relative;
+    box-shadow: 0 4px 16px rgba(64,158,255,0.08);
+  }
+  .panel-title {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed rgba(64,158,255,0.25);
+  }
+  .panel-title .name {
+    font-size: 14px; font-weight: 700; color: #0e4d92;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .panel-title .name::before {
+    content: ''; width: 3px; height: 14px;
+    background: linear-gradient(180deg, #2b8eff, #5cd1ff);
+    border-radius: 2px;
+    box-shadow: 0 0 6px rgba(64,158,255,0.5);
+  }
+  .panel-title .tag { font-size: 10px; padding: 2px 8px; background: rgba(64,158,255,0.1); color: #2b8eff; border-radius: 10px; }
+  .chart { width: 100%; height: 240px; }
+  .chart-tall { height: 280px; }
+
+  /* 盈亏分布 - 改用 ECharts,移除旧 CSS */
+  .pl-bar-list { display: none; }
+
+  /* 底部列表 */
+  .bottom-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+  }
+  .rank-list { display: flex; flex-direction: column; gap: 8px; max-height: 240px; overflow-y: auto; }
+  .rank-list::-webkit-scrollbar { width: 4px; }
+  .rank-list::-webkit-scrollbar-thumb { background: rgba(64,158,255,0.3); border-radius: 2px; }
+  .rank-item {
+    display: grid; grid-template-columns: 24px 1fr auto auto; gap: 10px; align-items: center;
+    padding: 6px 10px; background: rgba(64,158,255,0.04);
+    border-radius: 6px; font-size: 12px;
+    border-left: 2px solid transparent;
+  }
+  .rank-item.top1 { border-left-color: #ff5c5c; background: rgba(255,92,92,0.06); }
+  .rank-item.top2 { border-left-color: #ffaa3c; background: rgba(255,170,60,0.06); }
+  .rank-item.top3 { border-left-color: #5cd1ff; background: rgba(92,209,255,0.06); }
+  .rank-no { font-weight: 700; color: #6b8db5; font-family: 'DIN Alternate', sans-serif; }
+  .rank-name { color: #2b5a8a; }
+  .rank-val { font-family: 'DIN Alternate', sans-serif; font-weight: 700; color: #0e4d92; }
+  .rank-change { font-size: 10px; padding: 2px 6px; border-radius: 8px; font-weight: 600; }
+  .rank-change.up { background: rgba(255,92,92,0.12); color: #ff5c5c; }
+  .rank-change.down { background: rgba(43,213,118,0.12); color: #2bd576; }
+
+  /* SVG gauge 样式 - 现在所有样式都在 JS 内部 inline,这里保留以便覆写 */
+  .gauge-svg-wrap svg text { user-select: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 顶部 -->
+  <div class="header">
+    <div class="header-left">
+      <div class="logo">
+        <svg viewBox="0 0 24 24"><path d="M3 13h2l3-9 4 18 3-12 2 7h4v2h-5l-1.5-5-3 12-4-18-2 7H3z"/></svg>
+      </div>
+      <div>
+        <div class="title">风险管理子公司驾驶舱</div>
+        <div class="sub">BUSINESS INTELLIGENCE COCKPIT</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="info-chip">📅 交易日 2026-07-01</div>
+    </div>
+  </div>
+
+  <!-- ========== Tab 2: 当日敞口与盈亏 ========== -->
+  <div class="tab-page active" id="tab2">
+
+    <!-- 一、非权益+权益类 敞口限额执行情况 -->
+    <div class="expo-head-grid">
+      <div class="greek-compare-card">
+        <div class="greek-compare-head">
+          <div class="zone-title"><span class="zone-num">E</span>非权益类业务当日希腊字母与盈亏</div>
+          <div class="zone-tag">单位: 万元</div>
+        </div>
+        <table class="vz">
+          <thead><tr><th>业务板块</th><th>Delta</th><th>Gamma</th><th>Theta</th><th>Vega</th><th>当日盈亏</th></tr></thead>
+          <tbody>
+            <tr><td><b>场外</b></td><td class="num">949.35</td><td class="num">32,955.96</td><td class="num">-144.02</td><td class="num">295.05</td><td class="pnl-hl neg">-44.43</td></tr>
+            <tr><td><b>期现</b></td><td class="num">-966.39</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td></tr>
+            <tr><td><b>做市</b></td><td class="num">-922.28</td><td class="num">2,196.41</td><td class="num">-62.65</td><td class="num">161.04</td><td class="pnl-hl pos">12.53</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="greek-compare-card">
+        <div class="greek-compare-head">
+          <div class="zone-title"><span class="zone-num">F</span>权益类业务当日希腊字母与盈亏</div>
+          <div class="zone-tag">单位: 万元</div>
+        </div>
+        <table class="vz">
+          <thead><tr><th>业务板块</th><th>Delta</th><th>Gamma</th><th>Theta</th><th>Vega</th><th>当日盈亏</th></tr></thead>
+          <tbody>
+            <tr><td><b>场外股指</b></td><td class="num">-2,384.48</td><td class="num">5,189.11</td><td class="num">-226.66</td><td class="num">2,023.57</td><td class="pnl-hl pos">181.33</td></tr>
+            <tr><td><b>做市股指</b></td><td class="num">369.54</td><td class="num">-320.76</td><td class="num">—</td><td class="num">-5.13</td><td class="pnl-hl pos">200.00</td></tr>
+            <tr><td><b>场外个股</b></td><td class="num">342.91</td><td class="num">-556.50</td><td class="num">39.98</td><td class="num">-36.11</td><td class="pnl-hl pos">30.79</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 一、商品类各品种净敞口与品种聚焦 -->
+    <div class="expo-section-title"><span class="zone-num">C</span>一、商品类各品种净敞口与品种聚焦<span>净敞口按绝对值降序 · 场外 / 期现为台账口径 · 单位：万元</span></div>
+    <div class="greek-compare-card">
+      <div class="expo-stk-head">各品种净敞口<span style="font-size:12px;font-weight:400;color:#6b8db5;margin-left:8px;">按绝对值降序 · 共 65 个品种 · 拖动底部滑块查看更多 · 点击品种柱查看下方聚焦视图</span>
+        <span class="seg-btns">
+          <button id="btnNetDelta" class="seg-btn active" onclick="switchNet('delta')">DeltaCash</button>
+          <button id="btnNetGamma" class="seg-btn" onclick="switchNet('gamma')">GammaCash</button>
+          <button id="btnNetVega" class="seg-btn" onclick="switchNet('vega')">Vega</button>
+        </span>
+      </div>
+      <div id="chartNetExpo" style="width:100%;height:380px;"></div>
+    </div>
+    <div class="greek-compare-card" style="margin-top:14px;">
+      <div class="expo-stk-head" id="fcHead">品种聚焦视图</div>
+      <div class="fc-kpi-row" id="fcKpis"></div>
+      <div class="fc-mini-charts">
+        <div class="fc-mini" id="fcDelta"></div>
+        <div class="fc-mini" id="fcGamma"></div>
+        <div class="fc-mini" id="fcVega"></div>
+      </div>
+      <table class="vz fc-table" id="fcTable"></table>
+    </div>
+
+
+    <!-- 二、场外业务气泡图 -->
+    <div class="expo-section-title"><span class="zone-num">A</span>二、场外业务（43 个商品品种）<span>坐标轴已开方拉伸 · 悬停查看五希腊字母明细 · 滚轮缩放 · 拖拽平移</span></div>
+    <div class="greek-compare-card">
+      <div class="bubble-zoom-bar">
+        <button class="zoom-btn" onclick="bubbleZoom('chartOtc','zoomIn')" title="放大">＋</button>
+        <button class="zoom-btn" onclick="bubbleZoom('chartOtc','zoomOut')" title="缩小">－</button>
+        <button class="zoom-btn" onclick="bubbleZoom('chartOtc','reset')" title="还原">⊙</button>
+        <span class="zoom-hint">滚轮缩放 · 拖拽平移 · 双击还原</span>
+      </div>
+      <div id="chartOtc" class="expo-chart"></div>
+    </div>
+
+    <!-- 三、做市业务气泡图 -->
+    <div class="expo-section-title mm"><span class="zone-num" style="background:linear-gradient(135deg,#f5921b,#ffb000)">A</span>三、做市业务（28 个商品品种）<span>合约已汇总至品种维度 · 盈亏取 TheoProfit · Vega 为 0 的品种为纯期货做市</span></div>
+    <div class="greek-compare-card">
+      <div class="bubble-zoom-bar">
+        <button class="zoom-btn" onclick="bubbleZoom('chartMm','zoomIn')" title="放大">＋</button>
+        <button class="zoom-btn" onclick="bubbleZoom('chartMm','zoomOut')" title="缩小">－</button>
+        <button class="zoom-btn" onclick="bubbleZoom('chartMm','reset')" title="还原">⊙</button>
+        <span class="zoom-hint">滚轮缩放 · 拖拽平移 · 双击还原</span>
+      </div>
+      <div id="chartMm" class="expo-chart"></div>
+    </div>
+
+    <!-- 四、场外业务盈亏前十大 -->
+    <div class="expo-section-title"><span class="zone-num">B</span>四、场外业务盈亏前十大品种<span>单位：万元</span></div>
+    <div class="expo-tbl-grid">
+      <div class="greek-compare-card">
+        <div class="expo-tbl-head pos-h">▲ 盈利前十</div>
+        <table class="vz"><thead><tr><th>#</th><th>品种</th><th>Delta</th><th>Gamma</th><th>Theta</th><th>Vega</th><th>当日盈亏</th><th>本周盈亏</th><th>本月盈亏</th><th>年累计盈亏</th></tr></thead><tbody><tr><td class="rank">1</td><td><b>SS</b>　<span class="cn">不锈钢</span></td><td class="num">72.58</td><td class="num">1,429.47</td><td class="num">-4.97</td><td class="num">7.89</td><td class="pos">37.82</td><td class="pos">47.87</td><td class="pos">47.87</td><td class="num">182.81</td></tr><tr><td class="rank">2</td><td><b>LH</b>　<span class="cn">生猪</span></td><td class="num">-79.57</td><td class="num">231.61</td><td class="num">-0.66</td><td class="num">0.68</td><td class="pos">10.78</td><td class="pos">23.10</td><td class="pos">23.10</td><td class="num">66.95</td></tr><tr><td class="rank">3</td><td><b>SM</b>　<span class="cn">锰硅</span></td><td class="num">83.16</td><td class="num">2,370.14</td><td class="num">-5.76</td><td class="num">18.60</td><td class="pos">4.46</td><td class="pos">12.32</td><td class="pos">12.32</td><td class="num">-11.73</td></tr><tr><td class="rank">4</td><td><b>Y</b>　<span class="cn">豆油</span></td><td class="num">40.93</td><td class="num">3,318.60</td><td class="num">-6.48</td><td class="num">12.90</td><td class="pos">2.78</td><td class="neg">-4.26</td><td class="neg">-4.26</td><td class="num">5.10</td></tr><tr><td class="rank">5</td><td><b>OI</b>　<span class="cn">菜籽油</span></td><td class="num">2.69</td><td class="num">424.34</td><td class="num">-1.71</td><td class="num">21.18</td><td class="pos">2.52</td><td class="pos">1.03</td><td class="pos">1.03</td><td class="num">61.65</td></tr><tr><td class="rank">6</td><td><b>JM</b>　<span class="cn">焦煤</span></td><td class="num">-6.19</td><td class="num">33.17</td><td class="num">-0.54</td><td class="num">0.19</td><td class="pos">1.31</td><td class="pos">0.76</td><td class="pos">0.76</td><td class="num">188.02</td></tr><tr><td class="rank">7</td><td><b>NI</b>　<span class="cn">镍</span></td><td class="num">36.49</td><td class="num">20.37</td><td class="num">-0.17</td><td class="num">0.21</td><td class="pos">1.30</td><td class="pos">1.11</td><td class="pos">1.11</td><td class="num">50.10</td></tr><tr><td class="rank">8</td><td><b>HC</b>　<span class="cn">热轧卷板</span></td><td class="num">21.20</td><td class="num">371.92</td><td class="num">-0.05</td><td class="num">-3.20</td><td class="pos">0.92</td><td class="pos">1.48</td><td class="pos">1.48</td><td class="num">-94.05</td></tr><tr><td class="rank">9</td><td><b>CC</b>　<span class="cn"></span></td><td class="num">24.60</td><td class="num">599.34</td><td class="num">-2.41</td><td class="num">3.07</td><td class="pos">0.63</td><td class="pos">0.77</td><td class="pos">0.77</td><td class="num">-55.70</td></tr><tr><td class="rank">10</td><td><b>RU</b>　<span class="cn">天然橡胶</span></td><td class="num">0.18</td><td class="num">211.37</td><td class="num">-1.51</td><td class="num">0.66</td><td class="pos">0.53</td><td class="pos">0.13</td><td class="pos">0.13</td><td class="num">-5.27</td></tr></tbody></table>
+      </div>
+      <div class="greek-compare-card">
+        <div class="expo-tbl-head neg-h">▼ 亏损前十</div>
+        <table class="vz"><thead><tr><th>#</th><th>品种</th><th>Delta</th><th>Gamma</th><th>Theta</th><th>Vega</th><th>当日盈亏</th><th>本周盈亏</th><th>本月盈亏</th><th>年累计盈亏</th></tr></thead><tbody><tr><td class="rank">1</td><td><b>CU</b>　<span class="cn">铜</span></td><td class="num">608.79</td><td class="num">16,219.60</td><td class="num">-47.54</td><td class="num">26.40</td><td class="neg">-35.40</td><td class="neg">-49.17</td><td class="neg">-49.17</td><td class="num">1,399.91</td></tr><tr><td class="rank">2</td><td><b>LC</b>　<span class="cn">碳酸锂</span></td><td class="num">474.59</td><td class="num">1,146.39</td><td class="num">-28.36</td><td class="num">98.89</td><td class="neg">-28.06</td><td class="neg">-56.15</td><td class="neg">-56.15</td><td class="num">923.83</td></tr><tr><td class="rank">3</td><td><b>SN</b>　<span class="cn">锡</span></td><td class="num">-76.79</td><td class="num">858.76</td><td class="num">-15.22</td><td class="num">5.91</td><td class="neg">-11.41</td><td class="neg">-23.56</td><td class="neg">-23.56</td><td class="num">37.05</td></tr><tr><td class="rank">4</td><td><b>SC</b>　<span class="cn">原油</span></td><td class="num">-425.37</td><td class="num">100.36</td><td class="num">-6.72</td><td class="num">-0.21</td><td class="neg">-7.78</td><td class="neg">-5.81</td><td class="neg">-5.81</td><td class="num">-15.65</td></tr><tr><td class="rank">5</td><td><b>BU</b>　<span class="cn">沥青</span></td><td class="num">-58.25</td><td class="num">139.66</td><td class="num">-2.39</td><td class="num">1.39</td><td class="neg">-3.84</td><td class="pos">4.86</td><td class="pos">4.86</td><td class="num">238.48</td></tr><tr><td class="rank">6</td><td><b>P</b>　<span class="cn">棕榈油</span></td><td class="num">-6.78</td><td class="num">800.56</td><td class="num">-3.70</td><td class="num">44.29</td><td class="neg">-2.80</td><td class="neg">-6.33</td><td class="neg">-6.33</td><td class="num">121.88</td></tr><tr><td class="rank">7</td><td><b>UR</b>　<span class="cn">尿素</span></td><td class="num">5.53</td><td class="num">737.13</td><td class="num">-2.80</td><td class="num">6.96</td><td class="neg">-2.59</td><td class="pos">9.68</td><td class="pos">9.68</td><td class="num">165.91</td></tr><tr><td class="rank">8</td><td><b>M</b>　<span class="cn">豆粕</span></td><td class="num">88.05</td><td class="num">782.81</td><td class="num">-2.78</td><td class="num">27.74</td><td class="neg">-2.52</td><td class="neg">-15.41</td><td class="neg">-15.41</td><td class="num">10.73</td></tr><tr><td class="rank">9</td><td><b>MA</b>　<span class="cn">甲醇</span></td><td class="num">-31.62</td><td class="num">107.92</td><td class="num">-2.43</td><td class="num">2.36</td><td class="neg">-2.44</td><td class="neg">-1.35</td><td class="neg">-1.35</td><td class="num">42.96</td></tr><tr><td class="rank">10</td><td><b>AU</b>　<span class="cn">黄金</span></td><td class="num">-70.00</td><td class="num">237.07</td><td class="num">-1.38</td><td class="num">-8.15</td><td class="neg">-2.07</td><td class="neg">-2.22</td><td class="neg">-2.22</td><td class="num">1,690.38</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <!-- 五、做市业务盈亏前十大 -->
+    <div class="expo-section-title mm"><span class="zone-num" style="background:linear-gradient(135deg,#f5921b,#ffb000)">B</span>五、做市业务盈亏前十大品种<span>盈亏取 TheoProfit · 已按品种汇总合约 · 单位：万元</span></div>
+    <div class="expo-tbl-grid">
+      <div class="greek-compare-card">
+        <div class="expo-tbl-head pos-h">▲ 盈利前十</div>
+        <table class="vz"><thead><tr><th>#</th><th>品种</th><th>合约数</th><th>Delta</th><th>Gamma</th><th>Theta</th><th>Vega</th><th>当日盈亏</th></tr></thead><tbody><tr><td class="rank">1</td><td><b>PS</b>　<span class="cn">多晶硅</span></td><td class="num">8</td><td class="num">22.45</td><td class="num">-115.66</td><td class="num">10.62</td><td class="num">0.24</td><td class="pos">33.70</td></tr><tr><td class="rank">2</td><td><b>SC</b>　<span class="cn">原油</span></td><td class="num">4</td><td class="num">-190.53</td><td class="num">132.13</td><td class="num">-30.09</td><td class="num">-1.62</td><td class="pos">11.20</td></tr><tr><td class="rank">3</td><td><b>SM</b>　<span class="cn">锰硅</span></td><td class="num">4</td><td class="num">93.84</td><td class="num">0.00</td><td class="num">0.00</td><td class="num">0.00</td><td class="pos">9.92</td></tr><tr><td class="rank">4</td><td><b>AU</b>　<span class="cn">黄金</span></td><td class="num">4</td><td class="num">-0.39</td><td class="num">973.28</td><td class="num">-13.82</td><td class="num">21.93</td><td class="pos">7.93</td></tr><tr><td class="rank">5</td><td><b>L</b>　<span class="cn">塑料</span></td><td class="num">6</td><td class="num">-0.05</td><td class="num">-229.78</td><td class="num">2.26</td><td class="num">-5.38</td><td class="pos">4.01</td></tr><tr><td class="rank">6</td><td><b>OI</b>　<span class="cn">菜籽油</span></td><td class="num">5</td><td class="num">5.75</td><td class="num">-18.27</td><td class="num">-0.37</td><td class="num">23.41</td><td class="pos">3.19</td></tr><tr><td class="rank">7</td><td><b>C</b>　<span class="cn">玉米</span></td><td class="num">5</td><td class="num">-2.93</td><td class="num">302.38</td><td class="num">-1.39</td><td class="num">48.81</td><td class="pos">2.52</td></tr><tr><td class="rank">8</td><td><b>PK</b>　<span class="cn">花生</span></td><td class="num">4</td><td class="num">-26.04</td><td class="num">576.56</td><td class="num">-1.24</td><td class="num">9.89</td><td class="pos">2.51</td></tr><tr><td class="rank">9</td><td><b>PD</b>　<span class="cn">钯金</span></td><td class="num">5</td><td class="num">15.88</td><td class="num">51.61</td><td class="num">-1.87</td><td class="num">6.67</td><td class="pos">1.39</td></tr><tr><td class="rank">10</td><td><b>NR</b>　<span class="cn">20号胶</span></td><td class="num">4</td><td class="num">-27.16</td><td class="num">208.57</td><td class="num">-2.01</td><td class="num">6.36</td><td class="pos">1.02</td></tr></tbody></table>
+      </div>
+      <div class="greek-compare-card">
+        <div class="expo-tbl-head neg-h">▼ 亏损前十</div>
+        <table class="vz"><thead><tr><th>#</th><th>品种</th><th>合约数</th><th>Delta</th><th>Gamma</th><th>Theta</th><th>Vega</th><th>当日盈亏</th></tr></thead><tbody><tr><td class="rank">1</td><td><b>SF</b>　<span class="cn">硅铁</span></td><td class="num">4</td><td class="num">-1,080.17</td><td class="num">0.00</td><td class="num">0.00</td><td class="num">0.00</td><td class="neg">-30.32</td></tr><tr><td class="rank">2</td><td><b>CJ</b>　<span class="cn">红枣</span></td><td class="num">2</td><td class="num">-81.89</td><td class="num">0.00</td><td class="num">0.00</td><td class="num">0.00</td><td class="neg">-10.92</td></tr><tr><td class="rank">3</td><td><b>LC</b>　<span class="cn">碳酸锂</span></td><td class="num">10</td><td class="num">16.11</td><td class="num">243.88</td><td class="num">-11.38</td><td class="num">3.44</td><td class="neg">-9.25</td></tr><tr><td class="rank">4</td><td><b>Y</b>　<span class="cn">豆油</span></td><td class="num">4</td><td class="num">78.92</td><td class="num">-38.39</td><td class="num">-0.00</td><td class="num">4.19</td><td class="neg">-5.09</td></tr><tr><td class="rank">5</td><td><b>RM</b>　<span class="cn">菜粕</span></td><td class="num">5</td><td class="num">32.78</td><td class="num">246.59</td><td class="num">-1.23</td><td class="num">17.07</td><td class="neg">-4.20</td></tr><tr><td class="rank">6</td><td><b>SI</b>　<span class="cn">工业硅</span></td><td class="num">8</td><td class="num">29.40</td><td class="num">-25.04</td><td class="num">-0.71</td><td class="num">15.89</td><td class="neg">-2.78</td></tr><tr><td class="rank">7</td><td><b>RB</b>　<span class="cn">螺纹钢</span></td><td class="num">3</td><td class="num">180.10</td><td class="num">-312.61</td><td class="num">-1.59</td><td class="num">1.94</td><td class="neg">-1.74</td></tr><tr><td class="rank">8</td><td><b>SA</b>　<span class="cn">纯碱</span></td><td class="num">7</td><td class="num">-0.18</td><td class="num">-2.51</td><td class="num">-0.36</td><td class="num">0.51</td><td class="neg">-1.37</td></tr><tr><td class="rank">9</td><td><b>PP</b>　<span class="cn">聚丙烯</span></td><td class="num">8</td><td class="num">10.34</td><td class="num">523.79</td><td class="num">-11.41</td><td class="num">2.83</td><td class="neg">-0.64</td></tr><tr><td class="rank">10</td><td><b>TA</b>　<span class="cn">PTA</span></td><td class="num">6</td><td class="num">-8.67</td><td class="num">29.83</td><td class="num">-0.11</td><td class="num">2.72</td><td class="neg">-0.46</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <div style="font-size:12px;color:#6b8db5;margin-top:10px;text-align:right;">数据：场外台账 + 做市敞口及盈亏 T+0（2026-08-04） · 悬停气泡查看五希腊字母与盈亏明细 · 单位：万元</div>
+
+  </div><!-- /tab2 -->
+
+</div><!-- /.wrap -->
+
+<!-- ========== 回到顶部悬浮按钮 ========== -->
+<div class="back-to-top" id="backToTop" title="回到顶部" onclick="window.scrollTo({top:0, behavior:'smooth'})">↑</div>
+
+<script>
+/* ========== 回到顶部悬浮按钮 - 滚动出现 ========== */
+(function () {
+  const btn = document.getElementById('backToTop');
+  if (!btn) return;
+  let ticking = false;
+  window.addEventListener('scroll', function () {
+    if (!ticking) {
+      window.requestAnimationFrame(function () {
+        if (window.scrollY > 300) btn.classList.add('show');
+        else btn.classList.remove('show');
+        ticking = false;
+      });
+      ticking = true;
+    }
+  }, { passive: true });
+})();
+
+/* ========== Tab2 数据: 盈亏敞口快报 (来源: index.html) ========== */
+const otcData = [{"code":"M","name":"豆粕 M","delta":88.05,"gamma":782.81,"theta":-2.78,"vega":27.74,"pnl":-2.52,"ytd":10.73},{"code":"C","name":"玉米 C","delta":8.37,"gamma":362.77,"theta":-0.42,"vega":10.04,"pnl":-0.31,"ytd":9.54},{"code":"P","name":"棕榈油 P","delta":-6.78,"gamma":800.56,"theta":-3.7,"vega":44.29,"pnl":-2.8,"ytd":121.88},{"code":"Y","name":"豆油 Y","delta":40.93,"gamma":3318.6,"theta":-6.48,"vega":12.9,"pnl":2.78,"ytd":5.1},{"code":"OI","name":"菜籽油 OI","delta":2.69,"gamma":424.34,"theta":-1.71,"vega":21.18,"pnl":2.52,"ytd":61.65},{"code":"SR","name":"白糖 SR","delta":84.55,"gamma":1028.08,"theta":-1.93,"vega":7.31,"pnl":-0.62,"ytd":164.84},{"code":"CF","name":"棉花 CF","delta":3.72,"gamma":-693.78,"theta":2.46,"vega":-2.53,"pnl":-2.04,"ytd":119.4},{"code":"AP","name":"苹果 AP","delta":4.68,"gamma":59.3,"theta":-0.5,"vega":0.39,"pnl":-0.53,"ytd":-45.73},{"code":"JD","name":"鸡蛋 JD","delta":0.44,"gamma":0.0,"theta":0.0,"vega":0.0,"pnl":0.27,"ytd":25.59},{"code":"LH","name":"生猪 LH","delta":-79.57,"gamma":231.61,"theta":-0.66,"vega":0.68,"pnl":10.78,"ytd":66.95},{"code":"PB","name":"铅 PB","delta":4.38,"gamma":8.88,"theta":-0.01,"vega":0.01,"pnl":-0.03,"ytd":53.73},{"code":"SN","name":"锡 SN","delta":-76.79,"gamma":858.76,"theta":-15.22,"vega":5.91,"pnl":-11.41,"ytd":37.05},{"code":"NI","name":"镍 NI","delta":36.49,"gamma":20.37,"theta":-0.17,"vega":0.21,"pnl":1.3,"ytd":50.1},{"code":"SS","name":"不锈钢 SS","delta":72.58,"gamma":1429.47,"theta":-4.97,"vega":7.89,"pnl":37.82,"ytd":182.81},{"code":"AU","name":"黄金 AU","delta":-70.0,"gamma":237.07,"theta":-1.38,"vega":-8.15,"pnl":-2.07,"ytd":1690.38},{"code":"AG","name":"白银 AG","delta":-1.98,"gamma":3.21,"theta":0.19,"vega":-4.51,"pnl":-0.25,"ytd":8962.65},{"code":"LC","name":"碳酸锂 LC","delta":474.59,"gamma":1146.39,"theta":-28.36,"vega":98.89,"pnl":-28.06,"ytd":923.83},{"code":"SC","name":"原油 SC","delta":-425.37,"gamma":100.36,"theta":-6.72,"vega":-0.21,"pnl":-7.78,"ytd":-15.65},{"code":"BU","name":"沥青 BU","delta":-58.25,"gamma":139.66,"theta":-2.39,"vega":1.39,"pnl":-3.84,"ytd":238.48},{"code":"TA","name":"PTA TA","delta":0.89,"gamma":1.05,"theta":0.06,"vega":0.22,"pnl":-0.59,"ytd":-150.05},{"code":"EG","name":"乙二醇 EG","delta":-1.27,"gamma":48.32,"theta":-1.16,"vega":0.29,"pnl":-0.13,"ytd":118.58},{"code":"PF","name":"短纤 PF","delta":-0.5,"gamma":26.73,"theta":-0.31,"vega":0.19,"pnl":-0.36,"ytd":1.35},{"code":"PR","name":"瓶片 PR","delta":-13.89,"gamma":29.6,"theta":-0.4,"vega":0.19,"pnl":-0.01,"ytd":115.32},{"code":"MA","name":"甲醇 MA","delta":-31.62,"gamma":107.92,"theta":-2.43,"vega":2.36,"pnl":-2.44,"ytd":42.96},{"code":"PP","name":"聚丙烯 PP","delta":15.59,"gamma":5.64,"theta":-0.09,"vega":0.04,"pnl":-0.02,"ytd":129.16},{"code":"V","name":"PVC V","delta":35.74,"gamma":81.31,"theta":-0.64,"vega":0.67,"pnl":-0.39,"ytd":116.22},{"code":"NR","name":"20号胶 NR","delta":3.54,"gamma":-146.65,"theta":1.28,"vega":-1.08,"pnl":-1.18,"ytd":33.31},{"code":"RU","name":"天然橡胶 RU","delta":0.18,"gamma":211.37,"theta":-1.51,"vega":0.66,"pnl":0.53,"ytd":-5.27},{"code":"UR","name":"尿素 UR","delta":5.53,"gamma":737.13,"theta":-2.8,"vega":6.96,"pnl":-2.59,"ytd":165.91},{"code":"SP","name":"纸浆 SP","delta":7.86,"gamma":38.99,"theta":-0.18,"vega":0.92,"pnl":-0.18,"ytd":16.04},{"code":"SH","name":"烧碱 SH","delta":-1.34,"gamma":1.28,"theta":-0.01,"vega":0.01,"pnl":-0.01,"ytd":2.23},{"code":"I","name":"铁矿石 I","delta":36.64,"gamma":130.92,"theta":-0.55,"vega":1.87,"pnl":-0.21,"ytd":-29.61},{"code":"RB","name":"螺纹钢 RB","delta":68.98,"gamma":1029.67,"theta":-1.0,"vega":8.96,"pnl":-0.88,"ytd":-47.36},{"code":"HC","name":"热轧卷板 HC","delta":21.2,"gamma":371.92,"theta":-0.05,"vega":-3.2,"pnl":0.92,"ytd":-94.05},{"code":"AL","name":"铝 AL","delta":-6.91,"gamma":306.07,"theta":-0.62,"vega":2.05,"pnl":0.36,"ytd":95.77},{"code":"CU","name":"铜 CU","delta":608.79,"gamma":16219.6,"theta":-47.54,"vega":26.4,"pnl":-35.4,"ytd":1399.91},{"code":"J","name":"焦炭 J","delta":28.43,"gamma":133.88,"theta":-0.91,"vega":0.96,"pnl":-0.88,"ytd":-13.4},{"code":"JM","name":"焦煤 JM","delta":-6.19,"gamma":33.17,"theta":-0.54,"vega":0.19,"pnl":1.31,"ytd":188.02},{"code":"FG","name":"玻璃 FG","delta":-5.35,"gamma":32.69,"theta":-0.38,"vega":0.16,"pnl":0.43,"ytd":57.14},{"code":"SM","name":"锰硅 SM","delta":83.16,"gamma":2370.14,"theta":-5.76,"vega":18.6,"pnl":4.46,"ytd":-11.73},{"code":"SI","name":"工业硅 SI","delta":-36.94,"gamma":283.94,"theta":-1.02,"vega":0.84,"pnl":-0.75,"ytd":5.05},{"code":"AO","name":"氧化铝 AO","delta":9.5,"gamma":43.46,"theta":-0.28,"vega":0.28,"pnl":-0.26,"ytd":1.05},{"code":"CC","name":"CC","delta":24.6,"gamma":599.34,"theta":-2.41,"vega":3.07,"pnl":0.63,"ytd":-55.7}].map(function(d){d.biz='场外';return d;});
+const mmData = [{"code":"CF","name":"CF","delta":0.56,"gamma":-49.43,"theta":0.19,"vega":-0.23,"pnl":-0.08},{"code":"CJ","name":"CJ","delta":-81.89,"gamma":0.0,"theta":0.0,"vega":0.0,"pnl":-10.92},{"code":"MA","name":"MA","delta":49.78,"gamma":-17.71,"theta":1.83,"vega":3.97,"pnl":0.72},{"code":"OI","name":"OI","delta":5.75,"gamma":-18.27,"theta":-0.37,"vega":23.41,"pnl":3.19},{"code":"PF","name":"PF","delta":-7.27,"gamma":67.63,"theta":-0.93,"vega":0.77,"pnl":0.05},{"code":"PK","name":"PK","delta":-26.04,"gamma":576.56,"theta":-1.24,"vega":9.89,"pnl":2.51},{"code":"PR","name":"PR","delta":-5.8,"gamma":6.73,"theta":-0.06,"vega":0.21,"pnl":0.77},{"code":"PX","name":"PX","delta":-12.1,"gamma":49.47,"theta":-1.04,"vega":1.05,"pnl":-0.17},{"code":"RM","name":"RM","delta":32.78,"gamma":246.59,"theta":-1.23,"vega":17.07,"pnl":-4.2},{"code":"SA","name":"SA","delta":-0.18,"gamma":-2.51,"theta":-0.36,"vega":0.51,"pnl":-1.37},{"code":"SF","name":"SF","delta":-1080.17,"gamma":0.0,"theta":0.0,"vega":0.0,"pnl":-30.32},{"code":"SH","name":"SH","delta":26.05,"gamma":-59.69,"theta":-0.4,"vega":1.86,"pnl":0.57},{"code":"SM","name":"SM","delta":93.84,"gamma":0.0,"theta":0.0,"vega":0.0,"pnl":9.92},{"code":"TA","name":"TA","delta":-8.67,"gamma":29.83,"theta":-0.11,"vega":2.72,"pnl":-0.46},{"code":"AU","name":"AU","delta":-0.39,"gamma":973.28,"theta":-13.82,"vega":21.93,"pnl":7.93},{"code":"BC","name":"BC","delta":-35.56,"gamma":-296.34,"theta":2.02,"vega":-3.46,"pnl":0.16},{"code":"C","name":"C","delta":-2.93,"gamma":302.38,"theta":-1.39,"vega":48.81,"pnl":2.52},{"code":"L","name":"L","delta":-0.05,"gamma":-229.78,"theta":2.26,"vega":-5.38,"pnl":4.01},{"code":"LC","name":"LC","delta":16.11,"gamma":243.88,"theta":-11.38,"vega":3.44,"pnl":-9.25},{"code":"NR","name":"NR","delta":-27.16,"gamma":208.57,"theta":-2.01,"vega":6.36,"pnl":1.02},{"code":"PB","name":"PB","delta":-5.48,"gamma":-50.59,"theta":0.43,"vega":-2.03,"pnl":-0.11},{"code":"PD","name":"PD","delta":15.88,"gamma":51.61,"theta":-1.87,"vega":6.67,"pnl":1.39},{"code":"PP","name":"PP","delta":10.34,"gamma":523.79,"theta":-11.41,"vega":2.83,"pnl":-0.64},{"code":"PS","name":"PS","delta":22.45,"gamma":-115.66,"theta":10.62,"vega":0.24,"pnl":33.7},{"code":"RB","name":"RB","delta":180.1,"gamma":-312.61,"theta":-1.59,"vega":1.94,"pnl":-1.74},{"code":"SC","name":"SC","delta":-190.53,"gamma":132.13,"theta":-30.09,"vega":-1.62,"pnl":11.2},{"code":"SI","name":"SI","delta":29.4,"gamma":-25.04,"theta":-0.71,"vega":15.89,"pnl":-2.78},{"code":"Y","name":"Y","delta":78.92,"gamma":-38.39,"theta":-0.0,"vega":4.19,"pnl":-5.09}].map(function(d){d.biz='做市';return d;});
+
+const STK_DELTA = {"cats": ["硅铁", "原油", "铜", "碳酸锂", "红枣", "螺纹钢", "甲醇", "白糖", "PTA", "短纤", "铝", "花生", "尿素", "瓶片", "玉米", "塑料", "白银", "PVC", "沥青", "黄金", "热轧卷板", "聚丙烯", "锰硅", "国际铜", "20号胶", "锌", "镍", "锡", "铅", "不锈钢", "氧化铝", "工业硅", "多晶硅", "燃料油", "低硫燃料油", "集运欧线", "豆一", "豆二", "豆油", "棕榈油", "菜籽油", "菜粕", "豆粕", "棉花", "棉纱", "苹果", "鸡蛋", "生猪", "粳米", "玉米淀粉", "油菜籽", "焦炭", "焦煤", "铁矿石", "玻璃", "纯碱", "烧碱", "纸浆", "天然橡胶", "丁二烯橡胶", "乙二醇", "苯乙烯", "液化石油气", "原木", "对二甲苯"], "otc": [0, -425.37, 608.79, 474.59, 0, 68.98, -31.62, 84.55, 0.89, -0.5, -6.91, 0, 5.53, -13.89, 8.37, 0, -1.98, 35.74, -58.25, -70.0, 21.2, 15.59, 83.16, 0, 3.54, 44.26, 0, -415.72, 0, 46.98, 45.13, 340.62, 491.38, 427.94, 0, 221.86, 0, -374.12, -335.65, -344.66, -521.17, 56.12, 0, 0, 0, 0, 0, 237.95, 0, 0, -399.38, 0, 123.14, -394.8, -510.43, 0, 0, 182.61, 529.53, -255.51, 180.98, -179.76, 257.66, 320.43, 0], "qx": [-30.73, -343.92, 294.09, -44.88, -340.46, -147.9, 305.34, 269.15, -340.19, 326.21, 326.37, 295.62, -315.42, 298.29, 303.59, 310.85, 305.47, 269.96, -232.04, 219.63, -268.7, 240.14, 88.02, -229.08, -230.31, 0, 280.87, 0, -348.71, 303.71, -244.17, 230.62, -168.36, -105.08, 0, 306.95, 219.98, -196.84, 17.69, 0, -309.68, -36.76, 45.98, 0, 272.14, 200.31, 158.19, 260.2, -348.39, 189.59, 0, 213.11, 0, 0, -93.62, 41.06, 88.73, 207.37, 285.99, 0, 158.34, -241.39, 0, -130.32, 0], "mm": [-1080.17, -190.53, 0, 16.11, -81.89, 180.1, 49.78, 0, -8.67, -7.27, 0, -26.04, 0, -5.8, -2.93, -0.05, 0, 0, 0, -0.39, 0, 10.34, 93.84, -35.56, -27.16, 0, 0, 0, 0, 0, -117.74, -24.51, -242.64, 52.0, 0, 0, 0, 0, -75.49, -112.96, -144.49, 0, 0, -150.06, -26.08, 215.02, 31.53, 172.86, 0, -70.98, -112.07, 234.49, 69.19, 83.75, 29.73, 249.07, 0, 0, -221.71, 0, 0, -179.59, 167.82, -83.6, 44.39]};
+const STK_GAMMA = {"cats": ["硅铁", "原油", "铜", "碳酸锂", "红枣", "螺纹钢", "甲醇", "白糖", "PTA", "短纤", "铝", "花生", "尿素", "瓶片", "玉米", "塑料", "白银", "PVC", "沥青", "黄金", "热轧卷板", "聚丙烯", "锰硅", "国际铜", "20号胶", "锌", "镍", "锡", "铅", "不锈钢", "氧化铝", "工业硅", "多晶硅", "燃料油", "低硫燃料油", "集运欧线", "豆一", "豆二", "豆油", "棕榈油", "菜籽油", "菜粕", "豆粕", "棉花", "棉纱", "苹果", "鸡蛋", "生猪", "粳米", "玉米淀粉", "油菜籽", "焦炭", "焦煤", "铁矿石", "玻璃", "纯碱", "烧碱", "纸浆", "天然橡胶", "丁二烯橡胶", "乙二醇", "苯乙烯", "液化石油气", "原木", "对二甲苯"], "otc": [0, 100.36, 16219.6, 1146.39, 0, 1029.67, 107.92, 1028.08, 1.05, 26.73, 306.07, 0, 737.13, 29.6, 362.77, 0, 3.21, 81.31, 139.66, 237.07, 371.92, 5.64, 2370.14, 0, -146.65, 0, 926.19, 2195.19, 0, 902.35, 2730.21, 413.05, 938.54, 0, 1965.77, 2262.51, 1368.91, 0, 0, 2726.2, 2528.6, 572.07, 0, 2712.1, 2603.0, 748.72, 0, 0, 2669.78, 1918.89, 0, 2614.13, 2460.7, 220.64, 1096.73, 2436.37, 2460.64, 2394.02, 0, 2596.99, 0, 1461.86, 2416.73, 0, 0], "qx": [-2.77, -39.34, 15.37, -39.93, 18.59, -21.43, 3.05, -13.2, 29.87, 39.19, -10.62, -25.1, 12.76, -8.49, -26.68, -10.26, 12.98, -13.7, 22.32, -37.0, -7.09, -20.19, -1.69, 30.99, -3.41, 0, -34.85, 26.38, -22.38, 0, -8.79, 6.12, -13.92, -16.64, 28.93, -22.46, 27.48, 0, 14.55, 29.35, 17.52, 6.84, -27.74, -13.44, 0, -18.34, 19.67, -19.98, 8.45, 26.05, -30.54, 9.57, -20.06, 0, 25.93, 20.79, -2.21, 6.05, 0, 21.68, 34.24, -27.37, -38.1, -29.33, -22.82], "mm": [0, 132.13, 0, 243.88, 0, -312.61, -17.71, 0, 29.83, 67.63, 0, 576.56, 0, 6.73, 302.38, -229.78, 0, 0, 0, 973.28, 0, 523.79, 0, -296.34, 208.57, 150.28, 0, -233.26, 93.26, 0, 0, 0, 54.44, 216.33, 169.64, 0, -272.88, -259.17, 0, 0, 0, -258.23, -228.04, 77.85, 23.27, 130.23, -51.37, 0, 0, -22.72, 0, 29.33, 0, 0, -123.05, 86.9, 0, 299.97, -237.65, 285.64, 0, 0, 0, 175.73, 233.57]};
+const STK_VEGA  = {"cats": ["硅铁", "原油", "铜", "碳酸锂", "红枣", "螺纹钢", "甲醇", "白糖", "PTA", "短纤", "铝", "花生", "尿素", "瓶片", "玉米", "塑料", "白银", "PVC", "沥青", "黄金", "热轧卷板", "聚丙烯", "锰硅", "国际铜", "20号胶", "锌", "镍", "锡", "铅", "不锈钢", "氧化铝", "工业硅", "多晶硅", "燃料油", "低硫燃料油", "集运欧线", "豆一", "豆二", "豆油", "棕榈油", "菜籽油", "菜粕", "豆粕", "棉花", "棉纱", "苹果", "鸡蛋", "生猪", "粳米", "玉米淀粉", "油菜籽", "焦炭", "焦煤", "铁矿石", "玻璃", "纯碱", "烧碱", "纸浆", "天然橡胶", "丁二烯橡胶", "乙二醇", "苯乙烯", "液化石油气", "原木", "对二甲苯"], "otc": [0, -0.21, 26.4, 98.89, 0, 8.96, 2.36, 7.31, 0.22, 0.19, 2.05, 0, 6.96, 0.19, 10.04, 0, -4.51, 0.67, 1.39, -8.15, -3.2, 0.04, 18.6, 0, -1.08, 22.82, 28.99, 0, 0, 28.81, -3.67, -4.4, 18.61, 23.81, 12.06, 0, 24.94, -19.61, -13.91, -9.2, 15.28, -9.15, -3.97, 0, 18.89, 0, 6.68, -11.2, 9.37, -3.94, -23.11, -15.49, 0, 0, -10.23, 16.63, -10.93, 0, 0, 0, 0, 0, 23.22, 0, -22.15], "qx": [10.21, -9.69, -1.96, -13.6, 11.31, 7.15, -11.43, -5.54, -4.21, -3.75, 10.78, 14.11, -1.66, -0.34, -1.48, 8.7, -7.2, -8.07, 5.3, -8.27, 4.42, 8.83, 11.09, 2.14, -4.32, 4.78, 0, 3.31, -4.66, 10.69, -7.75, 7.44, 0, 0, -7.56, -1.81, 0, 0, -5.08, 0, -9.39, 8.2, -13.01, -9.6, 14.25, 10.16, 0, 0, 0, 9.21, -10.82, -10.55, -9.66, -6.81, -13.69, 0, 0, -11.42, -2.52, -14.18, 1.9, 5.34, 0, -12.66, -14.99], "mm": [0, -1.62, 0, 3.44, 0, 1.94, 3.97, 0, 2.72, 0.77, 0, 9.89, 0, 0.21, 48.81, -5.38, 0, 0, 0, 21.93, 0, 2.83, 0, -3.46, 6.36, 0, 0, -4.97, -2.22, 5.17, 0, 0, 8.65, -3.24, 5.73, 0, 0, -4.34, -6.75, 0, 0, 0, -6.44, 0, 9.31, -1.65, 2.77, 5.75, 9.17, 0, -5.23, -3.1, -2.82, 0, -5.33, -3.12, 0, -5.32, 0, 0, 9.99, 0, -3.78, 4.83, 0]};
+const SEG_COLORS = {"场外业务":"#2b8eff", "期现业务":"#52c41a", "做市业务":"#f5921b"};
+
+/* ========== 气泡尺寸函数 ========== */
+function mkSize(maxV){
+  return function(d){ return Math.max(12, Math.min(56, 10 + Math.sqrt(Math.abs(d[2])/maxV)*46)); };
+}
+
+/* ========== 构建气泡图 (适配驾驶舱蓝白科技风) ========== */
+function buildChart(elId, dataset, color, legendPrefix, cfg){
+  var maxV = Math.max.apply(null, dataset.map(function(d){ return Math.abs(d[cfg.sizeKey]); }));
+  var sizeFn = mkSize(maxV);
+
+  var tf = cfg.sqrt ? (function(v){ return Math.sign(v)*Math.sqrt(Math.abs(v)); }) : (function(v){ return v; });
+  var tfInv = cfg.sqrt ? (function(v){
+    var o = Math.sign(v)*v*v;
+    var a = Math.abs(o);
+    return a>=100 ? o.toFixed(0) : a>=1 ? o.toFixed(1) : o.toFixed(2);
+  }) : (function(v){ return v; });
+
+  function mkSeries(sign){
+    var filtered = dataset.filter(function(d){ return Math.sign(d[cfg.splitKey]) === sign; });
+    return {
+      name: legendPrefix + (sign>0 ? cfg.legendPos : cfg.legendNeg),
+      type: "scatter",
+      data: filtered.map(function(d){
+        return { value: [tf(d.vega), tf(d[cfg.yKey]), d[cfg.sizeKey]], name: (cfg.useCode?d.code:d.name), raw: d };
+      }),
+      symbolSize: sizeFn,
+      itemStyle: sign>0
+        ? { color: color, opacity: 0.8, borderColor: "#ffffff", borderWidth: 1,
+            shadowColor: 'rgba(43,142,255,0.4)', shadowBlur: 8 }
+        : { color: "rgba(255,255,255,0.15)", borderColor: color, borderWidth: 2.2, opacity: 0.95,
+            shadowColor: 'rgba(43,142,255,0.2)', shadowBlur: 6 },
+      label: {
+        show: true, position: "top", formatter: "{b}",
+        fontSize: 10, color: sign>0 ? '#1e5fc4' : '#5cd1ff', fontWeight: 600, distance: 2,
+        textShadow: '0 0 4px rgba(255,255,255,0.8)'
+      },
+      labelLayout: { moveOverlap: "shiftY" },
+      emphasis: {
+        itemStyle: { shadowBlur: 14, shadowColor: 'rgba(43,142,255,0.5)' },
+        label: { fontSize: 13, fontWeight: 700, color: "#0e4d92" }
+      },
+      z: 3
+    };
+  }
+
+  var chart = echarts.init(document.getElementById(elId));
+  chart.setOption({
+    animationDuration: 800,
+    grid: { left: 70, right: 60, top: 46, bottom: 56 },
+    legend: {
+      top: 4, left: "center", itemGap: 24,
+      textStyle: { fontSize: 12, color: "#4a6a8a", fontWeight: 600 },
+      data: [legendPrefix+cfg.legendPos, legendPrefix+cfg.legendNeg]
+    },
+    dataZoom: [
+      { type: "inside", xAxisIndex: 0, filterMode: "none", zoomOnMouseWheel: false, moveOnMouseWheel: false, moveOnMouseMove: false },
+      { type: "inside", yAxisIndex: 0, filterMode: "none", zoomOnMouseWheel: false, moveOnMouseWheel: false, moveOnMouseMove: false }
+    ],
+    tooltip: {
+      trigger: "item",
+      backgroundColor: "rgba(8,24,48,0.92)",
+      borderColor: "rgba(43,142,255,0.5)",
+      borderWidth: 1,
+      textStyle: { color: "#e0eaff", fontSize: 12 },
+      extraCssText: 'box-shadow: 0 0 20px rgba(43,142,255,0.3); border-radius:8px; backdrop-filter:blur(8px);',
+      formatter: function(p){
+        var d = p.data.raw; if(!d) return "";
+        var pnlC = d.pnl>=0 ? "#1a9d52" : "#ff3b5c";
+        var row = function(k,v,c){
+          return '<div style="display:flex;justify-content:space-between;gap:24px"><span style="color:#8aa5c8">' + k + '</span><b style="color:' + (c||'#fff') + '">' + v + '</b></div>';
+        };
+        return '<div style="font-weight:700;margin-bottom:6px;color:#5cd1ff;font-size:13px">' + d.name + '　<span style="color:#8aa5c8;font-weight:400">' + d.biz + '业务</span></div>'
+          + row("当日盈亏", d.pnl.toLocaleString() + " 万", pnlC)
+          + row("Vega", (d.vega>0?"+":"") + d.vega + " 万")
+          + row("Delta", (d.delta>0?"+":"") + d.delta.toLocaleString() + " 万")
+          + row("Gamma", d.gamma)
+          + row("Theta", d.theta.toFixed(1) + " 万")
+          + (d.ytd!==undefined ? row("年累计盈亏", d.ytd.toLocaleString() + " 万", d.ytd>=0?"#1a9d52":"#ff3b5c") : "");
+      }
+    },
+    xAxis: {
+      name: "Vega（万元）" + (cfg.sqrt?" · 开方刻度":""), nameLocation: "middle", nameGap: 32,
+      nameTextStyle: { color: "#4a6a8a", fontSize: 12, fontWeight: 600 },
+      axisLine: { lineStyle: { color: "rgba(64,158,255,0.3)" } },
+      splitLine: { lineStyle: { color: "rgba(64,158,255,0.06)", type: "dashed" } },
+      axisLabel: { color: "#6b8db5", formatter: tfInv }
+    },
+    yAxis: {
+      name: cfg.yName + (cfg.sqrt?" · 开方刻度":""), nameTextStyle: { color: "#4a6a8a", fontSize: 12, fontWeight: 600 },
+      axisLine: { lineStyle: { color: "rgba(64,158,255,0.3)" } },
+      splitLine: { lineStyle: { color: "rgba(64,158,255,0.06)", type: "dashed" } },
+      axisLabel: { color: "#6b8db5", formatter: tfInv }
+    },
+    series: [
+      mkSeries(1), mkSeries(-1),
+      {
+        type: "scatter", silent: true, data: [], z: 1, tooltip: { show: false },
+        markLine: {
+          silent: true, symbol: "none", animation: false,
+          lineStyle: { color: "rgba(64,158,255,0.25)", type: "dashed", width: 1.2 },
+          label: { show: false },
+          data: [{ xAxis: 0 }, { yAxis: 0 }]
+        }
+      }
+    ],
+    graphic: [
+      { type: "text", right: 66, top: 56,    style: { text: cfg.quad[0], fontSize: 12, fill: "rgba(74,106,138,0.5)" } },
+      { type: "text", left: 80,  top: 56,    style: { text: cfg.quad[1], fontSize: 12, fill: "rgba(74,106,138,0.5)" } },
+      { type: "text", right: 66, bottom: 64, style: { text: cfg.quad[2], fontSize: 12, fill: "rgba(74,106,138,0.5)" } },
+      { type: "text", left: 80,  bottom: 64, style: { text: cfg.quad[3], fontSize: 12, fill: "rgba(74,106,138,0.5)" } }
+    ]
+  });
+  /* 注册图表实例供缩放按钮调用 */
+  window._bubbleCharts = window._bubbleCharts || {};
+  window._bubbleCharts[elId] = chart;
+  window.addEventListener("resize", function(){ chart.resize(); });
+}
+
+/* ========== 气泡图缩放控制 ========== */
+function bubbleZoom(elId, action) {
+  var chart = window._bubbleCharts && window._bubbleCharts[elId];
+  if (!chart) return;
+
+  if (action === 'reset') {
+    chart.dispatchAction({ type: 'dataZoom', start: 0, end: 100 });
+    return;
+  }
+
+  /* 获取当前缩放范围 */
+  var option = chart.getOption();
+  var dz = option.dataZoom || [];
+  /* 找到 x 轴和 y 轴的 inside dataZoom */
+  var xDz = null, yDz = null;
+  for (var i = 0; i < dz.length; i++) {
+    if (dz[i].type === 'inside' && dz[i].xAxisIndex !== undefined && dz[i].xAxisIndex === 0) xDz = dz[i];
+    if (dz[i].type === 'inside' && dz[i].yAxisIndex !== undefined && dz[i].yAxisIndex === 0) yDz = dz[i];
+  }
+
+  var factor = action === 'zoomIn' ? 0.7 : 1.4; /* 缩小范围 = 放大, 扩大范围 = 缩小 */
+  var cx = 50, cy = 50; /* 以中心为基准缩放 */
+
+  function calcRange(dzItem) {
+    if (!dzItem) return;
+    var start = dzItem.start !== undefined ? dzItem.start : 0;
+    var end = dzItem.end !== undefined ? dzItem.end : 100;
+    var range = end - start;
+    var newRange = Math.max(2, Math.min(100, range * factor));
+    var newStart = cx - newRange / 2;
+    var newEnd = cx + newRange / 2;
+    if (newStart < 0) { newStart = 0; newEnd = newRange; }
+    if (newEnd > 100) { newEnd = 100; newStart = 100 - newRange; }
+    dzItem.start = newStart;
+    dzItem.end = newEnd;
+  }
+
+  calcRange(xDz);
+  calcRange(yDz);
+
+  chart.setOption({ dataZoom: dz });
+}
+
+/* ========== 净敞口柱 + 品种聚焦视图 ========== */
+var NET_METRICS = {
+  delta: { ds: STK_DELTA, name: "DeltaCash" },
+  gamma: { ds: STK_GAMMA, name: "GammaCash" },
+  vega:  { ds: STK_VEGA,  name: "Vega" }
+};
+var FC_SEGS = [["场外业务","otc","#2b8eff"],["期现业务","qx","#52c41a"],["做市业务","mm","#f5921b"]];
+var netMetric = "delta", netSel = 0;
+var chartNetExpo = null, fcCharts = {};
+
+function fcNetOf(ds, i){ return (ds.otc[i]||0) + (ds.qx[i]||0) + (ds.mm[i]||0); }
+function fcSortedIdx(ds){
+  var idx = ds.cats.map(function(_, i){ return i; });
+  idx.sort(function(a, b){ return Math.abs(fcNetOf(ds, b)) - Math.abs(fcNetOf(ds, a)); });
+  return idx;
+}
+function fcSignCls(v){ return v > 0 ? "fc-pos" : (v < 0 ? "fc-neg" : "fc-zero"); }
+function fcSignColor(v){ return v > 0 ? "#ff3b5c" : (v < 0 ? "#08979c" : "#8aa2bd"); }
+function fcFmt(v){ return v == null ? "-" : v.toLocaleString("zh-CN", { maximumFractionDigits: 2 }); }
+
+function switchNet(mode){
+  netMetric = mode; netSel = 0;
+  document.getElementById("btnNetDelta").classList.toggle("active", mode==="delta");
+  document.getElementById("btnNetGamma").classList.toggle("active", mode==="gamma");
+  document.getElementById("btnNetVega").classList.toggle("active", mode==="vega");
+  renderNetChart(); renderFocus();
+}
+
+function renderNetChart(keepZoom){
+  var ds = NET_METRICS[netMetric].ds, idx = fcSortedIdx(ds);
+  var names = idx.map(function(i){ return ds.cats[i]; });
+  var vals  = idx.map(function(i){ return fcNetOf(ds, i); });
+  /* 点击重渲染时保留当前缩放窗口 */
+  var dzStart = 0, dzEnd = Math.min(100, 30 / names.length * 100);
+  if (keepZoom && chartNetExpo) {
+    var cur = chartNetExpo.getOption();
+    if (cur && cur.dataZoom && cur.dataZoom[0]) { dzStart = cur.dataZoom[0].start; dzEnd = cur.dataZoom[0].end; }
+  }
+  chartNetExpo.setOption({
+    animationDuration: 500,
+    grid: { left: 10, right: 20, top: 30, bottom: 40, containLabel: true },
+    dataZoom: [
+      { type: "slider", xAxisIndex: 0, height: 16, bottom: 4, start: dzStart, end: dzEnd,
+        borderColor: "rgba(64,158,255,0.25)", backgroundColor: "rgba(64,158,255,0.04)",
+        fillerColor: "rgba(43,142,255,0.12)", handleStyle: { color: "#2b8eff" },
+        moveHandleStyle: { color: "#2b8eff", opacity: 0.3 }, textStyle: { color: "#6b8db5", fontSize: 10 } },
+      { type: "inside", xAxisIndex: 0 }
+    ],
+    tooltip: { trigger: "axis", axisPointer: { type: "shadow" },
+      backgroundColor: "rgba(8,24,48,0.92)", borderColor: "rgba(43,142,255,0.5)",
+      textStyle: { color: "#e0eaff", fontSize: 12 },
+      extraCssText: 'box-shadow: 0 0 20px rgba(43,142,255,0.3); border-radius:8px;',
+      valueFormatter: function(v){ return fcFmt(v) + " 万"; } },
+    xAxis: { type: "category", data: names, axisLabel: { color: "#4a6a8a", fontSize: 11, interval: 0, rotate: 38 }, axisLine: { lineStyle: { color: "rgba(64,158,255,0.3)" } } },
+    yAxis: { type: "value", name: NET_METRICS[netMetric].name + "（万元）", nameTextStyle: { color: "#6b8db5", fontSize: 11 },
+      splitLine: { lineStyle: { color: "rgba(64,158,255,0.06)", type: "dashed" } }, axisLabel: { color: "#6b8db5" } },
+    series: [{ type: "bar", barMaxWidth: 22,
+      data: vals.map(function(v, j){ return { value: v, itemStyle: { color: fcSignColor(v), borderColor: j===netSel ? "#0e4d92" : "transparent", borderWidth: j===netSel ? 2 : 0, opacity: j===netSel ? 1 : 0.85 } }; }),
+      markLine: { symbol: "none", silent: true, lineStyle: { color: "#b7c9dd" }, data: [{ yAxis: 0 }], label: { show: false } }
+    }]
+  }, true);
+}
+
+function fcHedgeText(i){
+  var parts = FC_SEGS.map(function(s){ return { seg: s[0].replace("业务",""), v: STK_DELTA[s[1]][i] || 0 }; }).filter(function(x){ return x.v !== 0; });
+  if (!parts.length) return "三板块均无 Delta 敞口";
+  var hasPos = parts.some(function(x){ return x.v > 0; }), hasNeg = parts.some(function(x){ return x.v < 0; });
+  var desc = parts.map(function(x){ return x.seg + (x.v > 0 ? " 多 " : " 空 ") + fcFmt(Math.abs(x.v)); }).join("，");
+  return desc + (hasPos && hasNeg ? " → 板块间对冲" : " → 同向叠加");
+}
+
+function renderFocus(){
+  var ds = NET_METRICS[netMetric].ds, idx = fcSortedIdx(ds);
+  var i = idx[Math.min(netSel, idx.length - 1)];
+  var name = STK_DELTA.cats[i];
+  var nets = { delta: fcNetOf(STK_DELTA, i), gamma: fcNetOf(STK_GAMMA, i), vega: fcNetOf(STK_VEGA, i) };
+
+  document.getElementById("fcHead").innerHTML = '品种聚焦视图 · ' + name +
+    '<span style="font-size:12px;font-weight:400;color:#6b8db5;margin-left:8px;">三板块敞口合计口径 · 单位：万元</span>';
+
+  var kpis = '<div class="fc-kpi"><div class="k">品种</div><div class="v" style="color:#16324f">' + name + '</div><div class="t">场外 / 期现 / 做市</div></div>';
+  ["delta","gamma","vega"].forEach(function(k){
+    var v = nets[k];
+    kpis += '<div class="fc-kpi"><div class="k">净' + NET_METRICS[k].name + '</div><div class="v ' + fcSignCls(v) + '">' + (v>0?"+":"") + fcFmt(v) + '</div><div class="t">' + (v>0?"净多":(v<0?"净空":"无敞口")) + '</div></div>';
+  });
+  kpis += '<div class="fc-kpi wide"><div class="k">Delta 结构判断</div><div class="t" style="font-size:13px;color:#33517a">' + fcHedgeText(i) + '</div></div>';
+  document.getElementById("fcKpis").innerHTML = kpis;
+
+  ["delta","gamma","vega"].forEach(function(k){
+    var elId = { delta:"fcDelta", gamma:"fcGamma", vega:"fcVega" }[k];
+    if (!fcCharts[k]) fcCharts[k] = echarts.init(document.getElementById(elId));
+    var mds = NET_METRICS[k].ds;
+    var vals = FC_SEGS.map(function(s){ return mds[s[1]][i] || 0; });
+    var net = vals[0] + vals[1] + vals[2];
+    fcCharts[k].setOption({
+      animationDuration: 400,
+      title: { text: NET_METRICS[k].name, left: "center", top: 6, textStyle: { fontSize: 12, color: "#33517a" } },
+      grid: { left: 8, right: 8, top: 34, bottom: 4, containLabel: true },
+      tooltip: { trigger: "axis", axisPointer: { type: "shadow" },
+        backgroundColor: "rgba(8,24,48,0.92)", borderColor: "rgba(43,142,255,0.5)", textStyle: { color: "#e0eaff", fontSize: 12 },
+        valueFormatter: function(v){ return fcFmt(v) + " 万"; } },
+      xAxis: { type: "category", data: ["场外","期现","做市","净额"], axisLabel: { color: "#4a6a8a", fontSize: 11 }, axisLine: { lineStyle: { color: "rgba(64,158,255,0.3)" } } },
+      yAxis: { type: "value", splitLine: { lineStyle: { color: "rgba(64,158,255,0.06)", type: "dashed" } }, axisLabel: { color: "#8aa2bd", fontSize: 10 } },
+      series: [{ type: "bar", barMaxWidth: 26,
+        data: vals.concat([net]).map(function(v, j){ return { value: v, itemStyle: { color: j < 3 ? FC_SEGS[j][2] : fcSignColor(v) } }; }),
+        markLine: { symbol: "none", silent: true, lineStyle: { color: "#b7c9dd" }, data: [{ yAxis: 0 }], label: { show: false } }
+      }]
+    }, true);
+  });
+
+  var rows = FC_SEGS.map(function(s){
+    return '<tr><td><b><span style="color:' + s[2] + '">●</span> ' + s[0] + '</b></td>' +
+      ["delta","gamma","vega"].map(function(k){
+        var v = NET_METRICS[k].ds[s[1]][i] || 0;
+        return '<td class="num ' + fcSignCls(v) + '">' + (v>0?"+":"") + fcFmt(v) + '</td>';
+      }).join("") + '</tr>';
+  }).join("");
+  var netRow = '<tr class="net"><td><b>净额合计</b></td>' + ["delta","gamma","vega"].map(function(k){
+    var v = nets[k]; return '<td class="num ' + fcSignCls(v) + '">' + (v>0?"+":"") + fcFmt(v) + '</td>';
+  }).join("") + '</tr>';
+  document.getElementById("fcTable").innerHTML =
+    '<thead><tr><th>业务板块</th><th>DeltaCash</th><th>GammaCash</th><th>Vega</th></tr></thead><tbody>' + rows + netRow + '</tbody>';
+}
+
+/* ========== 初始化 Tab2 ========== */
+function initTab2() {
+  if (typeof echarts === 'undefined') return;
+
+  /* 场外气泡图 */
+  buildChart("chartOtc", otcData, "#2b8eff", "场外", {
+    yKey: "pnl", yName: "当日盈亏（万元）",
+    splitKey: "delta", sizeKey: "delta",
+    legendPos: "（正Delta·实心）", legendNeg: "（负Delta·空心）",
+    quad: ["多波动率盈利区","空波动率盈利区","多波动率亏损区","空波动率亏损区"],
+    sqrt: true, zoom: false, useCode: true
+  });
+
+  /* 做市气泡图 */
+  buildChart("chartMm", mmData, "#f5921b", "做市", {
+    yKey: "pnl", yName: "当日盈亏（万元）",
+    splitKey: "delta", sizeKey: "delta",
+    legendPos: "（正Delta·实心）", legendNeg: "（负Delta·空心）",
+    quad: ["多波动率盈利区","空波动率盈利区","多波动率亏损区","空波动率亏损区"],
+    sqrt: true, zoom: false, useCode: true
+  });
+
+  /* 净敞口柱 + 品种聚焦 */
+  chartNetExpo = echarts.init(document.getElementById("chartNetExpo"));
+  chartNetExpo.on("click", function(p){
+    if (p.componentType === "series"){ netSel = p.dataIndex; renderNetChart(true); renderFocus(); }
+  });
+  renderNetChart();
+  renderFocus();
+
+  window.addEventListener("resize", function(){
+    if (chartNetExpo) chartNetExpo.resize();
+    ["delta","gamma","vega"].forEach(function(k){ if (fcCharts[k]) fcCharts[k].resize(); });
+  });
+}
+
+
+/* ========== 页面加载后直接初始化（独立页无 Tab 切换） ========== */
+initTab2();
+</script>
+
+<script src="../../home-link.js"></script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+{
+  "name": "risk-erm-ai-demo",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "start": "node server/index.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1152.0",
+    "@fastify/static": "^10.1.6",
+    "docx-preview": "0.3.6",
+    "fastify": "^5.12.7",
+    "jszip": "3.10.1",
+    "xlsx": "0.18.5",
+    "yaml": "^2.9.1"
+  },
+  "devDependencies": {
+    "vite": "7.3.1"
+  }
+}

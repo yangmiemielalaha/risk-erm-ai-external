@@ -1,0 +1,2201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>衍智 OptionMind · 期权蒙特卡洛智能估值平台</title>
+<style>
+:root{
+  --bg:#070b16;
+  --bg2:#0b1120;
+  --panel:rgba(17,25,45,.72);
+  --panel-solid:#111a2f;
+  --panel-2:rgba(24,34,60,.6);
+  --line:rgba(120,150,220,.16);
+  --line-2:rgba(120,150,220,.3);
+  --txt:#e8eefc;
+  --txt-2:#93a4c8;
+  --txt-3:#5f7099;
+  --accent:#38bdf8;
+  --accent-2:#818cf8;
+  --gold:#fbbf24;
+  --up:#f43f5e;      /* 中国市场：涨=红 */
+  --down:#10b981;    /* 跌=绿 */
+  --ok:#34d399;
+  --warn:#f59e0b;
+  --grad:linear-gradient(135deg,#38bdf8 0%,#818cf8 55%,#c084fc 100%);
+  --mono:"JetBrains Mono","Cascadia Code",Consolas,"Courier New",monospace;
+  --sans:"PingFang SC","Microsoft YaHei","Segoe UI",system-ui,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  font-family:var(--sans);background:var(--bg);color:var(--txt);
+  font-size:14px;overflow-x:hidden;
+}
+/* ---------- 背景氛围 ---------- */
+.bg-fx{position:fixed;inset:0;z-index:0;pointer-events:none}
+.bg-fx::before{
+  content:"";position:absolute;inset:0;
+  background:
+    radial-gradient(700px 500px at 12% -5%,rgba(56,189,248,.14),transparent 60%),
+    radial-gradient(800px 600px at 88% 8%,rgba(129,140,248,.13),transparent 60%),
+    radial-gradient(900px 700px at 55% 110%,rgba(192,132,252,.08),transparent 60%);
+}
+.bg-grid{
+  position:absolute;inset:0;opacity:.35;
+  background-image:
+    linear-gradient(rgba(120,150,220,.05) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(120,150,220,.05) 1px,transparent 1px);
+  background-size:44px 44px;
+  mask-image:radial-gradient(ellipse 90% 70% at 50% 0%,#000 30%,transparent 100%);
+}
+.app{position:relative;z-index:1;display:flex;flex-direction:column;min-height:100vh}
+
+/* ---------- 顶栏 ---------- */
+.topbar{
+  height:60px;display:flex;align-items:center;gap:28px;padding:0 24px;
+  border-bottom:1px solid var(--line);
+  background:rgba(8,12,24,.8);backdrop-filter:blur(14px);
+  position:sticky;top:0;z-index:50;
+}
+.brand{display:flex;align-items:center;gap:12px}
+.brand-logo{
+  width:34px;height:34px;border-radius:10px;background:var(--grad);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:16px;color:#0b1120;
+  box-shadow:0 0 24px rgba(99,140,248,.5);
+}
+.brand-name{font-size:16px;font-weight:700;letter-spacing:.5px}
+.brand-name small{display:block;font-size:10px;color:var(--txt-3);font-weight:400;letter-spacing:2px}
+.nav{display:flex;gap:4px;margin-left:12px}
+.nav a{
+  padding:7px 14px;border-radius:8px;color:var(--txt-2);text-decoration:none;
+  font-size:13px;transition:.2s;
+}
+.nav a:hover{color:var(--txt);background:var(--panel-2)}
+.nav a.active{color:var(--txt);background:var(--panel-2);box-shadow:inset 0 0 0 1px var(--line-2)}
+.top-right{margin-left:auto;display:flex;align-items:center;gap:14px}
+.engine-badge{
+  display:flex;align-items:center;gap:7px;padding:5px 12px;border-radius:99px;
+  background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);
+  font-size:12px;color:var(--ok);
+}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok);animation:pulse 2s infinite}
+@keyframes pulse{50%{opacity:.4}}
+.avatar{
+  width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#fbbf24,#f97316);
+  display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#231303;
+}
+
+/* ---------- 主体布局 ---------- */
+.layout{display:flex;flex:1;align-items:flex-start}
+/* 左侧：结构代码库 */
+.sidebar{
+  width:288px;flex-shrink:0;padding:20px 16px;position:sticky;top:60px;
+  height:calc(100vh - 60px);overflow-y:auto;
+  border-right:1px solid var(--line);
+}
+.side-title{display:flex;align-items:center;justify-content:space-between;margin:2px 6px 12px}
+.side-title h3{font-size:13px;color:var(--txt-2);letter-spacing:1px;font-weight:600}
+.side-title .count{
+  font-family:var(--mono);font-size:11px;color:var(--accent);
+  background:rgba(56,189,248,.1);padding:2px 8px;border-radius:99px;border:1px solid rgba(56,189,248,.25);
+}
+.lib-item{
+  border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;
+  background:var(--panel);cursor:pointer;transition:.25s;position:relative;overflow:hidden;
+}
+.lib-item::before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--grad);
+  opacity:0;transition:.25s;
+}
+.lib-item:hover{transform:translateY(-2px);border-color:var(--line-2)}
+.lib-item.active{border-color:rgba(56,189,248,.5);box-shadow:0 0 0 1px rgba(56,189,248,.25),0 8px 24px rgba(0,0,0,.35)}
+.lib-item.active::before{opacity:1}
+.lib-head{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+.lib-icon{
+  width:32px;height:32px;border-radius:9px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:15px;
+  background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.25);
+}
+.lib-name{font-weight:700;font-size:14px}
+.lib-name small{display:block;font-size:10.5px;color:var(--txt-3);font-weight:400;font-family:var(--mono)}
+.lib-tag{
+  margin-left:auto;font-size:10px;padding:2px 8px;border-radius:99px;
+  background:rgba(129,140,248,.12);color:#a5b4fc;border:1px solid rgba(129,140,248,.3);
+}
+.lib-formula{
+  font-family:var(--mono);font-size:11px;color:var(--txt-2);
+  background:rgba(0,0,0,.3);border:1px solid var(--line);border-radius:8px;
+  padding:7px 9px;white-space:pre-wrap;line-height:1.55;
+}
+.lib-meta{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap}
+.chip{font-size:10px;color:var(--txt-3);background:var(--panel-2);padding:2px 7px;border-radius:6px;border:1px solid var(--line)}
+.chip.gold{color:var(--gold);border-color:rgba(251,191,36,.3);background:rgba(251,191,36,.07)}
+.lib-add{
+  border:1px dashed var(--line-2);border-radius:14px;padding:13px;text-align:center;
+  color:var(--txt-3);font-size:12.5px;cursor:pointer;transition:.2s;
+}
+.lib-add:hover{color:var(--accent);border-color:var(--accent)}
+
+/* 右侧主区 */
+.main{flex:1;padding:24px 28px 60px;min-width:0;max-width:1240px}
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:18px;flex-wrap:wrap}
+.page-head h1{font-size:22px;font-weight:800;letter-spacing:.5px}
+.page-head h1 em{font-style:normal;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.page-head p{color:var(--txt-2);font-size:13px;margin-top:6px}
+
+/* 链路切换 */
+.flow-switch{
+  display:inline-flex;background:var(--panel);border:1px solid var(--line);
+  border-radius:12px;padding:4px;gap:4px;
+}
+.flow-btn{
+  padding:8px 18px;border-radius:9px;border:none;background:transparent;color:var(--txt-2);
+  font-size:13px;font-weight:600;cursor:pointer;transition:.2s;font-family:var(--sans);
+}
+.flow-btn.active{background:var(--grad);color:#0b1120;box-shadow:0 4px 16px rgba(99,140,248,.4)}
+
+/* 步骤条 */
+.stepper{display:flex;gap:0;margin:18px 0 22px;flex-wrap:wrap}
+.step{display:flex;align-items:center;gap:9px;flex:1;min-width:150px;position:relative;padding:0 8px}
+.step:not(:last-child)::after{
+  content:"";position:absolute;right:-4px;top:50%;width:14px;height:1.5px;background:var(--line-2);
+}
+.step-num{
+  width:26px;height:26px;border-radius:50%;flex-shrink:0;font-size:12px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;font-family:var(--mono);
+  background:var(--panel-2);border:1px solid var(--line-2);color:var(--txt-2);
+}
+.step.done .step-num{background:rgba(52,211,153,.15);border-color:rgba(52,211,153,.5);color:var(--ok)}
+.step.now .step-num{background:var(--grad);color:#0b1120;box-shadow:0 0 14px rgba(56,189,248,.5)}
+.step-label{font-size:12px;color:var(--txt-2);line-height:1.35}
+.step.now .step-label{color:var(--txt);font-weight:600}
+
+/* 卡片通用 */
+.card{
+  background:var(--panel);border:1px solid var(--line);border-radius:18px;
+  padding:20px;backdrop-filter:blur(10px);margin-bottom:18px;position:relative;
+}
+.card-title{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.card-title .bar{width:4px;height:16px;border-radius:2px;background:var(--grad)}
+.card-title h2{font-size:15px;font-weight:700}
+.card-title .sub{font-size:12px;color:var(--txt-3);margin-left:2px}
+.badge{
+  font-size:11px;padding:3px 10px;border-radius:99px;font-weight:600;margin-left:auto;
+}
+.badge.ok{background:rgba(52,211,153,.12);color:var(--ok);border:1px solid rgba(52,211,153,.35)}
+.badge.warn{background:rgba(245,158,11,.12);color:var(--warn);border:1px solid rgba(245,158,11,.35)}
+.badge.info{background:rgba(56,189,248,.1);color:var(--accent);border:1px solid rgba(56,189,248,.3)}
+
+/* 上传区 */
+.upload-zone{
+  border:1.5px dashed var(--line-2);border-radius:14px;padding:26px;text-align:center;
+  cursor:pointer;transition:.25s;background:rgba(56,189,248,.03);
+  display:flex;align-items:center;gap:20px;text-align:left;
+}
+.upload-zone:hover{border-color:var(--accent);background:rgba(56,189,248,.06)}
+.upload-icon{
+  width:52px;height:52px;border-radius:14px;background:var(--grad);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:24px;
+  box-shadow:0 6px 20px rgba(99,140,248,.4);
+}
+.upload-zone h4{font-size:14px;margin-bottom:5px}
+.upload-zone p{font-size:12px;color:var(--txt-3)}
+.upload-zone .fmt{margin-top:6px;display:flex;gap:6px}
+.upload-file{
+  margin-left:auto;flex-shrink:0;display:flex;align-items:center;gap:10px;
+  background:var(--panel-2);border:1px solid var(--line-2);border-radius:12px;padding:10px 14px;
+}
+.upload-file .fn{font-family:var(--mono);font-size:12px;color:var(--accent)}
+.upload-file .fs{font-size:11px;color:var(--txt-3)}
+.parse-state{font-family:var(--mono);font-size:11px;color:var(--ok)}
+
+/* 要素网格 */
+.elem-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.elem{
+  background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;
+  transition:.2s;
+}
+.elem:hover{border-color:var(--line-2)}
+.elem .k{font-size:11px;color:var(--txt-3);display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.elem .v{font-size:14px;font-weight:700}
+.elem .v.mono{font-family:var(--mono);font-size:13px}
+.elem .conf{font-size:10px;color:var(--ok);font-family:var(--mono);margin-left:auto}
+.conf-bar{height:3px;border-radius:2px;background:rgba(255,255,255,.06);margin-top:8px;overflow:hidden}
+.conf-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--ok),var(--accent));border-radius:2px}
+.kv{display:flex;gap:8px;align-items:baseline}
+.kv .sub-v{font-size:11px;color:var(--txt-2)}
+.gold{color:var(--gold)}
+.up{color:var(--up)}
+.down{color:var(--down)}
+
+/* 参数表单 */
+.param-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}
+.field label{display:block;font-size:11.5px;color:var(--txt-3);margin-bottom:6px}
+.field label b{color:var(--txt-2);font-weight:600}
+.input,select.input,textarea.input{
+  width:100%;background:rgba(0,0,0,.28);border:1px solid var(--line-2);border-radius:9px;
+  padding:9px 11px;color:var(--txt);font-size:13px;font-family:var(--mono);
+  outline:none;transition:.2s;
+}
+.input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(56,189,248,.12)}
+select.input{font-family:var(--sans)}
+.field .hint{font-size:10px;color:var(--txt-3);margin-top:4px}
+.switch-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--panel-2);border:1px solid var(--line);border-radius:11px}
+.switch-row .txt{font-size:12.5px}
+.switch-row .txt small{display:block;font-size:10.5px;color:var(--txt-3)}
+.toggle{
+  margin-left:auto;width:40px;height:22px;border-radius:99px;background:rgba(255,255,255,.12);
+  position:relative;cursor:pointer;transition:.25s;flex-shrink:0;border:none;
+}
+.toggle::after{
+  content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;
+  background:#fff;transition:.25s;
+}
+.toggle.on{background:var(--grad)}
+.toggle.on::after{left:21px}
+
+/* 结构比对 */
+.compare-wrap{display:flex;gap:14px;align-items:stretch;flex-wrap:wrap}
+.compare-box{flex:1;min-width:260px;background:rgba(0,0,0,.3);border:1px solid var(--line);border-radius:12px;padding:13px 15px}
+.compare-box h5{font-size:12px;color:var(--txt-2);margin-bottom:9px;display:flex;align-items:center;gap:7px}
+.compare-box pre{font-family:var(--mono);font-size:11.5px;line-height:1.7;color:#a8e6cf;white-space:pre-wrap}
+.compare-vs{
+  align-self:center;width:38px;height:38px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:12px;font-weight:800;
+  background:var(--panel-2);border:1px solid var(--line-2);color:var(--txt-2);
+}
+
+/* 结构选择卡片（链路2） */
+.struct-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:13px}
+.struct-card{
+  border:1px solid var(--line);border-radius:15px;padding:16px 14px;cursor:pointer;
+  background:var(--panel-2);transition:.25s;position:relative;overflow:hidden;text-align:center;
+}
+.struct-card:hover{transform:translateY(-3px);border-color:var(--line-2)}
+.struct-card.sel{border-color:rgba(56,189,248,.6);box-shadow:0 0 0 1px rgba(56,189,248,.3),0 10px 26px rgba(0,0,0,.4)}
+.struct-card.sel::after{
+  content:"✓";position:absolute;top:9px;right:9px;width:20px;height:20px;border-radius:50%;
+  background:var(--grad);color:#0b1120;font-size:11px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;
+}
+.struct-card .ic{font-size:26px;margin-bottom:9px}
+.struct-card .nm{font-weight:700;font-size:13.5px}
+.struct-card .en{font-size:10px;color:var(--txt-3);font-family:var(--mono);margin-top:3px}
+.struct-card .src{font-size:10px;color:var(--accent);margin-top:8px}
+
+/* 按钮 */
+.btn{
+  display:inline-flex;align-items:center;gap:8px;border:none;cursor:pointer;
+  padding:11px 26px;border-radius:11px;font-size:13.5px;font-weight:700;font-family:var(--sans);
+  transition:.2s;letter-spacing:.5px;
+}
+.btn-primary{background:var(--grad);color:#0b1120;box-shadow:0 6px 22px rgba(99,140,248,.45)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(99,140,248,.6)}
+.btn-ghost{background:var(--panel-2);color:var(--txt-2);border:1px solid var(--line-2)}
+.btn-ghost:hover{color:var(--txt);border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.action-bar{display:flex;gap:12px;justify-content:flex-end;align-items:center;margin-top:4px}
+.action-bar .note{font-size:11.5px;color:var(--txt-3);margin-right:auto}
+
+/* 结果区 */
+.result-hero{
+  display:flex;gap:22px;align-items:center;flex-wrap:wrap;
+  background:linear-gradient(120deg,rgba(56,189,248,.09),rgba(129,140,248,.08) 60%,rgba(192,132,252,.07));
+  border:1px solid rgba(99,140,248,.3);border-radius:18px;padding:22px 26px;margin-bottom:18px;
+}
+.result-hero .lab{font-size:12px;color:var(--txt-2)}
+.result-hero .val{
+  font-family:var(--mono);font-size:34px;font-weight:800;
+  background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;
+  letter-spacing:1px;
+}
+.result-hero .unit{font-size:13px;color:var(--txt-2);margin-left:6px}
+.hero-metric{margin-left:auto;text-align:right}
+.hero-metric .m-v{font-family:var(--mono);font-size:17px;font-weight:700}
+.hero-metric .m-k{font-size:11px;color:var(--txt-3)}
+.hero-metric + .hero-metric{margin-left:26px}
+.greek-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:18px}
+.greek{
+  background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;
+}
+.greek .gk{font-size:11px;color:var(--txt-3);font-family:var(--mono);letter-spacing:1px}
+.greek .gv{font-family:var(--mono);font-size:18px;font-weight:700;margin-top:5px}
+.greek .gd{font-size:10.5px;color:var(--txt-3);margin-top:3px}
+.chart-row{display:grid;grid-template-columns:1.35fr 1fr;gap:16px;margin-bottom:18px}
+.chart-row.three{grid-template-columns:1fr 1fr 1fr}
+@media(max-width:1000px){.chart-row,.chart-row.three{grid-template-columns:1fr}}
+.chart-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px}
+.chart-card h4{font-size:13px;font-weight:700;margin-bottom:3px}
+.chart-card p{font-size:11px;color:var(--txt-3);margin-bottom:8px}
+.chart-card canvas{width:100%;height:230px;display:block}
+
+/* 代码编辑（自定义结构） */
+.code-editor{
+  width:100%;min-height:150px;background:#0a0f1e;border:1px solid var(--line-2);border-radius:12px;
+  font-family:var(--mono);font-size:12.5px;line-height:1.7;color:#c8e6ff;padding:14px 16px;
+  resize:vertical;outline:none;
+}
+.code-editor:focus{border-color:var(--accent)}
+
+/* 弹窗 */
+.modal-mask{
+  position:fixed;inset:0;background:rgba(4,7,14,.7);backdrop-filter:blur(6px);
+  display:none;align-items:center;justify-content:center;z-index:100;
+}
+.modal-mask.show{display:flex;animation:fadeIn .25s}
+@keyframes fadeIn{from{opacity:0}}
+.modal{
+  width:min(880px,92vw);max-height:86vh;overflow:auto;background:#0d1428;
+  border:1px solid var(--line-2);border-radius:20px;padding:24px 26px;
+  box-shadow:0 30px 80px rgba(0,0,0,.6);animation:popIn .3s;
+}
+@keyframes popIn{from{transform:translateY(18px) scale(.97);opacity:0}}
+.modal-head{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.modal-head .ic{
+  width:38px;height:38px;border-radius:11px;background:rgba(245,158,11,.14);
+  border:1px solid rgba(245,158,11,.4);display:flex;align-items:center;justify-content:center;font-size:18px;
+}
+.modal-head h3{font-size:16px;font-weight:800}
+.modal-head p{font-size:12px;color:var(--txt-3);margin-top:3px}
+.modal-close{margin-left:auto;background:none;border:none;color:var(--txt-3);font-size:20px;cursor:pointer}
+.diff-cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0}
+@media(max-width:700px){.diff-cols{grid-template-columns:1fr}}
+.diff-pane{background:rgba(0,0,0,.32);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.diff-pane h5{
+  font-size:12px;padding:9px 13px;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:8px;color:var(--txt-2);
+}
+.diff-pane pre{padding:13px;font-family:var(--mono);font-size:11.5px;line-height:1.75;white-space:pre-wrap;color:#a8e6cf}
+.diff-pane pre .chg{
+  display:block;background:rgba(251,191,36,.13);color:var(--gold);
+  margin:0 -13px;padding:0 13px;border-left:3px solid var(--gold);
+}
+.modal-actions{display:flex;gap:12px;justify-content:flex-end;align-items:center}
+.modal-actions .note{font-size:11.5px;color:var(--txt-3);margin-right:auto}
+
+/* 进度条（估值中） */
+.run-progress{height:6px;border-radius:3px;background:rgba(255,255,255,.07);overflow:hidden;margin-top:14px;display:none}
+.run-progress i{display:block;height:100%;width:0;background:var(--grad);border-radius:3px;transition:width .3s}
+.run-log{font-family:var(--mono);font-size:11px;color:var(--txt-3);margin-top:8px;display:none}
+
+/* ---------- 结构代码库子页面 ---------- */
+.lib-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px}
+.lib-stat{
+  background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;
+}
+.lib-stat .sv{font-family:var(--mono);font-size:22px;font-weight:800;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lib-stat .sk{font-size:11.5px;color:var(--txt-3);margin-top:4px}
+.lib-toolbar{display:flex;gap:10px;align-items:center;margin-bottom:18px;flex-wrap:wrap}
+.search-box{
+  flex:1;min-width:220px;display:flex;align-items:center;gap:8px;
+  background:rgba(0,0,0,.28);border:1px solid var(--line-2);border-radius:11px;padding:9px 13px;
+}
+.search-box input{
+  flex:1;background:none;border:none;outline:none;color:var(--txt);font-size:13px;font-family:var(--sans);
+}
+.search-box input::placeholder{color:var(--txt-3)}
+.filter-chip{
+  padding:7px 14px;border-radius:99px;font-size:12px;cursor:pointer;
+  background:var(--panel-2);border:1px solid var(--line);color:var(--txt-2);transition:.2s;
+}
+.filter-chip:hover{border-color:var(--line-2);color:var(--txt)}
+.filter-chip.on{background:var(--grad);color:#0b1120;font-weight:700;border-color:transparent}
+.lib-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+.lib-card{
+  background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;
+  transition:.25s;position:relative;display:flex;flex-direction:column;gap:11px;
+}
+.lib-card:hover{transform:translateY(-3px);border-color:rgba(56,189,248,.4);box-shadow:0 12px 30px rgba(0,0,0,.35)}
+.lib-card-head{display:flex;align-items:center;gap:11px}
+.lib-card-head .lib-icon{width:40px;height:40px;font-size:19px;border-radius:11px}
+.lib-card-head .lib-name{font-size:15px}
+.lib-status{
+  margin-left:auto;font-size:10.5px;padding:3px 9px;border-radius:99px;font-weight:600;
+}
+.lib-status.pass{background:rgba(52,211,153,.12);color:var(--ok);border:1px solid rgba(52,211,153,.35)}
+.lib-status.pending{background:rgba(245,158,11,.12);color:var(--warn);border:1px solid rgba(245,158,11,.35)}
+.lib-card .desc{font-size:12px;color:var(--txt-2);line-height:1.65}
+.lib-card-actions{display:flex;gap:9px;margin-top:auto}
+.mini-btn{
+  flex:1;padding:8px 0;border-radius:9px;font-size:12px;font-weight:600;cursor:pointer;
+  border:1px solid var(--line-2);background:var(--panel-2);color:var(--txt-2);transition:.2s;
+  font-family:var(--sans);text-align:center;
+}
+.mini-btn:hover{color:var(--txt);border-color:var(--accent)}
+.mini-btn.primary{background:var(--grad);color:#0b1120;border:none}
+.mini-btn.primary:hover{box-shadow:0 4px 14px rgba(99,140,248,.4)}
+.mini-btn:disabled{opacity:.4;cursor:not-allowed}
+/* 详情弹窗 */
+.detail-tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:14px 0 0}
+.detail-tab{
+  padding:9px 16px;font-size:12.5px;cursor:pointer;color:var(--txt-2);border:none;background:none;
+  border-bottom:2px solid transparent;font-family:var(--sans);transition:.2s;
+}
+.detail-tab.on{color:var(--accent);border-bottom-color:var(--accent);font-weight:700}
+.detail-pane{display:none;padding:16px 2px}
+.detail-pane.on{display:block;animation:flowIn .3s}
+.code-view{
+  background:#0a0f1e;border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+  font-family:var(--mono);font-size:12.5px;line-height:1.8;white-space:pre;overflow-x:auto;color:#c8e6ff;
+}
+.tok-k{color:#c084fc;font-weight:600}
+.tok-f{color:#38bdf8}
+.tok-n{color:#fbbf24}
+.tok-s{color:#86efac}
+.tok-c{color:#5f7099;font-style:italic}
+.param-table{width:100%;border-collapse:collapse;font-size:12.5px}
+.param-table td{padding:9px 12px;border-bottom:1px solid var(--line)}
+.param-table td:first-child{color:var(--txt-3);width:45%}
+.param-table td:last-child{font-family:var(--mono);color:var(--txt)}
+.ver-row{display:flex;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;background:var(--panel-2)}
+.ver-row .vn{font-family:var(--mono);font-weight:700;color:var(--accent)}
+.ver-row .vd{font-size:11.5px;color:var(--txt-3);margin-left:auto}
+/* 新结构表单 */
+.form-row{margin-bottom:14px}
+.form-row label{display:block;font-size:12px;color:var(--txt-2);margin-bottom:6px;font-weight:600}
+
+/* ---------- 历史估值 / 模型管理 ---------- */
+.data-table{width:100%;border-collapse:collapse;font-size:12.5px}
+.data-table th{
+  text-align:left;padding:12px 14px;font-size:11px;color:var(--txt-3);font-weight:600;
+  letter-spacing:.5px;border-bottom:1px solid var(--line-2);background:rgba(0,0,0,.2);
+  white-space:nowrap;
+}
+.data-table td{padding:12px 14px;border-bottom:1px solid var(--line);color:var(--txt-2);white-space:nowrap}
+.data-table tbody tr{transition:.15s;cursor:pointer}
+.data-table tbody tr:hover{background:rgba(56,189,248,.05)}
+.data-table .mono{font-family:var(--mono)}
+.data-table .id-cell{font-family:var(--mono);color:var(--accent);font-size:11.5px}
+.data-table .val-cell{font-family:var(--mono);font-weight:700;color:var(--txt)}
+.st-badge{font-size:10.5px;padding:3px 9px;border-radius:99px;font-weight:600}
+.st-done{background:rgba(52,211,153,.12);color:var(--ok);border:1px solid rgba(52,211,153,.35)}
+.st-confirm{background:rgba(245,158,11,.12);color:var(--warn);border:1px solid rgba(245,158,11,.35)}
+.st-run{background:rgba(56,189,248,.12);color:var(--accent);border:1px solid rgba(56,189,248,.35)}
+.engine-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.engine-card{
+  background:var(--panel-2);border:1px solid var(--line);border-radius:14px;padding:16px;
+}
+.engine-card .ec-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.engine-card .ec-ic{
+  width:36px;height:36px;border-radius:10px;background:rgba(56,189,248,.12);
+  border:1px solid rgba(56,189,248,.25);display:flex;align-items:center;justify-content:center;font-size:17px;
+}
+.engine-card .ec-name{font-weight:700;font-size:14px}
+.engine-card .ec-name small{display:block;font-size:10.5px;color:var(--txt-3);font-weight:400;font-family:var(--mono)}
+.engine-card .ec-body .field{margin-bottom:10px}
+.meter-row{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.meter-row .mk{font-size:12px;color:var(--txt-2);width:88px;flex-shrink:0}
+.meter{flex:1;height:8px;border-radius:4px;background:rgba(255,255,255,.07);overflow:hidden}
+.meter i{display:block;height:100%;border-radius:4px;background:var(--grad);transition:width 1.2s cubic-bezier(.2,.8,.3,1)}
+.meter-row .mv{font-family:var(--mono);font-size:12px;width:44px;text-align:right}
+.queue-item{
+  display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--line);
+  border-radius:10px;margin-bottom:8px;font-size:12px;background:var(--panel-2);
+}
+.queue-item .qid{font-family:var(--mono);color:var(--accent);font-size:11px}
+.queue-item .qm{margin-left:auto;color:var(--txt-3);font-size:11px}
+.toast{
+  position:fixed;bottom:26px;right:26px;z-index:200;padding:12px 20px;border-radius:12px;
+  background:#0d1428;border:1px solid rgba(52,211,153,.4);color:var(--txt);font-size:13px;
+  box-shadow:0 12px 40px rgba(0,0,0,.5);opacity:0;transform:translateY(12px);
+  transition:.3s;pointer-events:none;display:flex;align-items:center;gap:9px;
+}
+.toast.show{opacity:1;transform:translateY(0)}
+.hist-info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin:14px 0}
+.hist-info{background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.hist-info .hk{font-size:10.5px;color:var(--txt-3);margin-bottom:4px}
+.hist-info .hv{font-size:13px;font-weight:700;font-family:var(--mono)}
+.result-strip{
+  display:flex;gap:22px;align-items:center;flex-wrap:wrap;margin-top:6px;
+  background:linear-gradient(120deg,rgba(56,189,248,.08),rgba(129,140,248,.07));
+  border:1px solid rgba(99,140,248,.25);border-radius:12px;padding:14px 18px;
+}
+.result-strip .rs-v{font-family:var(--mono);font-size:22px;font-weight:800;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.result-strip .rs-k{font-size:10.5px;color:var(--txt-3)}
+.result-strip .rs-item{text-align:left}
+.result-strip .rs-item .n{font-family:var(--mono);font-size:14px;font-weight:700}
+
+/* ---------- 帮助文档 ---------- */
+.doc-layout{display:flex;gap:26px;align-items:flex-start}
+.doc-nav{
+  width:200px;flex-shrink:0;position:sticky;top:80px;
+  background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;
+}
+.doc-nav a{
+  display:block;padding:9px 13px;border-radius:9px;font-size:12.5px;color:var(--txt-2);
+  text-decoration:none;transition:.15s;border-left:2px solid transparent;
+}
+.doc-nav a:hover{color:var(--txt);background:var(--panel-2)}
+.doc-nav a.on{color:var(--accent);background:rgba(56,189,248,.08);border-left-color:var(--accent);font-weight:600}
+.doc-nav .dn-title{font-size:11px;color:var(--txt-3);padding:8px 13px 6px;letter-spacing:1px}
+.doc-body{flex:1;min-width:0}
+.doc-section{
+  background:var(--panel);border:1px solid var(--line);border-radius:16px;
+  padding:24px 28px;margin-bottom:18px;
+}
+.doc-section h2{font-size:17px;font-weight:800;margin-bottom:6px;display:flex;align-items:center;gap:10px}
+.doc-section h2 .bar{width:4px;height:18px;border-radius:2px;background:var(--grad)}
+.doc-section h3{font-size:14px;font-weight:700;margin:20px 0 8px;color:var(--accent)}
+.doc-section p{font-size:13px;color:var(--txt-2);line-height:1.9;margin-bottom:10px}
+.doc-section ul,.doc-section ol{margin:0 0 12px 20px;font-size:13px;color:var(--txt-2);line-height:2}
+.doc-section code{
+  font-family:var(--mono);font-size:11.5px;background:rgba(56,189,248,.1);
+  border:1px solid rgba(56,189,248,.2);border-radius:5px;padding:1px 6px;color:var(--accent);
+}
+.doc-table{width:100%;border-collapse:collapse;font-size:12.5px;margin:10px 0 14px}
+.doc-table th{
+  text-align:left;padding:10px 12px;font-size:11.5px;color:var(--txt-3);
+  border-bottom:1px solid var(--line-2);background:rgba(0,0,0,.2);
+}
+.doc-table td{padding:10px 12px;border-bottom:1px solid var(--line);color:var(--txt-2);line-height:1.7}
+.doc-table td:first-child{font-weight:600;color:var(--txt);white-space:nowrap}
+.doc-tip{
+  border-left:3px solid var(--accent);background:rgba(56,189,248,.06);
+  border-radius:0 10px 10px 0;padding:12px 16px;font-size:12.5px;color:var(--txt-2);
+  line-height:1.8;margin:12px 0;
+}
+.doc-tip.warn{border-left-color:var(--gold);background:rgba(251,191,36,.06)}
+.doc-flow{display:flex;gap:0;align-items:center;margin:14px 0;flex-wrap:wrap}
+.doc-step{
+  background:var(--panel-2);border:1px solid var(--line-2);border-radius:10px;
+  padding:9px 15px;font-size:12.5px;font-weight:600;
+}
+.doc-arrow{color:var(--txt-3);padding:0 10px;font-size:14px}
+.faq-item{border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden}
+.faq-q{
+  padding:13px 16px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;
+  transition:.15s;user-select:none;
+}
+.faq-q:hover{background:var(--panel-2)}
+.faq-q .arr{margin-left:auto;color:var(--txt-3);transition:.2s;font-size:12px}
+.faq-item.open .faq-q .arr{transform:rotate(90deg);color:var(--accent)}
+.faq-a{display:none;padding:0 16px 14px;font-size:12.5px;color:var(--txt-2);line-height:1.9}
+.faq-item.open .faq-a{display:block}
+
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:rgba(120,150,220,.25);border-radius:5px}
+::-webkit-scrollbar-track{background:transparent}
+
+.flow{display:none}
+.flow.show{display:block;animation:flowIn .35s}
+@keyframes flowIn{from{opacity:0;transform:translateY(8px)}}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div class="bg-fx"><div class="bg-grid"></div></div>
+
+<div class="app">
+  <!-- ================= 顶栏 ================= -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-logo">Ω</div>
+      <div class="brand-name">衍智 OptionMind<small>OPTION PRICING PLATFORM</small></div>
+    </div>
+    <nav class="nav">
+      <a href="#" class="active" id="navWorkbench" onclick="switchPage('workbench');return false;">估值工作台</a>
+      <a href="#" id="navLibrary" onclick="switchPage('library');return false;">结构代码库</a>
+      <a href="#" id="navHistory" onclick="switchPage('history');return false;">历史估值</a>
+      <a href="../stress-test/module.html">压力测试</a>
+      <a href="#" id="navHelp" onclick="switchPage('help');return false;">帮助文档</a>
+    </nav>
+    <div class="top-right">
+      <div class="engine-badge"><span class="dot"></span>估值引擎已就绪 · 支持并行加速</div>
+      <div class="avatar">QD</div>
+    </div>
+  </header>
+
+  <!-- ================= 页面一：估值工作台 ================= -->
+  <div id="pageWorkbench">
+  <div class="layout">
+    <!-- ================= 左侧：基础期权结构代码库 ================= -->
+    <aside class="sidebar">
+      <div class="side-title">
+        <h3>基础期权结构代码库</h3>
+        <span class="count">7 类</span>
+      </div>
+
+      <div class="lib-item active" data-struct="snowball" onclick="selectLib('snowball')">
+        <div class="lib-head">
+          <div class="lib-icon">❄️</div>
+          <div class="lib-name">雪球结构<small>Snowball / Autocallable</small></div>
+          <span class="lib-tag">v2.3</span>
+        </div>
+        <div class="lib-formula">if KO(t): (1+coupon·t/T)
+elif KI &amp; ST&lt;KI: ST/S0
+else: 1+coupon</div>
+        <div class="lib-meta">
+          <span class="chip gold">票息 年化</span><span class="chip">敲入/敲出</span><span class="chip">月度观察</span>
+        </div>
+      </div>
+
+      <div class="lib-item" data-struct="vanilla" onclick="selectLib('vanilla')">
+        <div class="lib-head">
+          <div class="lib-icon">🍦</div>
+          <div class="lib-name">香草期权<small>Vanilla Option</small></div>
+          <span class="lib-tag">v1.0</span>
+        </div>
+        <div class="lib-formula">Call: max(ST−K, 0)
+Put : max(K−ST, 0)</div>
+        <div class="lib-meta">
+          <span class="chip">欧式/美式</span><span class="chip">解析解可用</span>
+        </div>
+      </div>
+
+      <div class="lib-item" data-struct="asian" onclick="selectLib('asian')">
+        <div class="lib-head">
+          <div class="lib-icon">🌏</div>
+          <div class="lib-name">亚式期权<small>Asian Option</small></div>
+          <span class="lib-tag">v1.4</span>
+        </div>
+        <div class="lib-formula">Call: max(Avg(S)−K, 0)
+Avg : 算术/几何平均</div>
+        <div class="lib-meta">
+          <span class="chip">均价结算</span><span class="chip">路径依赖</span>
+        </div>
+      </div>
+
+      <div class="lib-item" data-struct="sharkfin" onclick="selectLib('sharkfin')">
+        <div class="lib-head">
+          <div class="lib-icon">🦈</div>
+          <div class="lib-name">鲨鱼鳍结构<small>Shark Fin</small></div>
+          <span class="lib-tag">v1.1</span>
+        </div>
+        <div class="lib-formula">if max(St)≥KO: rebate
+else: p·max(ST−K, 0)</div>
+        <div class="lib-meta">
+          <span class="chip gold">保底收益</span><span class="chip">触碰失效</span>
+        </div>
+      </div>
+
+      <div class="lib-item" data-struct="binary" onclick="selectLib('binary')">
+        <div class="lib-head">
+          <div class="lib-icon">🎯</div>
+          <div class="lib-name">二元期权<small>Binary / Digital</small></div>
+          <span class="lib-tag">v1.0</span>
+        </div>
+        <div class="lib-formula">if ST≥K: 固定赔付 Q
+else: 0</div>
+        <div class="lib-meta">
+          <span class="chip gold">固定赔付</span><span class="chip">解析解可用</span>
+        </div>
+      </div>
+
+      <div class="lib-item" data-struct="rangeaccrual" onclick="selectLib('rangeaccrual')">
+        <div class="lib-head">
+          <div class="lib-icon">📊</div>
+          <div class="lib-name">区间累计<small>Range Accrual</small></div>
+          <span class="lib-tag">v1.0</span>
+        </div>
+        <div class="lib-formula">票息 × 区间内天数 / 总天数
+每日观察 [下限, 上限]</div>
+        <div class="lib-meta">
+          <span class="chip gold">逐日累计</span><span class="chip">区间观察</span>
+        </div>
+      </div>
+
+      <div class="lib-item" data-struct="airbag" onclick="selectLib('airbag')">
+        <div class="lib-head">
+          <div class="lib-icon">🛡️</div>
+          <div class="lib-name">安全气囊<small>Airbag</small></div>
+          <span class="lib-tag">v1.0</span>
+        </div>
+        <div class="lib-formula">ST≥S0: 1+p·(ST/S0−1)
+ST&lt;气囊线: ST/气囊线</div>
+        <div class="lib-meta">
+          <span class="chip gold">下跌缓冲</span><span class="chip">参与上涨</span>
+        </div>
+      </div>
+
+      <div class="lib-add" onclick="openAddStruct()">＋ 接入新结构代码</div>
+    </aside>
+
+    <!-- ================= 主区 ================= -->
+    <main class="main">
+      <div class="page-head">
+        <div>
+          <h1>期权蒙特卡洛<em>智能估值</em>工作台</h1>
+          <p>支持交易确认书智能解析 · 结构代码自动比对 · 蒙特卡洛 / 解析解多引擎估值</p>
+        </div>
+        <div class="flow-switch">
+          <button class="flow-btn active" id="tabF1" onclick="switchFlow(1)">链路一 · 确认书导入</button>
+          <button class="flow-btn" id="tabF2" onclick="switchFlow(2)">链路二 · 手动选择结构</button>
+        </div>
+      </div>
+
+      <!-- ============ 链路一 ============ -->
+      <div class="flow show" id="flow1">
+        <div class="stepper" id="stepper1">
+          <div class="step now"><div class="step-num">1</div><div class="step-label">导入交易确认书<br>智能识别期权要素</div></div>
+          <div class="step"><div class="step-num">2</div><div class="step-label">蒙特卡洛参数<br>配置</div></div>
+          <div class="step"><div class="step-num">3</div><div class="step-label">收益结构与代码库<br>自动比对</div></div>
+          <div class="step"><div class="step-num">4</div><div class="step-label">执行估值<br>输出结果</div></div>
+        </div>
+
+        <!-- 1. 确认书导入 -->
+        <div class="card">
+          <div class="card-title"><span class="bar"></span><h2>① 交易确认书导入</h2><span class="sub">自动识别期权要素</span><span class="badge info" id="parseBadge">等待导入</span></div>
+          <div class="upload-zone" id="uploadZone" onclick="simulateImport()">
+            <div class="upload-icon">📄</div>
+            <div>
+              <h4>点击或拖拽上传交易确认书</h4>
+              <p>NLP + 版面分析引擎自动抽取：期权结构 / 标的范围 / 到期日 / 收益结构 / 票息 / 名义本金等要素</p>
+              <div class="fmt">
+                <span class="chip">PDF</span><span class="chip">Word</span><span class="chip">Excel</span><span class="chip">扫描件 OCR</span>
+              </div>
+            </div>
+            <div class="upload-file hidden" id="uploadFile">
+              <div>
+                <div class="fn">交易确认书_雪球_中证500_202609.pdf</div>
+                <div class="fs">2.4 MB</div>
+              </div>
+              <span class="parse-state" id="parseState">解析中…</span>
+            </div>
+          </div>
+
+          <div class="elem-grid hidden" id="elemGrid" style="margin-top:16px">
+            <div class="elem"><div class="k">期权结构<span class="conf">置信度 98%</span></div><div class="v">雪球结构<span class="sub-v" style="font-size:11px;color:var(--txt-3)">（Autocallable，看涨雪球）</span></div><div class="conf-bar"><i style="width:98%"></i></div></div>
+            <div class="elem"><div class="k">标的范围<span class="conf">置信度 99%</span></div><div class="v mono">中证500指数 (000905.SH)</div><div class="conf-bar"><i style="width:99%"></i></div></div>
+            <div class="elem"><div class="k">合约到期日<span class="conf">置信度 100%</span></div><div class="v mono">2028-03-24<span class="sub-v"> · 24M（剩余 547 天）</span></div><div class="conf-bar"><i style="width:100%"></i></div></div>
+            <div class="elem"><div class="k">票息<span class="conf">置信度 97%</span></div><div class="v gold">年化 18.5%<span class="sub-v"> · 每月观察敲出</span></div><div class="conf-bar"><i style="width:97%"></i></div></div>
+            <div class="elem"><div class="k">名义本金<span class="conf">置信度 100%</span></div><div class="v mono">¥ 10,000,000</div><div class="conf-bar"><i style="width:100%"></i></div></div>
+            <div class="elem"><div class="k">敲入 / 敲出障碍<span class="conf">置信度 96%</span></div><div class="v mono">75% / 103%<span class="sub-v"> · 期初价比例</span></div><div class="conf-bar"><i style="width:96%"></i></div></div>
+            <div class="elem" style="grid-column:1/-1">
+              <div class="k">收益结构（识别结果 · 蒙特卡洛计算核心）<span class="conf">置信度 95%</span></div>
+              <div class="lib-formula" style="margin-top:6px"># 收益结构片段（由确认书条款解析生成）
+if 敲出观察日 and S(t) ≥ 103%·S0:  赎回 = 名义本金 × (1 + 18.5% × t/12)
+elif 曾敲入 and S(T) &lt; 75%·S0:    结算 = 名义本金 × S(T)/S0
+else:                             结算 = 名义本金 × (1 + 18.5% × 24/12)</div>
+              <div class="conf-bar"><i style="width:95%"></i></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. MC 参数 -->
+        <div class="card">
+          <div class="card-title"><span class="bar"></span><h2>② 蒙特卡洛参数配置</h2><span class="sub">可切换估值引擎</span></div>
+          <div class="switch-row" style="margin-bottom:14px">
+            <span class="txt">使用蒙特卡洛模拟<small>关闭后可选择解析解（BS 公式，仅香草等适用）或其他数值方法</small></span>
+            <button class="toggle on" id="mcToggle1" onclick="toggleMC(this,'mcParams1')"></button>
+          </div>
+          <div class="param-grid" id="mcParams1">
+            <div class="field"><label><b>模拟路径数</b></label><input class="input" value="100,000"><div class="hint">建议 ≥ 50,000，支持 GPU 并行</div></div>
+            <div class="field"><label><b>时间步数 / 年</b></label><input class="input" value="252"></div>
+            <div class="field"><label><b>波动率 σ</b></label><input class="input" value="22.0%"></div>
+            <div class="field"><label><b>无风险利率 r</b></label><input class="input" value="1.80%"></div>
+            <div class="field"><label><b>股息率 q</b></label><input class="input" value="0.00%"></div>
+            <div class="field"><label><b>随机种子</b></label><input class="input" value="42"><div class="hint">固定种子保证结果可复现</div></div>
+            <div class="field"><label><b>方差缩减</b></label><select class="input"><option>对偶变量 + 控制变量</option><option>仅对偶变量</option><option>不使用</option></select></div>
+            <div class="field"><label><b>置信水平</b></label><select class="input"><option>95%</option><option>99%</option></select></div>
+          </div>
+        </div>
+
+        <!-- 3. 结构比对 -->
+        <div class="card">
+          <div class="card-title"><span class="bar"></span><h2>③ 收益结构自动比对</h2><span class="sub">确认书条款 vs 代码库估值代码</span>
+            <span class="badge warn" id="cmpBadge1">检测到差异 · 待人工确认</span></div>
+          <div class="compare-wrap">
+            <div class="compare-box">
+              <h5>📕 确认书解析收益结构 <span class="chip">来源：交易确认书</span></h5>
+              <pre>coupon_rate  = 0.185   # ⚠ 与库内不一致
+knock_out    = 1.03
+knock_in     = 0.75
+observe_freq = "monthly"</pre>
+            </div>
+            <div class="compare-vs">VS</div>
+            <div class="compare-box">
+              <h5>📗 代码库匹配结构 <span class="chip">雪球 v2.3 · 相似度 92%</span></h5>
+              <pre>coupon_rate  = 0.180   # 库内默认值
+knock_out    = 1.03
+knock_in     = 0.75
+observe_freq = "monthly"</pre>
+            </div>
+          </div>
+          <div class="action-bar" style="margin-top:16px">
+            <span class="note">💡 结构不一致时将以确认书收益结构为准，需人工确认后估值</span>
+            <button class="btn btn-ghost" onclick="openDiff()">查看收益结构差异代码</button>
+            <button class="btn btn-primary" onclick="runValuation()">▶ 人工确认并开始估值</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ 链路二 ============ -->
+      <div class="flow" id="flow2">
+        <div class="stepper">
+          <div class="step now"><div class="step-num">1</div><div class="step-label">选择期权结构<br>匹配代码库模型</div></div>
+          <div class="step"><div class="step-num">2</div><div class="step-label">填写合同参数<br>+ 蒙特卡洛参数</div></div>
+          <div class="step"><div class="step-num">3</div><div class="step-label">收益结构比对<br>/ 自定义结构</div></div>
+          <div class="step"><div class="step-num">4</div><div class="step-label">执行估值<br>输出结果</div></div>
+        </div>
+
+        <!-- 1. 结构选择 -->
+        <div class="card">
+          <div class="card-title"><span class="bar"></span><h2>① 选择期权结构</h2><span class="sub">自动匹配代码库估值模型</span><span class="badge info" id="structBadge">已选：雪球结构</span></div>
+          <div class="struct-grid" id="structGrid">
+            <div class="struct-card sel" data-struct="snowball" onclick="selectStruct(this)"><div class="ic">❄️</div><div class="nm">雪球结构</div><div class="en">Snowball / Autocallable</div><div class="src">✓ 库内模型 v2.3</div></div>
+            <div class="struct-card" data-struct="vanilla" onclick="selectStruct(this)"><div class="ic">🍦</div><div class="nm">香草期权</div><div class="en">Vanilla Option</div><div class="src">✓ 库内模型 v1.0</div></div>
+            <div class="struct-card" data-struct="asian" onclick="selectStruct(this)"><div class="ic">🌏</div><div class="nm">亚式期权</div><div class="en">Asian Option</div><div class="src">✓ 库内模型 v1.4</div></div>
+            <div class="struct-card" data-struct="sharkfin" onclick="selectStruct(this)"><div class="ic">🦈</div><div class="nm">鲨鱼鳍结构</div><div class="en">Shark Fin</div><div class="src">✓ 库内模型 v1.1</div></div>
+            <div class="struct-card" data-struct="binary" onclick="selectStruct(this)"><div class="ic">🎯</div><div class="nm">二元期权</div><div class="en">Binary / Digital</div><div class="src">✓ 库内模型 v1.0</div></div>
+            <div class="struct-card" data-struct="rangeaccrual" onclick="selectStruct(this)"><div class="ic">📊</div><div class="nm">区间累计</div><div class="en">Range Accrual</div><div class="src">✓ 库内模型 v1.0</div></div>
+            <div class="struct-card" data-struct="airbag" onclick="selectStruct(this)"><div class="ic">🛡️</div><div class="nm">安全气囊</div><div class="en">Airbag</div><div class="src">✓ 库内模型 v1.0</div></div>
+            <div class="struct-card" data-struct="custom" onclick="selectStruct(this)"><div class="ic">🧩</div><div class="nm">自定义结构</div><div class="en">Custom Payoff</div><div class="src">手工编写收益结构</div></div>
+          </div>
+        </div>
+
+        <!-- 2. 合同参数（随结构动态变化） -->
+        <div class="card">
+          <div class="card-title"><span class="bar"></span><h2>② 合同参数录入</h2><span class="sub" id="paramSub">模型所需参数（雪球结构）</span></div>
+          <div class="param-grid" id="contractParams"><!-- JS 动态渲染 --></div>
+
+          <div style="margin-top:20px">
+            <div class="switch-row" style="margin-bottom:14px">
+              <span class="txt">使用蒙特卡洛模拟<small>关闭后可选解析解 / 二叉树等其他数值方法</small></span>
+              <button class="toggle on" id="mcToggle2" onclick="toggleMC(this,'mcParams2')"></button>
+            </div>
+            <div class="param-grid" id="mcParams2">
+              <div class="field"><label><b>模拟路径数</b></label><input class="input" value="100,000"></div>
+              <div class="field"><label><b>时间步数 / 年</b></label><input class="input" value="252"></div>
+              <div class="field"><label><b>波动率 σ</b></label><input class="input" value="22.0%"></div>
+              <div class="field"><label><b>无风险利率 r</b></label><input class="input" value="1.80%"></div>
+              <div class="field"><label><b>股息率 q</b></label><input class="input" value="0.00%"></div>
+              <div class="field"><label><b>随机种子</b></label><input class="input" value="42"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. 自定义收益结构 / 比对 -->
+        <div class="card">
+          <div class="card-title"><span class="bar"></span><h2>③ 收益结构确认</h2><span class="sub" id="cmpSub2">库内模型收益结构预览，可修改后将触发人工比对</span>
+            <span class="badge ok" id="cmpBadge2">与库内模型一致</span></div>
+          <div id="payoffPreview">
+            <div class="compare-box" style="min-width:0">
+              <h5>📗 当前收益结构代码 <span class="chip">雪球 v2.3 · 可编辑</span></h5>
+              <textarea class="code-editor" id="payoffCode" oninput="onPayoffEdit()">def payoff(paths, params):
+    """雪球结构收益结构（Autocallable）"""
+    for t in observe_dates:
+        if S[t] >= params.knock_out * S0:
+            return notional * (1 + params.coupon * t / 12)
+    if knocked_in and S[T] &lt; params.knock_in * S0:
+        return notional * S[T] / S0
+    return notional * (1 + params.coupon * T / 12)</textarea>
+            </div>
+          </div>
+          <div class="action-bar" style="margin-top:16px">
+            <span class="note">💡 修改收益结构代码后，系统将弹出差异比对窗口，人工确认后开始估值</span>
+            <button class="btn btn-ghost" onclick="openDiff()">与库内模型比对</button>
+            <button class="btn btn-primary" onclick="runValuation()">▶ 开始估值</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ 估值结果（两条链路共用） ============ -->
+      <div class="hidden" id="resultSection">
+        <div class="result-hero">
+          <div>
+            <div class="lab">蒙特卡洛估值结果（雪球结构 · 名义本金 ¥10,000,000）</div>
+            <div><span class="val">¥ 986,430</span><span class="unit">期权价值</span></div>
+          </div>
+          <div class="hero-metric"><div class="m-v">9.86%</div><div class="m-k">占名义本金比例</div></div>
+          <div class="hero-metric"><div class="m-v">± 0.12%</div><div class="m-k">95% 置信区间</div></div>
+          <div class="hero-metric"><div class="m-v">3.2s</div><div class="m-k">100,000 路径耗时</div></div>
+        </div>
+
+        <div class="greek-grid">
+          <div class="greek"><div class="gk">DELTA Δ</div><div class="gv up">−0.2842</div><div class="gd">对标的价格敏感度</div></div>
+          <div class="greek"><div class="gk">GAMMA Γ</div><div class="gv">0.0013</div><div class="gd">Delta 变化率</div></div>
+          <div class="greek"><div class="gk">VEGA ν</div><div class="gv down">−12,860</div><div class="gd">每 1% 波动率变动</div></div>
+          <div class="greek"><div class="gk">THETA Θ</div><div class="gv up">+2,145</div><div class="gd">每日时间价值</div></div>
+          <div class="greek"><div class="gk">RHO ρ</div><div class="gv">+8,932</div><div class="gd">每 1% 利率变动</div></div>
+          <div class="greek"><div class="gk">敲出概率</div><div class="gv gold">68.4%</div><div class="gd">模拟路径统计</div></div>
+          <div class="greek"><div class="gk">敲入概率</div><div class="gv down">21.7%</div><div class="gd">模拟路径统计</div></div>
+        </div>
+
+        <div class="chart-row">
+          <div class="chart-card">
+            <h4>蒙特卡洛模拟路径分布</h4>
+            <p>200 条 GBM 路径 · 5%–95% / 25%–75% 分位带 · 红绿虚线为敲出/敲入障碍</p>
+            <canvas id="chartPaths"></canvas>
+          </div>
+          <div class="chart-card">
+            <h4>估值收敛曲线</h4>
+            <p>估计值随模拟次数收敛 · 阴影为 95% 置信区间</p>
+            <canvas id="chartConv"></canvas>
+          </div>
+        </div>
+        <div class="chart-row">
+          <div class="chart-card">
+            <h4>结构收益示意图（到期）</h4>
+            <p>雪球结构到期收益 vs 标的价格（占名义本金比例）</p>
+            <canvas id="chartPayoff"></canvas>
+          </div>
+          <div class="chart-card">
+            <h4>收益分布直方图</h4>
+            <p>100,000 条路径到期收益分布 · 蒙特卡洛统计</p>
+            <canvas id="chartHist"></canvas>
+          </div>
+        </div>
+        <div class="run-progress" id="runProg"><i></i></div>
+        <div class="run-log" id="runLog"></div>
+      </div>
+    </main>
+  </div>
+  </div>
+
+  <!-- ================= 页面二：结构代码库 ================= -->
+  <div id="pageLibrary" class="hidden" style="flex:1">
+    <main class="main" style="margin:0 auto;width:100%">
+      <div class="page-head">
+        <div>
+          <h1>基础期权结构<em>代码库</em></h1>
+          <p>库内结构均可直接用于估值工作台 · 收益结构代码支持查看、比对与复制 · 新结构经评审后入库</p>
+        </div>
+        <button class="btn btn-primary" onclick="openAddStruct()">＋ 提交新结构代码</button>
+      </div>
+
+      <div class="lib-stats">
+        <div class="lib-stat"><div class="sv" id="statTotal">7</div><div class="sk">库内结构（类）</div></div>
+        <div class="lib-stat"><div class="sv">2</div><div class="sk">含解析解交叉验证</div></div>
+        <div class="lib-stat"><div class="sv">&lt;0.3%</div><div class="sk">MC 自测偏差（vs 解析解）</div></div>
+        <div class="lib-stat"><div class="sv">100k</div><div class="sk">标准自测路径数</div></div>
+        <div class="lib-stat"><div class="sv" id="statNew">3</div><div class="sk">本季新增结构</div></div>
+      </div>
+
+      <div class="lib-toolbar">
+        <div class="search-box">🔍<input id="libSearch" placeholder="搜索结构名称 / 英文 / 标签…" oninput="renderLib()"></div>
+        <button class="filter-chip on" data-tag="all" onclick="setFilter(this)">全部</button>
+        <button class="filter-chip" data-tag="障碍" onclick="setFilter(this)">障碍类</button>
+        <button class="filter-chip" data-tag="票息" onclick="setFilter(this)">票息类</button>
+        <button class="filter-chip" data-tag="路径依赖" onclick="setFilter(this)">路径依赖</button>
+        <button class="filter-chip" data-tag="解析解" onclick="setFilter(this)">解析解可用</button>
+        <button class="filter-chip" data-tag="保底" onclick="setFilter(this)">保底 / 缓冲</button>
+      </div>
+
+      <div class="lib-grid" id="libGrid"></div>
+    </main>
+  </div>
+
+  <!-- ================= 页面三：历史估值 ================= -->
+  <div id="pageHistory" class="hidden" style="flex:1">
+    <main class="main" style="margin:0 auto;width:100%">
+      <div class="page-head">
+        <div>
+          <h1>历史<em>估值记录</em></h1>
+          <p>工作台每次估值自动写入 · 支持检索、复用与报告导出 · 固定随机种子保证结果可复现</p>
+        </div>
+        <button class="btn btn-ghost" onclick="exportAllCSV()">⬇ 导出全部记录 (CSV)</button>
+      </div>
+
+      <div class="lib-stats">
+        <div class="lib-stat"><div class="sv" id="hStatTotal">8</div><div class="sk">累计估值（笔）</div></div>
+        <div class="lib-stat"><div class="sv" id="hStatMonth">5</div><div class="sk">本月估值（笔）</div></div>
+        <div class="lib-stat"><div class="sv">3.2s</div><div class="sk">平均耗时（10万路径）</div></div>
+        <div class="lib-stat"><div class="sv" id="hStatStruct">7</div><div class="sk">覆盖结构（类）</div></div>
+        <div class="lib-stat"><div class="sv">100%</div><div class="sk">结果可复现率</div></div>
+      </div>
+
+      <div class="lib-toolbar">
+        <div class="search-box">🔍<input id="histSearch" placeholder="搜索估值编号 / 结构 / 标的…" oninput="renderHistory()"></div>
+        <button class="filter-chip on" data-hf="all" onclick="setHistFilter(this)">全部</button>
+        <button class="filter-chip" data-hf="链路一" onclick="setHistFilter(this)">链路一 · 确认书导入</button>
+        <button class="filter-chip" data-hf="链路二" onclick="setHistFilter(this)">链路二 · 手动建模</button>
+        <button class="filter-chip" data-hf="差异确认" onclick="setHistFilter(this)">经人工差异确认</button>
+      </div>
+
+      <div class="card" style="padding:0;overflow:auto">
+        <table class="data-table">
+          <thead><tr>
+            <th>估值编号</th><th>时间</th><th>结构</th><th>标的</th><th>名义本金</th><th>期限</th>
+            <th>引擎</th><th>估值结果</th><th>占名义</th><th>链路</th><th>状态</th><th>操作</th>
+          </tr></thead>
+          <tbody id="histBody"></tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <!-- ================= 页面四：帮助文档 ================= -->
+  <div id="pageHelp" class="hidden" style="flex:1">
+    <main class="main" style="margin:0 auto;width:100%">
+      <div class="page-head">
+        <div>
+          <h1>帮助<em>文档</em></h1>
+          <p>衍智 OptionMind · 期权蒙特卡洛智能估值平台使用手册</p>
+        </div>
+      </div>
+      <div class="doc-layout">
+        <nav class="doc-nav" id="docNav">
+          <div class="dn-title">使用手册</div>
+          <a href="#doc-intro" class="on">平台简介</a>
+          <a href="#doc-flow1">链路一 · 确认书导入</a>
+          <a href="#doc-flow2">链路二 · 手动建模</a>
+          <a href="#doc-lib">结构代码库</a>
+          <a href="#doc-mc">蒙特卡洛参数说明</a>
+          <a href="#doc-result">估值结果解读</a>
+          <a href="#doc-faq">常见问题</a>
+        </nav>
+        <div class="doc-body">
+
+          <div class="doc-section" id="doc-intro">
+            <h2><span class="bar"></span>平台简介</h2>
+            <p>衍智 OptionMind 是面向场外衍生品业务的期权智能估值平台，覆盖「交易确认书要素识别 → 收益结构代码比对 → 蒙特卡洛模拟估值 → 结果输出」的完整工作流。平台内置基础期权结构估值代码库（当前 7 类），并支持自定义收益结构扩展。</p>
+            <h3>两条估值链路</h3>
+            <div class="doc-flow">
+              <span class="doc-step">链路一</span><span class="doc-arrow">：</span>
+              <span class="doc-step">导入交易确认书</span><span class="doc-arrow">→</span>
+              <span class="doc-step">自动识别期权要素</span><span class="doc-arrow">→</span>
+              <span class="doc-step">结构比对</span><span class="doc-arrow">→</span>
+              <span class="doc-step">估值</span>
+            </div>
+            <div class="doc-flow">
+              <span class="doc-step">链路二</span><span class="doc-arrow">：</span>
+              <span class="doc-step">手动选择期权结构</span><span class="doc-arrow">→</span>
+              <span class="doc-step">录入合同参数</span><span class="doc-arrow">→</span>
+              <span class="doc-step">结构比对 / 自定义</span><span class="doc-arrow">→</span>
+              <span class="doc-step">估值</span>
+            </div>
+            <div class="doc-tip">💡 有交易确认书时优先使用链路一（要素自动抽取，减少手工录入差错）；无确认书或做情景分析时使用链路二。</div>
+          </div>
+
+          <div class="doc-section" id="doc-flow1">
+            <h2><span class="bar"></span>链路一 · 交易确认书导入</h2>
+            <h3>1. 支持的文件格式</h3>
+            <p>PDF、Word、Excel 及扫描件（OCR）。上传后由 NLP + 版面分析引擎自动抽取期权要素。</p>
+            <h3>2. 自动识别的期权要素</h3>
+            <table class="doc-table">
+              <tr><th>要素</th><th>说明</th></tr>
+              <tr><td>期权结构</td><td>如雪球、香草、亚式、鲨鱼鳍等，自动匹配代码库</td></tr>
+              <tr><td>标的范围</td><td>挂钩标的名称与代码（如中证500指数 000905.SH）</td></tr>
+              <tr><td>合约到期日</td><td>到期日期与剩余期限</td></tr>
+              <tr><td>收益结构</td><td>蒙特卡洛计算核心，自动转写为收益结构代码片段</td></tr>
+              <tr><td>票息</td><td>是否含票息及票息率（年化）</td></tr>
+              <tr><td>名义本金</td><td>合约名义金额</td></tr>
+              <tr><td>障碍参数</td><td>敲入 / 敲出线及观察方式（如适用）</td></tr>
+            </table>
+            <p>每项要素均带<b>识别置信度</b>，低于阈值的字段建议人工复核后再进入估值。</p>
+            <h3>3. 结构比对与人工确认</h3>
+            <p>系统逐行比对「确认书收益结构」与「代码库估值代码」：<b>一致</b>则可直接开始估值；<b>不一致</b>时弹出差异比对窗口（仅展示收益结构部分，差异行高亮），人工确认后按新收益结构估值。</p>
+            <div class="doc-tip warn">⚠️ 差异确认是风控关键节点：确认操作会与估值记录一同留痕，可在「历史估值」中追溯。</div>
+          </div>
+
+          <div class="doc-section" id="doc-flow2">
+            <h2><span class="bar"></span>链路二 · 手动选择结构</h2>
+            <h3>操作步骤</h3>
+            <ol>
+              <li><b>选择期权结构</b>：点击结构卡片（雪球 / 香草 / 亚式 / 鲨鱼鳍 / 二元 / 区间累计 / 安全气囊），系统自动匹配代码库估值模型。</li>
+              <li><b>录入合同参数</b>：参数表单随所选结构动态生成，只展示该模型需要的字段。</li>
+              <li><b>配置蒙特卡洛参数</b>：也可关闭蒙特卡洛开关，改用解析解（仅香草、二元等适用）。</li>
+              <li><b>确认收益结构</b>：库内模型的收益结构代码可直接预览；非库内结构选择「自定义结构」，在编辑器中手工编写收益结构代码及其他定制参数。</li>
+              <li><b>开始估值</b>：修改过收益结构代码时会先弹出与库内模型的差异比对窗口，人工确认后执行。</li>
+            </ol>
+          </div>
+
+          <div class="doc-section" id="doc-lib">
+            <h2><span class="bar"></span>结构代码库</h2>
+            <p>代码库收录 7 类基础期权结构，每个结构包含：收益结构代码（<code>PAYOFF_CODE</code>）、合同参数模板、版本记录与自测状态。香草与二元期权含解析解，用于交叉验证蒙特卡洛引擎（自测偏差均 &lt; 0.3%）。</p>
+            <h3>新结构入库流程</h3>
+            <div class="doc-flow">
+              <span class="doc-step">提交收益结构代码</span><span class="doc-arrow">→</span>
+              <span class="doc-step">评审（待评审）</span><span class="doc-arrow">→</span>
+              <span class="doc-step">正式入库</span><span class="doc-arrow">→</span>
+              <span class="doc-step">纳入自测流水线</span>
+            </div>
+            <p>处于「待评审」状态的结构不可用于估值；评审通过后系统自动生成参数模板并开放估值权限。</p>
+          </div>
+
+          <div class="doc-section" id="doc-mc">
+            <h2><span class="bar"></span>蒙特卡洛参数说明</h2>
+            <table class="doc-table">
+              <tr><th>参数</th><th>含义</th><th>建议</th></tr>
+              <tr><td>模拟路径数</td><td>生成的标的价格路径条数，越多结果越稳定</td><td>≥ 50,000；正式估值建议 100,000+</td></tr>
+              <tr><td>时间步数 / 年</td><td>每年离散的观察步数，路径依赖结构建议按交易日取 252</td><td>252（逐日观察）</td></tr>
+              <tr><td>波动率 σ</td><td>标的年化波动率</td><td>可用历史波动率或隐含波动率</td></tr>
+              <tr><td>无风险利率 r</td><td>折现使用的年化利率（连续复利）</td><td>参考同期限国债收益率</td></tr>
+              <tr><td>股息率 q</td><td>标的年化股息率</td><td>指数可参考分红率，个股按实际</td></tr>
+              <tr><td>随机种子</td><td>随机数发生器种子</td><td>固定种子（如 42）保证结果可复现</td></tr>
+              <tr><td>方差缩减</td><td>对偶变量 / 控制变量技术，降低估计方差</td><td>建议开启「对偶变量 + 控制变量」</td></tr>
+              <tr><td>置信水平</td><td>估值结果置信区间的置信度</td><td>95%（常规）/ 99%（审慎）</td></tr>
+            </table>
+            <div class="doc-tip">💡 关闭「使用蒙特卡洛模拟」开关后，可为香草、二元等简单结构选择 BS 解析解，估值瞬时完成。</div>
+          </div>
+
+          <div class="doc-section" id="doc-result">
+            <h2><span class="bar"></span>估值结果解读</h2>
+            <table class="doc-table">
+              <tr><th>输出项</th><th>说明</th></tr>
+              <tr><td>估值结果</td><td>全部路径贴现收益的平均值，即期权公允价值</td></tr>
+              <tr><td>95% 置信区间</td><td>蒙特卡洛估计的统计误差范围，区间越窄估计越可靠</td></tr>
+              <tr><td>Greeks</td><td>Delta / Gamma / Vega / Theta / Rho，衡量估值对市场参数的敏感度</td></tr>
+              <tr><td>敲出 / 敲入概率</td><td>路径统计触发各类障碍的比例（雪球、鲨鱼鳍等结构）</td></tr>
+              <tr><td>路径分布图</td><td>模拟路径的分位带与障碍线位置，直观展示标的情景覆盖</td></tr>
+              <tr><td>收敛曲线</td><td>估计值随模拟次数增加的收敛情况，用于判断路径数是否充分</td></tr>
+              <tr><td>收益分布直方图</td><td>到期收益的分布形态，识别尾部风险</td></tr>
+            </table>
+          </div>
+
+          <div class="doc-section" id="doc-faq">
+            <h2><span class="bar"></span>常见问题</h2>
+            <div class="faq-item open"><div class="faq-q" onclick="toggleFaq(this)">为什么收益结构不一致时必须人工确认？<span class="arr">▶</span></div>
+              <div class="faq-a">收益结构是估值的核心输入，确认书条款与库内代码的任何差异（如票息 18.5% vs 18.0%）都会直接影响估值结果。人工确认确保估值口径与合约法律文本一致，确认记录会留痕可追溯。</div></div>
+            <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">什么情况下可以不用蒙特卡洛？<span class="arr">▶</span></div>
+              <div class="faq-a">香草、二元等欧式简单结构存在 BS 框架下的解析解，关闭蒙特卡洛开关后可直接选用解析解估值，速度更快且无模拟误差。雪球、亚式、鲨鱼鳍等路径依赖结构必须使用蒙特卡洛。</div></div>
+            <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">估值结果可以复现吗？<span class="arr">▶</span></div>
+              <div class="faq-a">可以。固定随机种子（默认 42）后，相同合约参数与市场参数下的每次估值结果完全一致。历史估值记录中保存了全部输入参数，支持一键复用重算。</div></div>
+            <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">置信区间过宽怎么办？<span class="arr">▶</span></div>
+              <div class="faq-a">按优先级尝试：① 增加模拟路径数（误差约与 √N 成反比）；② 开启对偶变量 + 控制变量方差缩减；③ 检查波动率等输入参数是否异常。</div></div>
+            <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">自定义结构的代码有什么要求？<span class="arr">▶</span></div>
+              <div class="faq-a">收益结构代码为 Python 函数 <code>payoff(paths, params)</code>，输入为模拟路径与合约参数，输出该路径下的收益金额。提交后进入评审流程，评审通过后纳入代码库与自测流水线。</div></div>
+            <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">库内模型的正确性如何保证？<span class="arr">▶</span></div>
+              <div class="faq-a">库内含解析解的结构（香草、二元）以解析解为基准交叉验证，当前自测偏差均小于 0.3%；无解析解的结构通过提高路径数做收敛性复核，全部结构通过自测后方可标记「自测通过」。</div></div>
+          </div>
+
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ================= 历史估值详情弹窗 ================= -->
+<div class="modal-mask" id="histModal" onclick="if(event.target===this)closeHist()">
+  <div class="modal" style="width:min(860px,94vw)">
+    <div class="modal-head">
+      <div class="ic" style="background:rgba(56,189,248,.14);border-color:rgba(56,189,248,.4)">🧾</div>
+      <div>
+        <h3 id="hTitle">估值详情</h3>
+        <p id="hSub">—</p>
+      </div>
+      <button class="modal-close" onclick="closeHist()">✕</button>
+    </div>
+    <div class="result-strip" style="margin-top:14px">
+      <div class="rs-item"><div class="rs-v" id="hValue">—</div><div class="rs-k">估值结果（期权价值）</div></div>
+      <div class="rs-item" style="margin-left:auto"><div class="n" id="hRatio">—</div><div class="rs-k">占名义本金</div></div>
+      <div class="rs-item"><div class="n" id="hCi">—</div><div class="rs-k">95% 置信区间</div></div>
+      <div class="rs-item"><div class="n" id="hExtra">—</div><div class="rs-k" id="hExtraK">结构特征</div></div>
+    </div>
+    <div class="hist-info-grid" id="hInfo"></div>
+    <h4 style="font-size:13px;margin:6px 0 8px">合同参数</h4>
+    <table class="param-table" id="hParams"></table>
+    <div class="modal-actions" style="margin-top:16px">
+      <span class="note">全部输入参数已随记录保存，可一键复用到工作台重算</span>
+      <button class="btn btn-ghost" onclick="histExport()">⬇ 导出估值报告</button>
+      <button class="btn btn-primary" onclick="histReuse()">▶ 复用到工作台</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span>✓</span><span id="toastMsg">已保存</span></div>
+
+<!-- ================= 结构详情弹窗 ================= -->
+<div class="modal-mask" id="structModal" onclick="if(event.target===this)closeStruct()">
+  <div class="modal" style="width:min(960px,94vw)">
+    <div class="modal-head">
+      <div class="ic" id="dIcon" style="background:rgba(56,189,248,.14);border-color:rgba(56,189,248,.4)">❄️</div>
+      <div>
+        <h3 id="dName">雪球结构</h3>
+        <p id="dEn">Snowball / Autocallable · <span id="dVer">v2.3</span></p>
+      </div>
+      <span class="lib-status pass" id="dStatus" style="margin-left:14px">✓ 自测通过</span>
+      <button class="modal-close" onclick="closeStruct()">✕</button>
+    </div>
+    <div class="detail-tabs">
+      <button class="detail-tab on" data-pane="code" onclick="switchTab(this)">收益结构代码</button>
+      <button class="detail-tab" data-pane="params" onclick="switchTab(this)">合同参数说明</button>
+      <button class="detail-tab" data-pane="chart" onclick="switchTab(this)">收益示意图</button>
+      <button class="detail-tab" data-pane="about" onclick="switchTab(this)">结构与版本</button>
+    </div>
+    <div class="detail-pane on" id="pane-code">
+      <div class="code-view" id="dCode"></div>
+    </div>
+    <div class="detail-pane" id="pane-params">
+      <table class="param-table" id="dParams"></table>
+    </div>
+    <div class="detail-pane" id="pane-chart">
+      <p style="font-size:12px;color:var(--txt-3);margin-bottom:8px" id="dChartNote"></p>
+      <canvas id="detailPayoffChart" style="width:100%;height:260px;display:block;background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:12px"></canvas>
+    </div>
+    <div class="detail-pane" id="pane-about">
+      <p style="font-size:13px;color:var(--txt-2);line-height:1.8;margin-bottom:14px" id="dDesc"></p>
+      <div id="dVersions"></div>
+    </div>
+    <div class="modal-actions" style="margin-top:14px">
+      <span class="note" id="dNote">收益结构代码可直接复制用于自定义结构或差异比对</span>
+      <button class="btn btn-ghost" id="dCopyBtn" onclick="copyPayoff()">⧉ 复制收益结构代码</button>
+      <button class="btn btn-primary" id="dUseBtn" onclick="useInWorkbench()">▶ 用于估值（链路二）</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= 提交新结构弹窗 ================= -->
+<div class="modal-mask" id="addStructModal" onclick="if(event.target===this)closeAddStruct()">
+  <div class="modal" style="width:min(720px,92vw)">
+    <div class="modal-head">
+      <div class="ic" style="background:rgba(129,140,248,.14);border-color:rgba(129,140,248,.4)">＋</div>
+      <div>
+        <h3>提交新结构代码</h3>
+        <p>新结构将进入评审流程，评审通过后正式入库并可用于估值</p>
+      </div>
+      <button class="modal-close" onclick="closeAddStruct()">✕</button>
+    </div>
+    <div style="margin-top:14px">
+      <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div><label>结构名称 *</label><input class="input" id="nsName" placeholder="如：凤凰结构"></div>
+        <div><label>英文标识 *</label><input class="input" id="nsKey" placeholder="如：phoenix"></div>
+      </div>
+      <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div><label>标签（逗号分隔）</label><input class="input" id="nsTags" placeholder="如：障碍,票息,月度观察"></div>
+        <div><label>提交人</label><input class="input" id="nsAuthor" placeholder="如：量化研究-张三"></div>
+      </div>
+      <div class="form-row">
+        <label>收益结构代码 *（蒙特卡洛计算核心，Python 函数）</label>
+        <textarea class="code-editor" id="nsCode" placeholder='def payoff(paths, params):&#10;    """在此编写收益结构"""&#10;    ...'></textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <span class="note">提交后状态为「待评审」，评审通过后自动纳入自测流水线</span>
+      <button class="btn btn-ghost" onclick="closeAddStruct()">取消</button>
+      <button class="btn btn-primary" onclick="submitNewStruct()">✓ 提交评审</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= 收益结构差异比对弹窗 ================= -->
+<div class="modal-mask" id="diffModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="ic">⚠️</div>
+      <div>
+        <h3>收益结构代码差异比对</h3>
+        <p>仅展示收益结构部分 · 检测到 2 处差异，需人工确认后按新收益结构估值</p>
+      </div>
+      <button class="modal-close" onclick="closeDiff()">✕</button>
+    </div>
+    <div class="diff-cols">
+      <div class="diff-pane">
+        <h5>📗 代码库收益结构 <span class="chip">雪球 v2.3</span></h5>
+        <pre>def payoff(paths, params):
+    """雪球结构收益结构"""
+    for t in observe_dates:
+        if S[t] >= params.knock_out * S0:
+<span class="chg">            return notional * (1 + 0.180 * t / 12)</span>
+    if knocked_in and S[T] &lt; params.knock_in * S0:
+        return notional * S[T] / S0
+<span class="chg">    return notional * (1 + 0.180 * T / 12)</span></pre>
+      </div>
+      <div class="diff-pane" style="border-color:rgba(251,191,36,.4)">
+        <h5>📕 新收益结构（确认书 / 手工修改）<span class="chip gold">待确认</span></h5>
+        <pre>def payoff(paths, params):
+    """雪球结构收益结构"""
+    for t in observe_dates:
+        if S[t] >= params.knock_out * S0:
+<span class="chg">            return notional * (1 + 0.185 * t / 12)</span>
+    if knocked_in and S[T] &lt; params.knock_in * S0:
+        return notional * S[T] / S0
+<span class="chg">    return notional * (1 + 0.185 * T / 12)</span></pre>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <span class="note">确认后将以「新收益结构」执行估值，并提示是否将新结构沉淀入代码库</span>
+      <button class="btn btn-ghost" onclick="closeDiff()">返回修改</button>
+      <button class="btn btn-primary" onclick="confirmDiff()">✓ 人工确认，按新结构估值</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================= 数据 ================= */
+var STRUCT_INFO = {
+  snowball:{cn:"雪球结构", en:"Snowball / Autocallable"},
+  vanilla:{cn:"香草期权", en:"Vanilla Option"},
+  asian:{cn:"亚式期权", en:"Asian Option"},
+  sharkfin:{cn:"鲨鱼鳍结构", en:"Shark Fin"},
+  binary:{cn:"二元期权", en:"Binary / Digital"},
+  rangeaccrual:{cn:"区间累计", en:"Range Accrual"},
+  airbag:{cn:"安全气囊", en:"Airbag"},
+  custom:{cn:"自定义结构", en:"Custom Payoff"}
+};
+var PARAM_TPL = {
+  snowball:[
+    ["标的范围","中证500指数 (000905.SH)"],["名义本金 (¥)","10,000,000"],
+    ["合约到期日","2028-03-24"],["票息（年化）","18.50%"],
+    ["敲出障碍（%期初价）","103%"],["敲入障碍（%期初价）","75%"],
+    ["敲出观察频率","每月"],["敲入观察方式","每日收盘价"]
+  ],
+  vanilla:[
+    ["标的范围","沪深300指数 (000300.SH)"],["名义本金 (¥)","5,000,000"],
+    ["合约到期日","2027-03-24"],["期权类型","欧式看涨 Call"],
+    ["行权价 K（%期初价）","100%"],["权利金支付方式","期初支付"]
+  ],
+  asian:[
+    ["标的范围","沪铜主力合约 (CU.SHF)"],["名义本金 (¥)","8,000,000"],
+    ["合约到期日","2027-06-24"],["期权类型","看涨 Call"],
+    ["行权价 K（%期初价）","100%"],["平均方式","算术平均"],
+    ["均价观察窗口","最后 30 个交易日"]
+  ],
+  sharkfin:[
+    ["标的范围","中证1000指数 (000852.SH)"],["名义本金 (¥)","10,000,000"],
+    ["合约到期日","2027-09-24"],["执行价 K（%期初价）","100%"],
+    ["触碰障碍 KO（%期初价）","115%"],["参与率","80%"],
+    ["保底收益（年化）","3.20%"],["障碍观察方式","每日收盘价"]
+  ],
+  binary:[
+    ["标的范围","沪深300指数 (000300.SH)"],["名义本金 (¥)","5,000,000"],
+    ["合约到期日","2027-03-24"],["期权类型","现金或无价值看涨"],
+    ["行权条件 K（%期初价）","105%"],["固定赔付比例","15%"]
+  ],
+  rangeaccrual:[
+    ["标的范围","中证500指数 (000905.SH)"],["名义本金 (¥)","10,000,000"],
+    ["合约到期日","2027-09-24"],["票息（年化，按日累计）","6.00%"],
+    ["区间下限（%期初价）","90%"],["区间上限（%期初价）","110%"],
+    ["观察方式","每日收盘价"]
+  ],
+  airbag:[
+    ["标的范围","中证1000指数 (000852.SH)"],["名义本金 (¥)","10,000,000"],
+    ["合约到期日","2027-09-24"],["气囊线（%期初价）","80%"],
+    ["上涨参与率","100%"],["观察方式","到期观察"]
+  ],
+  custom:[
+    ["标的范围","自定义"],["名义本金 (¥)","10,000,000"],["合约到期日","2028-03-24"]
+  ]
+};
+var PAYOFF_TPL = {
+  snowball:'def payoff(paths, params):\n    """雪球结构收益结构（Autocallable）"""\n    for t in observe_dates:\n        if S[t] >= params.knock_out * S0:\n            return notional * (1 + params.coupon * t / 12)\n    if knocked_in and S[T] < params.knock_in * S0:\n        return notional * S[T] / S0\n    return notional * (1 + params.coupon * T / 12)',
+  vanilla:'def payoff(paths, params):\n    """香草期权收益结构"""\n    if params.call_put == "call":\n        return max(S[T] - params.K, 0)\n    return max(params.K - S[T], 0)',
+  asian:'def payoff(paths, params):\n    """亚式期权收益结构（均价结算）"""\n    avg = mean(S[window])          # 算术/几何平均\n    if params.call_put == "call":\n        return max(avg - params.K, 0)\n    return max(params.K - avg, 0)',
+  sharkfin:'def payoff(paths, params):\n    """鲨鱼鳍结构收益结构"""\n    if max(S[:]) >= params.knock_out * S0:\n        return notional * params.rebate       # 触碰障碍，保底收益\n    gain = params.participation * max(S[T]/S0 - params.K, 0)\n    return notional * (params.rebate + gain)',
+  binary:'def payoff(paths, params):\n    """二元期权收益结构（现金或无价值）"""\n    if params.call_put == "call":\n        return params.Q if S[T] >= params.K else 0\n    return params.Q if S[T] <= params.K else 0',
+  rangeaccrual:'def payoff(paths, params):\n    """区间累计收益结构：逐日观察，落入区间累计票息"""\n    days_in = count(params.lower * S0 <= S[t] <= params.upper * S0)\n    return notional * params.coupon * days_in / total_days',
+  airbag:'def payoff(paths, params):\n    """安全气囊收益结构（到期观察）"""\n    if S[T] >= S0:\n        return notional * (1 + params.participation * (S[T]/S0 - 1))\n    elif S[T] >= params.airbag_level * S0:\n        return notional                       # 本金保障\n    return notional * S[T] / (params.airbag_level * S0)  # 亏损缓冲',
+  custom:'def payoff(paths, params):\n    """自定义收益结构：请在此手工编写"""\n    # 可用变量: S(路径), S0, notional, params\n    # 在此处编写您的收益结构代码\n    return notional * 0'
+};
+var currentStruct = "snowball";
+var imported = false;
+
+/* ================= 交互 ================= */
+function switchFlow(n){
+  document.getElementById("flow1").classList.toggle("show", n===1);
+  document.getElementById("flow2").classList.toggle("show", n===2);
+  document.getElementById("tabF1").classList.toggle("active", n===1);
+  document.getElementById("tabF2").classList.toggle("active", n===2);
+}
+function selectLib(key){
+  var items = document.querySelectorAll(".lib-item");
+  for(var i=0;i<items.length;i++) items[i].classList.toggle("active", items[i].dataset.struct===key);
+  // 联动链路2结构卡片
+  var cards = document.querySelectorAll(".struct-card");
+  for(var j=0;j<cards.length;j++){
+    if(cards[j].dataset.struct===key){ selectStruct(cards[j]); }
+  }
+}
+function selectStruct(el){
+  var cards = document.querySelectorAll(".struct-card");
+  for(var i=0;i<cards.length;i++) cards[i].classList.remove("sel");
+  el.classList.add("sel");
+  currentStruct = el.dataset.struct;
+  var info = STRUCT_INFO[currentStruct];
+  document.getElementById("structBadge").textContent = "已选：" + info.cn;
+  document.getElementById("paramSub").textContent = "模型所需参数（" + info.cn + "）";
+  renderContractParams(currentStruct);
+  document.getElementById("payoffCode").value = PAYOFF_TPL[currentStruct];
+  setCmpState(true);
+  // 联动左侧库高亮
+  if(currentStruct!=="custom") selectLibHighlight(currentStruct);
+}
+function selectLibHighlight(key){
+  var items = document.querySelectorAll(".lib-item");
+  for(var i=0;i<items.length;i++) items[i].classList.toggle("active", items[i].dataset.struct===key);
+}
+function renderContractParams(key){
+  var wrap = document.getElementById("contractParams");
+  var tpl = PARAM_TPL[key];
+  var html = "";
+  for(var i=0;i<tpl.length;i++){
+    html += '<div class="field"><label><b>'+tpl[i][0]+'</b></label><input class="input" value="'+tpl[i][1]+'"></div>';
+  }
+  wrap.innerHTML = html;
+}
+function toggleMC(btn, panelId){
+  btn.classList.toggle("on");
+  var panel = document.getElementById(panelId);
+  var off = !btn.classList.contains("on");
+  panel.style.opacity = off ? .35 : 1;
+  panel.style.pointerEvents = off ? "none" : "auto";
+}
+function onPayoffEdit(){
+  // 简化演示：任何编辑都触发“与库内不一致”状态
+  setCmpState(false);
+}
+function setCmpState(match){
+  var b = document.getElementById("cmpBadge2");
+  if(match){
+    b.className = "badge ok"; b.textContent = "与库内模型一致";
+  }else{
+    b.className = "badge warn"; b.textContent = "与库内模型不一致 · 待人工确认";
+  }
+}
+function simulateImport(){
+  if(imported) return;
+  imported = true;
+  document.getElementById("uploadFile").classList.remove("hidden");
+  var st = document.getElementById("parseState");
+  st.textContent = "解析中…";
+  st.style.color = "var(--warn)";
+  setTimeout(function(){
+    st.textContent = "✓ 要素识别完成";
+    st.style.color = "var(--ok)";
+    document.getElementById("parseBadge").className = "badge ok";
+    document.getElementById("parseBadge").textContent = "识别完成 · 7 项要素";
+    var g = document.getElementById("elemGrid");
+    g.classList.remove("hidden");
+    g.style.animation = "flowIn .5s";
+  }, 1200);
+}
+function openDiff(){ document.getElementById("diffModal").classList.add("show"); }
+function closeDiff(){ document.getElementById("diffModal").classList.remove("show"); }
+function confirmDiff(){
+  closeDiff();
+  document.getElementById("cmpBadge1").className = "badge ok";
+  document.getElementById("cmpBadge1").textContent = "✓ 人工已确认 · 按新收益结构估值";
+  runValuation();
+}
+function runValuation(){
+  closeDiff();
+  var sec = document.getElementById("resultSection");
+  sec.classList.remove("hidden");
+  sec.scrollIntoView({behavior:"smooth"});
+  drawAllCharts();
+  addHistoryFromRun();
+}
+
+/* ================= 图表 ================= */
+function randn(){
+  var u=0,v=0;
+  while(u===0) u=Math.random();
+  while(v===0) v=Math.random();
+  return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+}
+function setupCanvas(id){
+  var c = document.getElementById(id);
+  var dpr = window.devicePixelRatio || 1;
+  var w = c.clientWidth, h = c.clientHeight;
+  c.width = w*dpr; c.height = h*dpr;
+  var ctx = c.getContext("2d");
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,w,h);
+  return {ctx:ctx, w:w, h:h};
+}
+function axisStyle(ctx){
+  ctx.strokeStyle = "rgba(120,150,220,.18)";
+  ctx.fillStyle = "#5f7099";
+  ctx.font = "10px Consolas, monospace";
+  ctx.lineWidth = 1;
+}
+
+/* 路径分布图 */
+function drawPaths(){
+  var s = setupCanvas("chartPaths"), ctx=s.ctx, W=s.w, H=s.h;
+  var padL=42, padR=12, padT=12, padB=24;
+  var pw = W-padL-padR, ph = H-padT-padB;
+  var N=200, T=252, mu=0.018, sig=0.22, dt=1/252;
+  var paths=[], i, t;
+  for(i=0;i<N;i++){
+    var p=[1];
+    for(t=1;t<=T;t++) p.push(p[t-1]*Math.exp((mu-0.5*sig*sig)*dt + sig*Math.sqrt(dt)*randn()));
+    paths.push(p);
+  }
+  var ymin=0.6, ymax=1.4;
+  function X(t){ return padL + t/T*pw; }
+  function Y(v){ return padT + (ymax-v)/(ymax-ymin)*ph; }
+  // 分位带
+  function band(q1,q2,color){
+    ctx.beginPath();
+    for(t=0;t<=T;t++){
+      var col = paths.map(function(p){return p[t];}).sort(function(a,b){return a-b;});
+      var v = col[Math.floor(q1*N)];
+      t===0 ? ctx.moveTo(X(t),Y(v)) : ctx.lineTo(X(t),Y(v));
+    }
+    for(t=T;t>=0;t--){
+      var col2 = paths.map(function(p){return p[t];}).sort(function(a,b){return a-b;});
+      ctx.lineTo(X(t), Y(col2[Math.floor(q2*N)]));
+    }
+    ctx.closePath(); ctx.fillStyle=color; ctx.fill();
+  }
+  band(0.05,0.95,"rgba(56,189,248,.07)");
+  band(0.25,0.75,"rgba(56,189,248,.13)");
+  // 样本路径
+  for(i=0;i<24;i++){
+    ctx.beginPath();
+    ctx.strokeStyle = "rgba(129,140,248,"+(0.18+Math.random()*0.2)+")";
+    ctx.lineWidth = 1;
+    for(t=0;t<=T;t++) t===0?ctx.moveTo(X(t),Y(paths[i][t])):ctx.lineTo(X(t),Y(paths[i][t]));
+    ctx.stroke();
+  }
+  // 中位数
+  ctx.beginPath(); ctx.strokeStyle="#38bdf8"; ctx.lineWidth=2;
+  for(t=0;t<=T;t++){
+    var col3 = paths.map(function(p){return p[t];}).sort(function(a,b){return a-b;});
+    t===0?ctx.moveTo(X(t),Y(col3[N/2])):ctx.lineTo(X(t),Y(col3[N/2]));
+  }
+  ctx.stroke();
+  // 障碍线：敲出103% 红虚线 / 敲入75% 绿虚线
+  ctx.setLineDash([6,5]);
+  ctx.strokeStyle="rgba(244,63,94,.85)"; ctx.lineWidth=1.4;
+  ctx.beginPath(); ctx.moveTo(padL,Y(1.03)); ctx.lineTo(W-padR,Y(1.03)); ctx.stroke();
+  ctx.strokeStyle="rgba(16,185,129,.85)";
+  ctx.beginPath(); ctx.moveTo(padL,Y(0.75)); ctx.lineTo(W-padR,Y(0.75)); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle="#f43f5e"; ctx.font="10px PingFang SC, sans-serif";
+  ctx.fillText("敲出 103%", W-padR-62, Y(1.03)-5);
+  ctx.fillStyle="#10b981";
+  ctx.fillText("敲入 75%", W-padR-58, Y(0.75)+13);
+  // 轴
+  axisStyle(ctx);
+  for(var gv=0.6; gv<=1.41; gv+=0.2){
+    ctx.beginPath(); ctx.moveTo(padL,Y(gv)); ctx.lineTo(W-padR,Y(gv)); ctx.stroke();
+    ctx.fillText((gv*100).toFixed(0)+"%", 6, Y(gv)+3);
+  }
+  ctx.fillText("0", padL-4, H-8); ctx.fillText("12M", X(126)-12, H-8); ctx.fillText("24M", W-padR-22, H-8);
+}
+
+/* 收敛曲线 */
+function drawConv(){
+  var s = setupCanvas("chartConv"), ctx=s.ctx, W=s.w, H=s.h;
+  var padL=52, padR=14, padT=12, padB=24;
+  var pw=W-padL-padR, ph=H-padT-padB;
+  var trueV=986430, nPts=40, i;
+  var xs=[], est=[], hi=[], lo=[];
+  for(i=0;i<nPts;i++){
+    var n = Math.round(1000*Math.pow(100, i/(nPts-1))); // 1k → 100k
+    var se = 42000/Math.sqrt(n/1000);
+    xs.push(n);
+    est.push(trueV + randn()*se*0.9);
+    hi.push(trueV+1.96*se); lo.push(trueV-1.96*se);
+  }
+  var all = est.concat(hi).concat(lo);
+  var ymin=Math.min.apply(null,all)*0.995, ymax=Math.max.apply(null,all)*1.005;
+  function X(i){ return padL + i/(nPts-1)*pw; }
+  function Y(v){ return padT + (ymax-v)/(ymax-ymin)*ph; }
+  // 置信带
+  ctx.beginPath();
+  for(i=0;i<nPts;i++) i===0?ctx.moveTo(X(i),Y(hi[i])):ctx.lineTo(X(i),Y(hi[i]));
+  for(i=nPts-1;i>=0;i--) ctx.lineTo(X(i),Y(lo[i]));
+  ctx.closePath(); ctx.fillStyle="rgba(129,140,248,.14)"; ctx.fill();
+  // 估计线
+  ctx.beginPath(); ctx.strokeStyle="#818cf8"; ctx.lineWidth=2;
+  for(i=0;i<nPts;i++) i===0?ctx.moveTo(X(i),Y(est[i])):ctx.lineTo(X(i),Y(est[i]));
+  ctx.stroke();
+  // 真值线
+  ctx.setLineDash([5,4]); ctx.strokeStyle="rgba(52,211,153,.8)"; ctx.lineWidth=1.3;
+  ctx.beginPath(); ctx.moveTo(padL,Y(trueV)); ctx.lineTo(W-padR,Y(trueV)); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle="#34d399"; ctx.font="10px PingFang SC, sans-serif";
+  ctx.fillText("收敛值 ¥986,430", padL+8, Y(trueV)-6);
+  axisStyle(ctx);
+  var ticks=[1000,5000,10000,50000,100000];
+  for(i=0;i<ticks.length;i++){
+    var idx = Math.round(Math.log(ticks[i]/1000)/Math.log(100)*(nPts-1));
+    ctx.fillText((ticks[i]/1000)+"k", X(idx)-8, H-8);
+  }
+  ctx.fillText("模拟次数", W-padR-46, H-8);
+}
+
+/* 雪球收益示意 */
+function drawPayoff(){
+  var s = setupCanvas("chartPayoff"), ctx=s.ctx, W=s.w, H=s.h;
+  var padL=46, padR=14, padT=14, padB=26;
+  var pw=W-padL-padR, ph=H-padT-padB;
+  var xmin=0.55, xmax=1.25;
+  var KI=0.75, couponTotal=0.37; // 18.5% × 2年
+  function f(x){
+    if(x < KI) return x - 1;              // 敲入未敲出：承担标的亏损
+    return couponTotal;                    // 其余情形：获得全部票息
+  }
+  function X(x){ return padL + (x-xmin)/(xmax-xmin)*pw; }
+  var ymin=-0.5, ymax=0.5;
+  function Y(v){ return padT + (ymax-v)/(ymax-ymin)*ph; }
+  // 零轴
+  axisStyle(ctx);
+  ctx.strokeStyle="rgba(120,150,220,.3)";
+  ctx.beginPath(); ctx.moveTo(padL,Y(0)); ctx.lineTo(W-padR,Y(0)); ctx.stroke();
+  // 收益曲线：两段
+  ctx.lineWidth=2.4;
+  ctx.strokeStyle="#f43f5e"; // 亏损段（红）
+  ctx.beginPath();
+  for(var x=xmin;x<KI;x+=0.005){ x===xmin?ctx.moveTo(X(x),Y(f(x))):ctx.lineTo(X(x),Y(f(x))); }
+  ctx.lineTo(X(KI),Y(f(KI-0.001))); ctx.stroke();
+  ctx.strokeStyle="#38bdf8"; // 票息段
+  ctx.beginPath();
+  ctx.moveTo(X(KI),Y(couponTotal)); ctx.lineTo(X(xmax),Y(couponTotal)); ctx.stroke();
+  // 跳变虚线
+  ctx.setLineDash([4,4]); ctx.strokeStyle="rgba(120,150,220,.4)"; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(X(KI),Y(f(KI-0.001))); ctx.lineTo(X(KI),Y(couponTotal)); ctx.stroke();
+  ctx.setLineDash([]);
+  // 标注
+  ctx.font="10px PingFang SC, sans-serif";
+  ctx.fillStyle="#38bdf8"; ctx.fillText("票息 +37%（18.5%×2年）", X(0.86), Y(couponTotal)-7);
+  ctx.fillStyle="#f43f5e"; ctx.fillText("敲入后承担标的跌幅", X(0.56), Y(-0.32));
+  ctx.fillStyle="#5f7099"; ctx.fillText("敲入线 75%", X(KI)-30, H-8);
+  axisStyle(ctx);
+  var xt=[0.6,0.75,0.9,1.0,1.1,1.2];
+  for(var i=0;i<xt.length;i++) ctx.fillText((xt[i]*100).toFixed(0)+"%", X(xt[i])-12, H-8);
+  var yt=[-0.4,-0.2,0,0.2,0.4];
+  for(var j=0;j<yt.length;j++){
+    ctx.beginPath(); ctx.strokeStyle="rgba(120,150,220,.12)";
+    ctx.moveTo(padL,Y(yt[j])); ctx.lineTo(W-padR,Y(yt[j])); ctx.stroke();
+    ctx.fillStyle="#5f7099";
+    ctx.fillText((yt[j]>0?"+":"")+(yt[j]*100).toFixed(0)+"%", 6, Y(yt[j])+3);
+  }
+}
+
+/* 收益分布直方图 */
+function drawHist(){
+  var s = setupCanvas("chartHist"), ctx=s.ctx, W=s.w, H=s.h;
+  var padL=46, padR=14, padT=14, padB=26;
+  var pw=W-padL-padR, ph=H-padT-padB;
+  // 模拟雪球到期收益分布
+  var bins={}, i;
+  for(i=0;i<8000;i++){
+    var r=Math.random(), v;
+    if(r<0.684) v = 0.10 + Math.random()*0.27;        // 敲出：部分~全部票息
+    else if(r<0.684+0.099) v = 0.37;                   // 未敲入未敲出
+    else v = -0.45 + Math.random()*0.35;               // 敲入亏损
+    var b = Math.round(v*40)/40;
+    bins[b] = (bins[b]||0)+1;
+  }
+  var keys = Object.keys(bins).map(Number).sort(function(a,b){return a-b;});
+  var maxC = 0;
+  for(i=0;i<keys.length;i++) maxC = Math.max(maxC, bins[keys[i]]);
+  var xmin=-0.5, xmax=0.5;
+  function X(x){ return padL + (x-xmin)/(xmax-xmin)*pw; }
+  function Y(c){ return padT + (1-c/maxC)*ph; }
+  var bw = pw/( (xmax-xmin)/0.025 ) - 1;
+  for(i=0;i<keys.length;i++){
+    var x=keys[i], c=bins[x];
+    ctx.fillStyle = x<0 ? "rgba(16,185,129,.75)" : "rgba(56,189,248,.75)";
+    if(Math.abs(x-0.37)<0.013) ctx.fillStyle = "rgba(251,191,36,.85)";
+    ctx.fillRect(X(x)-bw/2, Y(c), bw, padT+ph-Y(c));
+  }
+  axisStyle(ctx);
+  ctx.strokeStyle="rgba(120,150,220,.3)";
+  ctx.beginPath(); ctx.moveTo(padL,padT+ph); ctx.lineTo(W-padR,padT+ph); ctx.stroke();
+  ctx.font="10px PingFang SC, sans-serif";
+  ctx.fillStyle="#fbbf24"; ctx.fillText("满票息 +37%", X(0.37)-34, padT+2);
+  var xt=[-0.4,-0.2,0,0.2,0.37,0.5];
+  for(i=0;i<xt.length;i++){
+    ctx.fillStyle="#5f7099";
+    ctx.fillText((xt[i]>0?"+":"")+(xt[i]*100).toFixed(0)+"%", X(xt[i])-14, H-8);
+  }
+}
+
+function drawAllCharts(){
+  drawPaths(); drawConv(); drawPayoff(); drawHist();
+}
+
+/* ================= 结构代码库页面 ================= */
+var LIB_DATA = [
+  {key:"snowball", icon:"❄️", formula:"if KO(t): (1+coupon·t/T)\nelif KI & ST<KI: ST/S0\nelse: 1+coupon",
+   desc:"带敲入敲出障碍的自动赎回结构：存续期内任一敲出观察日触发即提前终止并锁定票息；未敲出且曾敲入则到期承担标的亏损。场外衍生品市场存量最大的结构之一。",
+   tags:["障碍","票息","路径依赖","月度观察"], status:"pass",
+   versions:[["v2.3","当前","敲入观察改为每日收盘价，对齐主流确认书口径"],["v2.1","2026-03","新增对偶变量方差缩减适配"],["v1.5","2025-11","首个入库版本"]]},
+  {key:"vanilla", icon:"🍦", formula:"Call: max(ST−K, 0)\nPut : max(K−ST, 0)",
+   desc:"最基础的欧式期权，到期收益为标的价格相对行权价的内在价值。支持 BS 解析解，是蒙特卡洛引擎正确性的基准验证结构。",
+   tags:["解析解","欧式","基础"], status:"pass",
+   versions:[["v1.0","当前","首个入库版本，含 BS 解析解交叉验证"]]},
+  {key:"asian", icon:"🌏", formula:"Call: max(Avg(S)−K, 0)\nAvg : 算术/几何平均",
+   desc:"以约定观察窗口内的均价结算，弱化到期日单点价格影响，常见于大宗商品套期保值与工资挂钩型产品。支持算术/几何两种平均方式与自定义均价窗口。",
+   tags:["路径依赖","均价","大宗套保"], status:"pass",
+   versions:[["v1.4","当前","新增几何平均与自定义观察窗口"],["v1.0","2025-12","首个入库版本"]]},
+  {key:"sharkfin", icon:"🦈", formula:"if max(St)≥KO: rebate\nelse: p·max(ST−K, 0)",
+   desc:"存续期内未触碰障碍时获得「保底收益 + 参与率 × 涨幅」，一旦触碰障碍则收益退回保底。到期收益图形似鲨鱼背鳍，适合温和看涨行情。",
+   tags:["障碍","保底","触碰失效"], status:"pass",
+   versions:[["v1.1","当前","障碍观察支持每日/到期两种口径"],["v1.0","2026-01","首个入库版本"]]},
+  {key:"binary", icon:"🎯", formula:"if ST≥K: 固定赔付 Q\nelse: 0",
+   desc:"现金或无价值数字期权：到期满足行权条件即获固定金额赔付，否则为零，收益呈阶跃形态。含解析解，可用于引擎交叉验证。",
+   tags:["解析解","固定赔付","数字"], status:"pass",
+   versions:[["v1.0","当前","首个入库版本，含解析解交叉验证"]]},
+  {key:"rangeaccrual", icon:"📊", formula:"票息 × 区间内天数 / 总天数\n每日观察 [下限, 上限]",
+   desc:"逐日观察标的收盘价是否落入约定区间，按区间内累计天数计发票息。标的区间震荡时票息积累稳定，是固收增强的常用结构。",
+   tags:["票息","区间","逐日累计","路径依赖"], status:"pass",
+   versions:[["v1.0","当前","首个入库版本"]]},
+  {key:"airbag", icon:"🛡️", formula:"ST≥S0: 1+p·(ST/S0−1)\nST<气囊线: ST/气囊线",
+   desc:"到期观察型保护结构：上涨时按参与率分享收益；跌至气囊线之上本金保障；跌破气囊线亏损按气囊线折算，显著小于直接持有标的的跌幅。",
+   tags:["保底","缓冲","参与上涨"], status:"pass",
+   versions:[["v1.0","当前","首个入库版本"]]}
+];
+var libFilter = "all";
+var detailKey = null;
+var newStructCount = 0;
+
+function switchPage(p){
+  var pages = {workbench:"pageWorkbench", library:"pageLibrary", history:"pageHistory", help:"pageHelp"};
+  var navs = {workbench:"navWorkbench", library:"navLibrary", history:"navHistory", help:"navHelp"};
+  for(var k in pages){
+    document.getElementById(pages[k]).classList.toggle("hidden", k!==p);
+    document.getElementById(navs[k]).classList.toggle("active", k===p);
+  }
+  if(p==="library") renderLib();
+  if(p==="history") renderHistory();
+  window.scrollTo(0,0);
+}
+function setFilter(el){
+  var chips = document.querySelectorAll(".filter-chip");
+  for(var i=0;i<chips.length;i++) chips[i].classList.remove("on");
+  el.classList.add("on");
+  libFilter = el.dataset.tag;
+  renderLib();
+}
+function escHtml(s){
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+function renderLib(){
+  var kw = (document.getElementById("libSearch").value||"").toLowerCase();
+  var grid = document.getElementById("libGrid");
+  var html = "";
+  var shown = 0;
+  for(var i=0;i<LIB_DATA.length;i++){
+    var s = LIB_DATA[i];
+    var info = STRUCT_INFO[s.key] || {cn:s.cn||s.key, en:s.en||""};
+    if(libFilter!=="all" && s.tags.indexOf(libFilter)<0) continue;
+    var hay = (info.cn+" "+info.en+" "+s.key+" "+s.tags.join(" ")).toLowerCase();
+    if(kw && hay.indexOf(kw)<0) continue;
+    shown++;
+    var statusBadge = s.status==="pass"
+      ? '<span class="lib-status pass">✓ 自测通过</span>'
+      : '<span class="lib-status pending">◔ 待评审</span>';
+    var tagHtml = "";
+    for(var j=0;j<s.tags.length;j++) tagHtml += '<span class="chip">'+escHtml(s.tags[j])+'</span>';
+    var useBtn = s.status==="pass"
+      ? '<button class="mini-btn primary" onclick="useInWorkbenchKey(\''+s.key+'\')">▶ 用于估值</button>'
+      : '<button class="mini-btn primary" disabled title="评审通过后方可用于估值">▶ 用于估值</button>';
+    html += '<div class="lib-card">'
+      + '<div class="lib-card-head"><div class="lib-icon">'+s.icon+'</div>'
+      + '<div class="lib-name">'+escHtml(info.cn)+'<small>'+escHtml(info.en)+'</small></div>'+statusBadge+'</div>'
+      + '<div class="lib-formula">'+escHtml(s.formula)+'</div>'
+      + '<div class="desc">'+escHtml(s.desc)+'</div>'
+      + '<div class="lib-meta">'+tagHtml+'</div>'
+      + '<div class="lib-card-actions">'
+      + '<button class="mini-btn" onclick="openStruct(\''+s.key+'\')">查看详情</button>'
+      + useBtn
+      + '</div></div>';
+  }
+  grid.innerHTML = html || '<div style="color:var(--txt-3);padding:40px;text-align:center;grid-column:1/-1">没有匹配的结构，换个关键词试试</div>';
+  document.getElementById("statTotal").textContent = LIB_DATA.length;
+}
+function openStruct(key){
+  detailKey = key;
+  var s = null;
+  for(var i=0;i<LIB_DATA.length;i++) if(LIB_DATA[i].key===key) s = LIB_DATA[i];
+  if(!s) return;
+  var info = STRUCT_INFO[key] || {cn:s.cn||key, en:s.en||""};
+  document.getElementById("dIcon").textContent = s.icon;
+  document.getElementById("dName").textContent = info.cn;
+  document.getElementById("dEn").innerHTML = info.en + ' · <span id="dVer">'+(s.versions?s.versions[0][0]:"v0.1")+'</span>';
+  var st = document.getElementById("dStatus");
+  if(s.status==="pass"){ st.className="lib-status pass"; st.textContent="✓ 自测通过"; }
+  else{ st.className="lib-status pending"; st.textContent="◔ 待评审"; }
+  var code = PAYOFF_TPL[key] || s.payoff || "# 暂无收益结构代码";
+  document.getElementById("dCode").innerHTML = highlightPy(code);
+  // 参数表
+  var tpl = PARAM_TPL[key];
+  var rows = "";
+  if(tpl){ for(var j=0;j<tpl.length;j++) rows += "<tr><td>"+tpl[j][0]+"</td><td>"+tpl[j][1]+"</td></tr>"; }
+  else{ rows = '<tr><td colspan="2" style="color:var(--txt-3)">待评审结构，参数模板将在入库时生成</td></tr>'; }
+  document.getElementById("dParams").innerHTML = rows;
+  document.getElementById("dDesc").textContent = s.desc;
+  // 版本
+  var vh = "";
+  if(s.versions){
+    for(var k=0;k<s.versions.length;k++){
+      vh += '<div class="ver-row"><span class="vn">'+s.versions[k][0]+'</span>'
+        + '<span style="font-size:12px">'+s.versions[k][2]+'</span>'
+        + '<span class="vd">'+s.versions[k][1]+'</span></div>';
+    }
+  } else {
+    vh = '<div class="ver-row"><span class="vn">v0.1</span><span style="font-size:12px">评审提交版本</span><span class="vd">待评审</span></div>';
+  }
+  document.getElementById("dVersions").innerHTML = vh;
+  document.getElementById("dUseBtn").disabled = (s.status!=="pass");
+  // 重置 tab 到代码页
+  var tabs = document.querySelectorAll("#structModal .detail-tab");
+  for(var t=0;t<tabs.length;t++) tabs[t].classList.toggle("on", tabs[t].dataset.pane==="code");
+  var panes = document.querySelectorAll("#structModal .detail-pane");
+  for(var q=0;q<panes.length;q++) panes[q].classList.toggle("on", panes[q].id==="pane-code");
+  document.getElementById("structModal").classList.add("show");
+  // 示意图（canvas 需可见时绘制，切到 chart tab 时也会重绘）
+  drawDetailPayoff(key);
+}
+function closeStruct(){ document.getElementById("structModal").classList.remove("show"); }
+function switchTab(el){
+  var tabs = document.querySelectorAll("#structModal .detail-tab");
+  for(var i=0;i<tabs.length;i++) tabs[i].classList.remove("on");
+  el.classList.add("on");
+  var panes = document.querySelectorAll("#structModal .detail-pane");
+  for(var j=0;j<panes.length;j++) panes[j].classList.toggle("on", panes[j].id==="pane-"+el.dataset.pane);
+  if(el.dataset.pane==="chart" && detailKey) drawDetailPayoff(detailKey);
+}
+function highlightPy(code){
+  var esc = code.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  var lines = esc.split("\n"), out = [];
+  for(var i=0;i<lines.length;i++){
+    var line = lines[i], comment = "";
+    var ci = line.indexOf("#");
+    if(ci>=0){ comment = line.slice(ci); line = line.slice(0,ci); }
+    if(line.indexOf('"""')>=0){
+      line = '<span class="tok-s">'+line+'</span>';
+    }else{
+      line = line.replace(/\b(def|return|if|elif|else|for|in|not|and|or|import|from|None|True|False)\b/g,'<span class="tok-k">$1</span>');
+      line = line.replace(/\b(max|min|mean|count|sum|abs|range|len)\b/g,'<span class="tok-f">$1</span>');
+      line = line.replace(/\b(\d+\.?\d*)\b/g,'<span class="tok-n">$1</span>');
+    }
+    if(comment) line += '<span class="tok-c">'+comment+'</span>';
+    out.push(line);
+  }
+  return out.join("\n");
+}
+function copyPayoff(){
+  var code = PAYOFF_TPL[detailKey] || "";
+  var btn = document.getElementById("dCopyBtn");
+  function done(){
+    btn.textContent = "✓ 已复制";
+    setTimeout(function(){ btn.textContent = "⧉ 复制收益结构代码"; }, 1500);
+  }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(code).then(done, function(){ fallback(); });
+  }else fallback();
+  function fallback(){
+    var ta = document.createElement("textarea");
+    ta.value = code; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy"); }catch(e){}
+    document.body.removeChild(ta); done();
+  }
+}
+function useInWorkbench(){ if(detailKey) useInWorkbenchKey(detailKey); }
+function useInWorkbenchKey(key){
+  closeStruct();
+  switchPage("workbench");
+  switchFlow(2);
+  var cards = document.querySelectorAll(".struct-card");
+  for(var i=0;i<cards.length;i++){
+    if(cards[i].dataset.struct===key){ selectStruct(cards[i]); break; }
+  }
+  document.getElementById("structGrid").scrollIntoView({behavior:"smooth", block:"center"});
+}
+/* ---------- 收益示意图 ---------- */
+function structPayoffFn(key){
+  switch(key){
+    case "snowball": return {f:function(x){ return x<0.75 ? x-1 : 0.37; }, note:"雪球：敲入未敲出承担标的跌幅，其余情形获得全部票息（18.5%×2年=37%）", marks:[[0.75,"敲入 75%"],[1.03,"敲出 103%"]]};
+    case "vanilla":  return {f:function(x){ return Math.max(x-1,0); }, note:"香草看涨：max(ST/S0 − K, 0)，K=100%", marks:[[1.0,"行权价 100%"]]};
+    case "asian":    return {f:function(x){ return Math.max(x-1,0); }, note:"亚式看涨：以均价 Avg(S) 替代 ST 结算（示意按均价≈ST 绘制）", marks:[[1.0,"行权价 100%"]]};
+    case "sharkfin": return {f:function(x){ if(x>=1.15) return 0.032; if(x>=1.0) return 0.032+0.8*(x-1); return 0.032; }, note:"鲨鱼鳍：未触碰障碍获保底3.2%+80%参与上涨，触碰115%障碍后仅剩保底", marks:[[1.0,"执行价 100%"],[1.15,"障碍 115%"]]};
+    case "binary":   return {f:function(x){ return x>=1.05?0.15:0; }, note:"二元看涨：ST≥105% 获固定赔付15%，否则为0（阶跃形态）", marks:[[1.05,"行权条件 105%"]]};
+    case "rangeaccrual": return {f:function(x){ return (x>=0.9&&x<=1.1)?0.06:0; }, note:"区间累计：每日落入[90%,110%]累计一天票息（示意：终点落在区间内⇄满期票息6%）", marks:[[0.9,"下限 90%"],[1.1,"上限 110%"]]};
+    case "airbag":   return {f:function(x){ if(x>=1) return x-1; if(x>=0.8) return 0; return x/0.8-1; }, note:"安全气囊：≥100%参与上涨，80%~100%本金保障，跌破80%按气囊线折算亏损", marks:[[0.8,"气囊线 80%"]]};
+    default: return null;
+  }
+}
+function drawDetailPayoff(key){
+  var cfg = structPayoffFn(key);
+  var note = document.getElementById("dChartNote");
+  if(!cfg){ note.textContent = "该结构暂无预置收益示意图"; return; }
+  note.textContent = cfg.note + "（横轴：标的价格 %期初价，纵轴：收益 %名义本金）";
+  var c = document.getElementById("detailPayoffChart");
+  var dpr = window.devicePixelRatio||1;
+  var W = c.clientWidth, H = c.clientHeight;
+  if(!W) return;
+  c.width = W*dpr; c.height = H*dpr;
+  var ctx = c.getContext("2d");
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,H);
+  var padL=48, padR=16, padT=14, padB=28;
+  var pw=W-padL-padR, ph=H-padT-padB;
+  var xmin=0.5, xmax=1.35;
+  var ymin=-0.35, ymax=0.45;
+  function X(x){ return padL+(x-xmin)/(xmax-xmin)*pw; }
+  function Y(v){ return padT+(ymax-v)/(ymax-ymin)*ph; }
+  // 网格 + 轴
+  ctx.font="10px Consolas, monospace"; ctx.lineWidth=1;
+  var yt=[-0.3,-0.15,0,0.15,0.3,0.45];
+  for(var j=0;j<yt.length;j++){
+    ctx.strokeStyle="rgba(120,150,220,.12)";
+    ctx.beginPath(); ctx.moveTo(padL,Y(yt[j])); ctx.lineTo(W-padR,Y(yt[j])); ctx.stroke();
+    ctx.fillStyle="#5f7099";
+    ctx.fillText((yt[j]>0?"+":"")+(yt[j]*100).toFixed(0)+"%", 6, Y(yt[j])+3);
+  }
+  var xt=[0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,1.3];
+  for(var i=0;i<xt.length;i++){
+    ctx.fillStyle="#5f7099";
+    ctx.fillText((xt[i]*100).toFixed(0)+"%", X(xt[i])-12, H-8);
+  }
+  // 零轴
+  ctx.strokeStyle="rgba(120,150,220,.35)";
+  ctx.beginPath(); ctx.moveTo(padL,Y(0)); ctx.lineTo(W-padR,Y(0)); ctx.stroke();
+  // 特征竖线
+  ctx.setLineDash([4,4]);
+  for(var m2=0;m2<cfg.marks.length;m2++){
+    var mx = cfg.marks[m2][0];
+    ctx.strokeStyle="rgba(251,191,36,.45)";
+    ctx.beginPath(); ctx.moveTo(X(mx),padT); ctx.lineTo(X(mx),padT+ph); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  // 收益曲线：正负分段着色
+  var step=0.002, x, y0, y1;
+  ctx.lineWidth=2.4;
+  var prev = null;
+  for(x=xmin;x<=xmax+step;x+=step){
+    var v = cfg.f(Math.min(x,xmax));
+    if(prev!==null){
+      ctx.strokeStyle = (prev.v<0||v<0) ? "#f43f5e" : "#38bdf8";
+      ctx.beginPath(); ctx.moveTo(X(prev.x),Y(prev.v)); ctx.lineTo(X(x),Y(v)); ctx.stroke();
+    }
+    prev = {x:x, v:v};
+  }
+  // 标注
+  ctx.font="10px PingFang SC, sans-serif"; ctx.fillStyle="#fbbf24";
+  for(var m3=0;m3<cfg.marks.length;m3++){
+    ctx.fillText(cfg.marks[m3][1], X(cfg.marks[m3][0])-24, padT+11);
+  }
+}
+/* ---------- 提交新结构 ---------- */
+function openAddStruct(){
+  closeStruct();
+  document.getElementById("addStructModal").classList.add("show");
+}
+function closeAddStruct(){ document.getElementById("addStructModal").classList.remove("show"); }
+function submitNewStruct(){
+  var name = document.getElementById("nsName").value.trim();
+  var key = document.getElementById("nsKey").value.trim().toLowerCase();
+  var tags = document.getElementById("nsTags").value.trim();
+  var code = document.getElementById("nsCode").value.trim();
+  if(!name || !key || !code){ alert("请填写：结构名称、英文标识、收益结构代码（三项必填）"); return; }
+  for(var i=0;i<LIB_DATA.length;i++){
+    if(LIB_DATA[i].key===key){ alert("英文标识「"+key+"」已存在，请更换"); return; }
+  }
+  LIB_DATA.push({
+    key:key, icon:"🧩", cn:name, en:key,
+    formula:"（评审通过后生成公式摘要）",
+    desc:"由「"+(document.getElementById("nsAuthor").value.trim()||"未署名")+"」提交的新结构，当前处于评审流程。评审通过后将自动生成参数模板并纳入自测流水线。",
+    tags: tags ? tags.split(/[,，]/).map(function(t){return t.trim();}).filter(Boolean) : ["自定义"],
+    status:"pending", payoff:code, versions:null
+  });
+  document.getElementById("nsName").value=""; document.getElementById("nsKey").value="";
+  document.getElementById("nsTags").value=""; document.getElementById("nsCode").value=""; document.getElementById("nsAuthor").value="";
+  closeAddStruct();
+  switchPage("library");
+  document.getElementById("statNew").textContent = 3 + (++newStructCount);
+  // 高亮滚动到底部新卡片
+  setTimeout(function(){
+    var grid = document.getElementById("libGrid");
+    var last = grid.lastElementChild;
+    if(last){ last.scrollIntoView({behavior:"smooth", block:"center"});
+      last.style.borderColor="rgba(245,158,11,.6)";
+      setTimeout(function(){ last.style.borderColor=""; }, 2000); }
+  }, 100);
+}
+
+/* ================= 历史估值 ================= */
+var HISTORY = [
+  {id:"VAL-20261009-007", time:"2026-10-09 16:42", struct:"snowball", target:"中证500指数 (000905.SH)",
+   notional:"¥10,000,000", tenor:"24M", engine:"MC · 100,000 路径",
+   value:"¥10,355,607", ratio:"103.56%", ci:"±0.11%", flow:"链路一", status:"confirm",
+   extra:["敲出概率","81.9%"]},
+  {id:"VAL-20261009-006", time:"2026-10-09 15:18", struct:"airbag", target:"中证1000指数 (000852.SH)",
+   notional:"¥10,000,000", tenor:"12M", engine:"MC · 100,000 路径",
+   value:"¥10,612,214", ratio:"106.12%", ci:"±0.11%", flow:"链路二", status:"done",
+   extra:["跌破气囊概率","16.2%"]},
+  {id:"VAL-20261008-005", time:"2026-10-08 11:03", struct:"sharkfin", target:"中证1000指数 (000852.SH)",
+   notional:"¥10,000,000", tenor:"12M", engine:"MC · 100,000 路径",
+   value:"¥350,406", ratio:"3.50%", ci:"±0.01%", flow:"链路一", status:"done",
+   extra:["触碰障碍概率","49.1%"]},
+  {id:"VAL-20261008-004", time:"2026-10-08 09:47", struct:"vanilla", target:"沪深300指数 (000300.SH)",
+   notional:"¥5,000,000", tenor:"12M", engine:"MC · 100,000 路径 + BS 解析解",
+   value:"¥479,102", ratio:"9.58%", ci:"±0.09%", flow:"链路二", status:"done",
+   extra:["MC vs BS 偏差","0.21%"]},
+  {id:"VAL-20260930-003", time:"2026-09-30 16:20", struct:"rangeaccrual", target:"中证500指数 (000905.SH)",
+   notional:"¥10,000,000", tenor:"12M", engine:"MC · 100,000 路径",
+   value:"¥321,884", ratio:"3.22%", ci:"±0.01%", flow:"链路二", status:"done",
+   extra:["区间内天数占比","54.6%"]},
+  {id:"VAL-20260929-002", time:"2026-09-29 14:15", struct:"binary", target:"沪深300指数 (000300.SH)",
+   notional:"¥5,000,000", tenor:"12M", engine:"MC · 100,000 路径 + BS 解析解",
+   value:"¥294,825", ratio:"5.90%", ci:"±0.04%", flow:"链路二", status:"done",
+   extra:["赔付概率","40.0%"]},
+  {id:"VAL-20260928-001", time:"2026-09-28 10:08", struct:"asian", target:"沪铜主力合约 (CU.SHF)",
+   notional:"¥8,000,000", tenor:"12M", engine:"MC · 100,000 路径",
+   value:"¥735,984", ratio:"9.20%", ci:"±0.09%", flow:"链路一", status:"done",
+   extra:["均价观察窗口","30 个交易日"]}
+];
+var histFilter = "all";
+var histIdx = null;
+var histSeq = 8;
+
+function setHistFilter(el){
+  var chips = document.querySelectorAll("#pageHistory .filter-chip");
+  for(var i=0;i<chips.length;i++) chips[i].classList.remove("on");
+  el.classList.add("on");
+  histFilter = el.dataset.hf;
+  renderHistory();
+}
+function renderHistory(){
+  var kw = (document.getElementById("histSearch").value||"").toLowerCase();
+  var body = document.getElementById("histBody");
+  var html = "", month = 0, structs = {};
+  for(var i=0;i<HISTORY.length;i++){
+    var r = HISTORY[i];
+    var info = STRUCT_INFO[r.struct] || {cn:r.struct};
+    if(r.time.indexOf("2026-10")===0) month++;
+    structs[r.struct] = 1;
+    if(histFilter==="差异确认" && r.status!=="confirm") continue;
+    if(histFilter==="链路一" && r.flow!=="链路一") continue;
+    if(histFilter==="链路二" && r.flow!=="链路二") continue;
+    var hay = (r.id+" "+info.cn+" "+r.target).toLowerCase();
+    if(kw && hay.indexOf(kw)<0) continue;
+    var stBadge = r.status==="confirm"
+      ? '<span class="st-badge st-confirm">人工差异确认</span>'
+      : '<span class="st-badge st-done">已完成</span>';
+    html += '<tr onclick="openHist('+i+')">'
+      + '<td class="id-cell">'+r.id+'</td>'
+      + '<td class="mono">'+r.time+'</td>'
+      + '<td>'+info.cn+'</td>'
+      + '<td class="mono" style="font-size:11.5px">'+r.target+'</td>'
+      + '<td class="mono">'+r.notional+'</td>'
+      + '<td class="mono">'+r.tenor+'</td>'
+      + '<td style="font-size:11.5px">'+r.engine+'</td>'
+      + '<td class="val-cell">'+r.value+'</td>'
+      + '<td class="mono">'+r.ratio+'</td>'
+      + '<td style="font-size:11.5px">'+r.flow+'</td>'
+      + '<td>'+stBadge+'</td>'
+      + '<td><button class="mini-btn" style="flex:none;padding:5px 12px" onclick="event.stopPropagation();histReuseIdx('+i+')">复用</button></td>'
+      + '</tr>';
+  }
+  body.innerHTML = html || '<tr><td colspan="12" style="text-align:center;padding:36px;color:var(--txt-3)">没有匹配的估值记录</td></tr>';
+  document.getElementById("hStatTotal").textContent = HISTORY.length;
+  document.getElementById("hStatMonth").textContent = month;
+  var n=0; for(var k in structs) n++;
+  document.getElementById("hStatStruct").textContent = n;
+}
+function openHist(i){
+  histIdx = i;
+  var r = HISTORY[i];
+  var info = STRUCT_INFO[r.struct] || {cn:r.struct, en:""};
+  document.getElementById("hTitle").textContent = info.cn + " · 估值详情";
+  document.getElementById("hSub").textContent = r.id + " · " + r.time + " · " + r.flow + " · " + r.engine;
+  document.getElementById("hValue").textContent = r.value;
+  document.getElementById("hRatio").textContent = r.ratio;
+  document.getElementById("hCi").textContent = r.ci;
+  document.getElementById("hExtra").textContent = r.extra[1];
+  document.getElementById("hExtraK").textContent = r.extra[0];
+  var infoHtml = "";
+  var items = [["估值编号",r.id],["估值时间",r.time],["期权结构",info.cn],["标的",r.target],
+               ["名义本金",r.notional],["期限",r.tenor],["估值引擎",r.engine],["业务链路",r.flow]];
+  for(var j=0;j<items.length;j++){
+    infoHtml += '<div class="hist-info"><div class="hk">'+items[j][0]+'</div><div class="hv" style="font-size:12px">'+items[j][1]+'</div></div>';
+  }
+  document.getElementById("hInfo").innerHTML = infoHtml;
+  var tpl = PARAM_TPL[r.struct];
+  var rows = "";
+  if(tpl){ for(var q=0;q<tpl.length;q++) rows += "<tr><td>"+tpl[q][0]+"</td><td>"+tpl[q][1]+"</td></tr>"; }
+  else{ rows = '<tr><td colspan="2" style="color:var(--txt-3)">参数快照不可用</td></tr>'; }
+  document.getElementById("hParams").innerHTML = rows;
+  document.getElementById("histModal").classList.add("show");
+}
+function closeHist(){ document.getElementById("histModal").classList.remove("show"); }
+function histReuse(){ if(histIdx!==null) histReuseIdx(histIdx); }
+function histReuseIdx(i){
+  closeHist();
+  var r = HISTORY[i];
+  if(STRUCT_INFO[r.struct]) useInWorkbenchKey(r.struct);
+  showToast("已将 " + r.id + " 的参数复用到工作台");
+}
+function histExport(){
+  if(histIdx===null) return;
+  var r = HISTORY[histIdx];
+  var info = STRUCT_INFO[r.struct] || {cn:r.struct, en:""};
+  var md = "# 估值报告 " + r.id + "\n\n"
+    + "- 结构：" + info.cn + " (" + info.en + ")\n"
+    + "- 标的：" + r.target + "\n"
+    + "- 名义本金：" + r.notional + "　期限：" + r.tenor + "\n"
+    + "- 引擎：" + r.engine + "\n"
+    + "- 估值时间：" + r.time + "　链路：" + r.flow + "\n\n"
+    + "## 估值结果\n\n"
+    + "- 期权价值：**" + r.value + "**（占名义本金 " + r.ratio + "）\n"
+    + "- 95% 置信区间：" + r.ci + "\n"
+    + "- " + r.extra[0] + "：" + r.extra[1] + "\n\n"
+    + "## 合同参数\n\n";
+  var tpl = PARAM_TPL[r.struct] || [];
+  for(var i=0;i<tpl.length;i++) md += "- " + tpl[i][0] + "：" + tpl[i][1] + "\n";
+  md += "\n---\n衍智 OptionMind · 期权蒙特卡洛智能估值平台\n";
+  downloadFile(r.id + "_估值报告.md", md, "text/markdown");
+  showToast("估值报告已导出");
+}
+function exportAllCSV(){
+  var csv = "估值编号,时间,结构,标的,名义本金,期限,引擎,估值结果,占名义,置信区间,链路,状态\n";
+  for(var i=0;i<HISTORY.length;i++){
+    var r = HISTORY[i];
+    var info = STRUCT_INFO[r.struct] || {cn:r.struct};
+    csv += [r.id, r.time, info.cn, r.target, r.notional, r.tenor, r.engine,
+            r.value, r.ratio, r.ci, r.flow, r.status==="confirm"?"人工差异确认":"已完成"].join(",") + "\n";
+  }
+  downloadFile("历史估值记录.csv", csv, "text/csv");
+  showToast("已导出 " + HISTORY.length + " 条历史估值记录");
+}
+function downloadFile(name, content, mime){
+  var blob = new Blob(["﻿" + content], {type: mime + ";charset=utf-8"});
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 2000);
+}
+/* 工作台估值完成后自动写入历史 */
+function addHistoryFromRun(){
+  var flow1 = document.getElementById("flow1").classList.contains("show");
+  var key = flow1 ? "snowball" : currentStruct;
+  var info = STRUCT_INFO[key] || {cn:key};
+  var now = new Date();
+  var hh = ("0"+now.getHours()).slice(-2), mm = ("0"+now.getMinutes()).slice(-2);
+  var id = "VAL-20261009-" + ("00"+(histSeq++)).slice(-3);
+  var mcOn = document.getElementById(flow1 ? "mcToggle1" : "mcToggle2").classList.contains("on");
+  var rec = {
+    id:id, time:"2026-10-09 " + hh + ":" + mm, struct:key,
+    target: flow1 ? "中证500指数 (000905.SH)" : (PARAM_TPL[key] ? PARAM_TPL[key][0][1] : "自定义标的"),
+    notional:"¥10,000,000", tenor: flow1 ? "24M" : "12M",
+    engine: mcOn ? "MC · 100,000 路径" : "解析解",
+    value:"¥986,430", ratio:"9.86%", ci:"±0.12%",
+    flow: flow1 ? "链路一" : "链路二",
+    status: flow1 ? "confirm" : "done",
+    extra: key==="snowball" ? ["敲出概率","68.4%"] : ["估值耗时","3.2s"]
+  };
+  HISTORY.unshift(rec);
+  showToast("估值完成，已写入历史记录 " + id);
+}
+/* ================= 帮助文档 ================= */
+function toggleFaq(el){ el.parentNode.classList.toggle("open"); }
+function setDocNav(a){
+  var links = document.querySelectorAll("#docNav a");
+  for(var i=0;i<links.length;i++) links[i].classList.remove("on");
+  a.classList.add("on");
+}
+/* ================= 通用提示 ================= */
+function showToast(msg){
+  document.getElementById("toastMsg").textContent = msg;
+  var t = document.getElementById("toast");
+  t.classList.add("show");
+  clearTimeout(t._timer);
+  t._timer = setTimeout(function(){ t.classList.remove("show"); }, 2400);
+}
+
+/* 初始化 */
+renderContractParams("snowball");
+var docLinks = document.querySelectorAll("#docNav a");
+for(var d=0; d<docLinks.length; d++){
+  docLinks[d].addEventListener("click", function(){ setDocNav(this); });
+}
+window.addEventListener("resize", function(){
+  if(!document.getElementById("resultSection").classList.contains("hidden")) drawAllCharts();
+});
+</script>
+<script src="../../../home-link.js"></script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="驭风智行——风险六必治智能管控" />
+    <title>驭风智行——风险“六必治”智能管控</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+        color: #eef5ff;
+        background: #07101f;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          radial-gradient(circle at 15% 10%, rgba(34, 151, 255, .22), transparent 34%),
+          radial-gradient(circle at 85% 85%, rgba(124, 91, 255, .18), transparent 36%),
+          linear-gradient(145deg, #07101f 0%, #0b1730 52%, #091224 100%);
+      }
+      .shell { width: min(1180px, calc(100% - 40px)); margin: 0 auto; padding: 54px 0 64px; }
+      h1 { max-width: 1050px; margin: 0 0 14px; font-size: clamp(38px, 6vw, 68px); line-height: 1.08; letter-spacing: -2px; }
+      .accent { background: linear-gradient(90deg, #48c6ff, #9c8cff); -webkit-background-clip: text; color: transparent; }
+      .lead { max-width: 730px; margin: 0 0 44px; color: #9fb0cc; font-size: 17px; line-height: 1.8; }
+      .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+      .card {
+        position: relative; min-height: 290px; padding: 25px 25px 72px; border: 1px solid rgba(126, 167, 224, .18);
+        border-radius: 20px; color: inherit; text-decoration: none; overflow: hidden;
+        background: linear-gradient(155deg, rgba(24, 45, 80, .82), rgba(10, 23, 46, .9));
+        box-shadow: 0 20px 55px rgba(0, 0, 0, .22); transition: transform .22s, border-color .22s;
+      }
+      .card:hover { transform: translateY(-6px); border-color: rgba(91, 191, 255, .58); }
+      .card::after { content: ""; position: absolute; inset: auto -35px -55px auto; width: 150px; height: 150px; border-radius: 50%; background: var(--glow); filter: blur(12px); opacity: .22; }
+      .num { color: #6f8fb9; font: 12px ui-monospace, monospace; }
+      .icon { display: grid; place-items: center; width: 48px; height: 48px; margin: 24px 0 26px; border-radius: 14px; background: var(--icon); font-size: 23px; }
+      h2 { margin: 0 0 10px; font-size: 21px; }
+      .card p { margin: 0; color: #94a9c8; line-height: 1.7; font-size: 14px; }
+      .open { position: absolute; left: 25px; bottom: 23px; color: #70cfff; font-size: 13px; }
+      footer { margin-top: 38px; color: #607493; font-size: 12px; }
+      @media (max-width: 1050px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+      @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } .card { min-height: 225px; } }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <h1>驭风智行 — <span class="accent">风险“六必治”智能管控</span></h1>
+      <p class="lead">从风险识别到量化决策，让 AI 驱动风控闭环</p>
+
+      <section class="grid" aria-label="演示模块">
+        <a class="card" style="--glow:#38bdf8;--icon:linear-gradient(135deg,#168eea,#47c8ff)" href="%BASE_URL%modules/cockpit/风险子驾驶舱_0805.html">
+          <span class="num">01 / COCKPIT</span><span class="icon">◫</span>
+          <h2>智能驾驶舱</h2><p>经营指标、风险敞口、预警事项与客户集中度统一呈现。</p><span class="open">进入智能驾驶舱 →</span>
+        </a>
+        <a class="card" style="--glow:#8b7cff;--icon:linear-gradient(135deg,#6659e8,#a087ff)" href="%BASE_URL%modules/quant/valuation/option-mc-valuation-ui.html">
+          <span class="num">02 / QUANT RISK</span><span class="icon">Ω</span>
+          <h2>量化风控中心</h2><p>集成模型验证与压力测试，支持智能估值、风险情景生成及组合损益分析。</p>
+          <span class="open">进入量化风控 →</span>
+        </a>
+        <a class="card" style="--glow:#fb923c;--icon:linear-gradient(135deg,#ea580c,#fbbf24)" href="%BASE_URL%modules/enterprise-risk/全面风险管理系统.html">
+          <span class="num">03 / TRADE RISK</span><span class="icon">◎</span>
+          <h2>贸易风险穿透监测</h2><p>覆盖虚假贸易排查、期现定价跟踪与定价偏离检测。</p><span class="open">进入穿透监测 →</span>
+        </a>
+        <a class="card" style="--glow:#f43f5e;--icon:linear-gradient(135deg,#be123c,#fb7185)" href="%BASE_URL%modules/customer-asset-monitor/index.html">
+          <span class="num">04 / CUSTOMER &amp; ASSET</span><span class="icon">⊕</span>
+          <h2>同一客户/标的监控中心</h2><p>基于新增期货系统，穿透聚合同一客户、同一品种及关联主体的风险敞口。</p><span class="open">进入监控中心 →</span>
+        </a>
+        <a class="card" style="--glow:#f59e0b;--icon:linear-gradient(135deg,#d97706,#fbbf24)" href="%BASE_URL%modules/customer-asset-monitor/预警中心.html">
+          <span class="num">05 / WARNING CENTER</span><span class="icon">!</span>
+          <h2>预警中心</h2><p>集中展示风险超限、预警事项、处置措施与通知状态。</p><span class="open">进入预警中心 →</span>
+        </a>
+        <a class="card" style="--glow:#22d3ee;--icon:linear-gradient(135deg,#0891b2,#67e8f9)" href="%BASE_URL%modules/knowledge-center/知识中心.html">
+          <span class="num">06 / KNOWLEDGE CENTER</span><span class="icon">▤</span>
+          <h2>知识中心</h2><p>集中展示制度规范、风险案例、研究成果与智能知识检索。</p><span class="open">进入知识中心 →</span>
+        </a>
+      </section>
+      <footer>AI 风险管理创新大赛 Demo · 演示数据不构成投资建议</footer>
+    </main>
+    <script>
+      (async function checkHomepageAuth(){
+        if (['localhost', '127.0.0.1'].includes(window.location.hostname)) return;
+        try {
+          const response = await fetch('/oauth2/userinfo', {
+            method: 'GET',
+            credentials: 'include',
+            cache: 'no-store'
+          });
+          let userInfo = null;
+          if (response.ok) {
+            try { userInfo = await response.json(); } catch (error) {}
+          }
+          if (!response.ok || !userInfo || !String(userInfo.email || '').trim()) {
+            const loginUrl = '/tologin.do?url=' + encodeURIComponent(window.location.href);
+            window.location.replace(loginUrl);
+          }
+        } catch (error) {
+          console.error('登录状态检查失败', error);
+        }
+      })();
+    </script>
+  </body>
+</html>
